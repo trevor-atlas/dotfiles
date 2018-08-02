@@ -1,0 +1,26 @@
+#!/usr/bin/bash
+# Set personal aliases
+
+alias zshconfig="code ~/.zshrc"
+alias ohmyzsh="code ~/.oh-my-zsh"
+alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222"
+alias ls="exa -glam --group-directories-first"
+alias githistory='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
+alias git=hub
+alias pulls='hub browse -- pulls'
+alias issues='hub browse -- issues'
+alias cat=ccat
+alias js=/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Resources/jsc
+alias nodescripts="jq '.scripts' package.json"
+alias htop=gtop
+
+# Get macOS Software Updates, and update installed Ruby gems, Homebrew, npm, and their installed packages
+alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup; npm install npm -g; npm update -g; sudo gem update --system;'
+
+# Stuff I never really use but cannot delete either because of http://xkcd.com/530/
+alias stfu="osascript -e 'set volume output muted true'"
+alias pumpitup="osascript -e 'set volume output volume 100'"
+
+# aquicore stuff
+alias killplay="kill `jps -v | grep framework/play-1. | cut -f1 -d \" \"`"
+alias runAQ='play run -Djobs.run=false -Duser.timezone=UTC'
