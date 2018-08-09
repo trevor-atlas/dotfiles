@@ -4,16 +4,7 @@ export ATLAS_ROOT="$HOME/.config/atlas"
 source "$ATLAS_ROOT/.alias"
 source "$ATLAS_ROOT/.functions"
 
-# init vim config if it doesn't exist
-if [[ ! -f ${HOME}/.vimrc ]]; then
-	ln -s "$ATLAS_ROOT/.vimrc" "$HOME/"
-fi
-
-if [[ ! -f ${HOME}/.config/nvim/init.vim ]]; then
-	mkdir -p  "$HOME/.config/nvim"
-	ln -s     "$ATLAS_ROOT/.vimrc" "$HOME/.config/nvim/init.vim"
-fi
-
-if [[ ! -f ${HOME}/.tmux.conf ]]; then
-	ln -s "$ATLAS_ROOT/.tmux.conf" "$HOME/"
-fi
+# init vim and tmux config if they don't exist
+install_nvim
+install_vim
+install_tmux

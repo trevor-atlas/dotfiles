@@ -101,3 +101,31 @@ else
 	echo "'$1' is not a valid file"
 fi
 }
+
+install_nvim() {
+	[[ ! -f ${HOME}/.config/nvim/init.vim ]] && {
+		ls -s "$ATLAS_ROOT/.vimrc" "$HOME/.config/nvim/init.vim"
+	}
+}
+
+install_vim() {
+	[[ ! -f ${HOME}/.vimrc ]] && {
+		ls -s "$ATLAS_ROOT/.vimrc" "$HOME/"
+	}
+}
+
+install_tmux() {
+	[[ ! -f ${HOME}/.tumx.conf ]] && {
+		ls -s "$ATLAS_ROOT/.tmux.conf" "$HOME/"
+	}
+}
+
+# update this project with local system changes
+atlas_update_from_local() {
+	# update spectacle config
+	[[ ! -f ${HOME}/Library/Application\ Support/Spectacle ]] && {
+		rm "$ATLAS_ROOT/init/Shortcuts.json"
+		cp "$HOME/Library/Application\ Support/Spectacle/Shortcuts.json" ./init
+	}
+}
+
