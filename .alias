@@ -13,6 +13,7 @@ alias cat=ccat
 alias js=/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Resources/jsc
 alias nodescripts="jq '.scripts' package.json"
 alias htop=gtop
+alias worklog=nvim "$HOME/Dropbox/notepad/work/worklog.md"
 
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew, npm, and their installed packages
 alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup; npm install npm -g; npm update -g; sudo gem update --system;'
