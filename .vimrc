@@ -179,7 +179,7 @@ noremap <left> <C-w><left>
 noremap <right> <C-w><right>
 
 set number
-set relativenumber
+"set relativenumber
 
 " easy navigation between splits to save a keystroke. So instead of ctrl-w then j, it’s just ctrl-j
 nnoremap <C-J> <C-W><C-J>

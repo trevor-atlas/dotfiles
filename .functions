@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 # Create a new directory and enter it
 function mkd() {
@@ -103,20 +103,23 @@ fi
 }
 
 install_nvim() {
-	[[ ! -f ${HOME}/.config/nvim/init.vim ]] && {
-		ls -s "$ATLAS_ROOT/.vimrc" "$HOME/.config/nvim/init.vim"
+	[[ ! -e ${HOME}/.config/nvim/init.vim && ! -L ${HOME}/.config/nvim/init.vim ]] && {
+		ln -sf "$ATLAS_ROOT/.vimrc" "$HOME/.config/nvim/init.vim"
+		echo "installed nvim config"
 	}
 }
 
 install_vim() {
-	[[ ! -f ${HOME}/.vimrc ]] && {
-		ls -s "$ATLAS_ROOT/.vimrc" "$HOME/"
+	[[ ! -e ${HOME}/.vimrc && ! -L ${HOME}/.vimrc ]] && {
+		ln -sf "$ATLAS_ROOT/.vimrc" "$HOME"
+		echo "installed vim config"
 	}
 }
 
 install_tmux() {
-	[[ ! -f ${HOME}/.tumx.conf ]] && {
-		ls -s "$ATLAS_ROOT/.tmux.conf" "$HOME/"
+	[[ ! -e ${HOME}/.tumx.conf && ! -L ${HOME}/.tmux.conf ]] && {
+		ln -sf "$ATLAS_ROOT/.tmux.conf" "$HOME"
+		echo "installed tmux config"
 	}
 }
 
