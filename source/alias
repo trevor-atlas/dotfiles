@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Set personal aliases
 
-alias zshconfig="code ~/.zshrc"
-alias ohmyzsh="code ~/.oh-my-zsh"
+# Set personal aliases
+alias zshconfig="code $HOME/.zshrc"
+alias ohmyzsh="code $HOME/.oh-my-zsh"
+alias editconfig="code $ATLAS_ROOT"
 alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222"
 alias ls="exa -glam --group-directories-first"
 alias githistory='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
@@ -10,13 +11,18 @@ alias git=hub
 alias pulls='hub browse -- pulls'
 alias issues='hub browse -- issues'
 alias cat=ccat
-alias js=/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Resources/jsc
 alias nodescripts="jq '.scripts' package.json"
 alias htop=gtop
-alias worklog=nvim "$HOME/Dropbox/notepad/work/worklog.md"
+alias worklog=nvim "$ATLAS_STORAGE_DIR/notepad/work/worklog.md"
 
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew, npm, and their installed packages
-alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup; npm install npm -g; npm update -g; sudo gem update --system;'
+alias update='sudo softwareupdate -i -a;\
+brew update;\
+brew upgrade;\
+brew cleanup;\
+npm install npm -g;\
+npm update -g;\
+sudo gem update --system;'
 
 # Stuff I never really use but cannot delete either because of http://xkcd.com/530/
 alias stfu="osascript -e 'set volume output muted true'"

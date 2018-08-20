@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 
 export ATLAS_ROOT="$HOME/.config/atlas"
-export ATLAS_NOTES_DIR="$HOME/Dropbox/notes"
+export ATLAS_STORAGE_DIR="$HOME/Dropbox"
+export ATLAS_NOTES_DIR="$ATLAS_STORAGE_DIR/notes"
 export ATLAS_WORKNOTES_DIR="$ATLAS_NOTES_DIR/work"
-export ATLAS_BLOG_DIR="$ATLAS_NOTES_DIR/blog"
-export ATLAS_DEV_DIR="$ATLAS_NOTES_DIR/dev"
+export ATLAS_DEVNOTES_DIR="$ATLAS_NOTES_DIR/dev"
+export ATLAS_MEDIA_DIR="$ATLAS_STORAGE_DIR/media"
+export ATLAS_BLOG_DIR="$ATLAS_STORAGE_DIR/Trevor\’s\ blog"
+export ATLAS_SCREENSHOT_DIR="$ATLAS_STORAGE_DIR/Screenshots"
+export ATLAS_PROJECTS_DIR="$HOME/projects"
 
 for file in ${ATLAS_ROOT}/source/*; do
-  [[ -f "$file" ]] && . "$file"
+	[[ -f "$file" ]] && . "$file"
 done
 
 # init vim and tmux config if they don't exist
