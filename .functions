@@ -132,3 +132,15 @@ atlas_update_from_local() {
 	}
 }
 
+mdless() {
+	pandoc -s -f markdown -t man $1 | groff -T utf8 -man | less
+}
+
+umedit() {
+	mkdir -p ${ATLAS_DEV_DIR}; vim ${ATLAS_DEV_DIR}/$1;
+}
+
+um() { mdless ${ATLAS_DEV_DIR}"$1"; }
+
+umls() { ls ${ATLAS_DEV_DIR} }
+
