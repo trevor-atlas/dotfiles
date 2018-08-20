@@ -2,8 +2,11 @@
 ```
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" &&\
 git clone https://github.com/trevor-atlas/config ~/.config/atlas &&\
-echo "source $HOME/.config/atlas/.index" >> .zshrc && sh "$ATLAS_ROOT/install.sh"
+echo "source $HOME/.config/atlas/index" >> .zshrc &&\
+source "$HOME/.zshrc" &&\
+install_dotfiles_once
 ```
+
 this will:
 1. install oh-my-zsh
 2. clone this repository into ~/.config/atlas
