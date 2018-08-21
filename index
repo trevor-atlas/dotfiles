@@ -11,7 +11,7 @@ export ATLAS_SCREENSHOT_DIR="$ATLAS_STORAGE_DIR/Screenshots"
 export ATLAS_PROJECTS_DIR="$HOME/projects"
 
 for file in ${ATLAS_ROOT}/source/*; do
-	[[ -f "$file" ]] && . "$file"
+	[[ -f "$file" ]] && source "$file"
 done
 
 # init vim and tmux config if they don't exist

@@ -19,32 +19,32 @@ install_dotfiles_once() {
 atlas_update_from_local() {
 	# update spectacle config
 	[[ ! -f ${HOME}/Library/Application\ Support/Spectacle ]] && {
-		rm "$ATLAS_ROOT/settings/spectacle-app.json"
-		cp "$HOME/Library/Application\ Support/Spectacle/Shortcuts.json" ./settings/spectacle-app.json
+		rm "$ATLAS_ROOT/settings/spectacle-app.json";
+		cp "$HOME/Library/Application\ Support/Spectacle/Shortcuts.json" ./settings/spectacle-app.json;
 	}
 }
 
 install_nvim() {
 	[[ ! -e ${HOME}/.config/nvim/init.vim && ! -L ${HOME}/.config/nvim/init.vim ]] && {
-		ln -sf "$ATLAS_ROOT/settings/vimrc" "$HOME/.config/nvim/init.vim"
-		echo "installed nvim config"
+		ln -sf "$ATLAS_ROOT/settings/vimrc" "$HOME/.config/nvim/init.vim";
+		echo "installed nvim config";
 	}
 }
 
 install_vim() {
 	[[ ! -e ${HOME}/.vimrc && ! -L ${HOME}/.vimrc ]] && {
-		ln -sf "$ATLAS_ROOT/settings/vimrc" "$HOME"
-		echo "installed vim config"
+		ln -sf "$ATLAS_ROOT/settings/vimrc" "$HOME/.vimrc";
+		echo "installed vim config";
 	}
 }
 
 install_tmux() {
-	[[ ! -d ${HOME}/.tumx/plugins ]] && {
+	[[ ! -d ${HOME}/.tumx/ ]] && {
 		git clone https://github.com/tmux-plugins/tpm ${HOME}/.tmux/plugins/tpm;
 		echo "installed tmux plugin manager"
 	}
 	[[ ! -e ${HOME}/.tumx.conf && ! -L ${HOME}/.tmux.conf ]] && {
-		ln -sf "$ATLAS_ROOT/settings/tmux.conf" "$HOME"
-		echo "installed tmux config"
+		ln -sf "$ATLAS_ROOT/settings/tmux.conf" "$HOME/.tmux.conf";
+		echo "installed tmux config";
 	}
 }
