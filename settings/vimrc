@@ -74,7 +74,8 @@ call plug#begin('~/.vim/plugged')
 	Plug 'tpope/vim-scriptease'
 	Plug 'tpope/vim-surround'
 	Plug 'tpope/vim-unimpaired'
-	Plug 'mhartington/oceanic-next'
+	Plug 'arcticicestudio/nord-vim'
+	"Plug 'mhartington/oceanic-next'
 	Plug 'othree/yajs'
 	Plug 'easymotion/vim-easymotion'
 	Plug 'scrooloose/nerdtree'
@@ -128,7 +129,7 @@ set tabstop=4
 set shiftwidth=4
 let g:oceanic_next_terminal_bold = 1
 let g:oceanic_next_terminal_italic = 1
-colorscheme OceanicNext
+colorscheme nord
 
 " Clear highlighting on escape in normal mode
 nnoremap <esc> :noh<return><esc>
@@ -179,7 +180,7 @@ noremap <left> <C-w><left>
 noremap <right> <C-w><right>
 
 set number
-"set relativenumber
+set relativenumber
 
 " easy navigation between splits to save a keystroke. So instead of ctrl-w then j, it’s just ctrl-j
 nnoremap <C-J> <C-W><C-J>

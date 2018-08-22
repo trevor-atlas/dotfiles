@@ -39,11 +39,11 @@ install_vim() {
 }
 
 install_tmux() {
-	[[ ! -d ${HOME}/.tumx/ ]] && {
+	[[ ! -d ${HOME}/.tmux/plugins ]] && {
 		git clone https://github.com/tmux-plugins/tpm ${HOME}/.tmux/plugins/tpm;
 		echo "installed tmux plugin manager"
 	}
-	[[ ! -e ${HOME}/.tumx.conf && ! -L ${HOME}/.tmux.conf ]] && {
+	[[ ! -e ${HOME}/.tmux.conf && ! -L ${HOME}/.tmux.conf ]] && {
 		ln -sf "$ATLAS_ROOT/settings/tmux.conf" "$HOME/.tmux.conf";
 		echo "installed tmux config";
 	}
