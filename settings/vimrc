@@ -27,7 +27,6 @@ nnoremap <Leader>; m`A;<Esc>``
 
 nnoremap H ^
 nnoremap L $
-nnoremap ; :
 
 nmap <Leader>s :write<Enter>
 nmap <Leader>r :redraw!<Enter>
