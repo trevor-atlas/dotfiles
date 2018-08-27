@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo "add this to the .gitconfig\n\
+[pager]\n\
+       diff = diff-so-fancy | less --tabs=1,5 -RFX\n\
+       show = diff-so-fancy | less --tabs=1,5 -RFX"

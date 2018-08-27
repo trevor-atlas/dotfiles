@@ -10,10 +10,15 @@ alias githistory='git for-each-ref --count=10 --sort=-committerdate refs/heads/ 
 alias git=hub
 alias pulls='hub browse -- pulls'
 alias issues='hub browse -- issues'
-alias cat=ccat
+alias cat=bat
+alias ping="$ATLAS_ROOT/prettyping --nolegend"
 alias nodescripts="jq '.scripts' package.json"
 alias htop=gtop
 alias worklog=nvim "$ATLAS_STORAGE_DIR/notepad/work/worklog.md"
+alias preview="fzf --preview 'bat --color \"always\" {}'"
+# add support for ctrl+o to open selected file in VS Code
+export FZF_DEFAULT_OPTS="--bind='ctrl-o:execute(code {})+abort'"
+alias help='tldr'
 
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew, npm, and their installed packages
 alias update='sudo softwareupdate -i -a;\

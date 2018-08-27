@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+source "$ATLAS_ROOT"/source/install_helpers
+determine_os ATLAS_OS
+export ATLAS_OS
+
+
+if [[ "$ATLAS_OS" = "mac" ]]; then
+	echo "Installing MacOS preferences and apps."
+	./macos
+	./postinstall
+elif [[ "$ATLAS_OS" = "linux" ]]; then
+	echo "Installing Linux preferences and apps."
+	./nix
+	./postinstall
+else
+	echo "could not determine a supported OS. halting install."
+fi

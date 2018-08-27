@@ -15,6 +15,23 @@ install_dotfiles_once() {
 	mkdir -p "$HOME/go"
 }
 
+determine_os() {
+	unameOut="$(uname -s)"
+	case "${unameOut}" in
+		Linux*)     machine=linux;;
+		Darwin*)    machine=mac;;
+		CYGWIN*)    machine=cygwin;;
+		MINGW*)     machine=mingw;;
+		*)          machine="UNKNOWN:${unameOut}"
+	esac
+	local __resultvar=$1
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'${machine}'"
+	else
+		echo "$machine"
+	fi
+}
+
 # update this project with local system changes
 atlas_update_from_local() {
 	# update spectacle config
