@@ -65,13 +65,3 @@ install_tmux() {
 		echo "installed tmux config";
 	}
 }
-
-install_emacs() {
-	[[ ! -d ${HOME}/.emacs.d ]] && {
-		mkdir -p ${HOME}/.emacs.d
-	}
-	[[ ! -e ${HOME}/.emacs && ! -L ${HOME}/.emacs ]] && {
-		ln -sf "$ATLAS_ROOT/settings/emacs" "$HOME/.emacs";
-		echo "installed emacs config";
-	}
-}
