@@ -18,3 +18,4 @@ done
 install_nvim
 install_vim
 install_tmux
+install_emacs
