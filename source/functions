@@ -24,7 +24,7 @@ nn() {
     note_name="$note_date.$note_ext"
   fi
   mkdir -p $ATLAS_NOTES_DIR
-  emacs "$ATLAS_NOTES_DIR/$note_name"
+  ec "$ATLAS_NOTES_DIR/$note_name"
 }
 
 ns() {

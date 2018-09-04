@@ -2,6 +2,7 @@
 
 # Set personal aliases
 alias emacs='open -a /Applications/Emacs.app $1'
+alias ec='/Applications/Emacs.app/Contents/MacOS/bin/emacsclient'
 alias zshconfig="code $HOME/.zshrc"
 alias ohmyzsh="code $HOME/.oh-my-zsh"
 alias editconfig="code $ATLAS_ROOT"
