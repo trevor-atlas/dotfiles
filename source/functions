@@ -1,5 +1,58 @@
 #!/usr/bin/env bash
 
+edit_file() {
+	previous_file="$1"
+	file_to_edit=`select_file $previous_file`
+
+	if [ -n "$file_to_edit" ] ; then
+		"$EDITOR" "$file_to_edit"
+		edit_file "$file_to_edit"
+	fi
+}
+
+select_file() {
+	given_file="$1"
+	fzf --preview="cat {}" --preview-window=right:70%:wrap --query="$given_file"
+}
+
+notes() {
+	cd "$ATLAS_NOTES_DIR"
+	edit_file ""
+}
+
+export NOTESDIR="$ATLAS_NOTES_DIR"
+
+nn() {
+  local note_name="$*"
+  local note_date="`date +%F`"
+  local note_ext="md"
+  if [[ $note_name == "" ]]
+  then
+    note_name="$note_date.$note_ext"
+  fi
+  mkdir -p $NOTESDIR
+  vim -c 'startinsert' "$NOTESDIR/$note_name"
+}
+
+ns() {
+  local file
+  [ -z "$1" ] && echo "No argument supplied - Enter a term to search" && return 1
+  file="$(rg --files-with-matches --no-ignore --ignore-case --hidden --no-heading --no-messages $1 $NOTESDIR | fzf --preview "head -100 {}")"
+  if [[ -n $file ]]
+  then
+    vim $file
+  fi
+}
+
+nl() {
+  local files
+  files="$(rg --files $NOTESDIR | fzf --preview "head -100 {}")"
+  if [[ -n $files ]]; then
+    vim $files
+  fi
+}
+
+
 # Create a new directory and enter it
 mkd() {
 	mkdir -p "$@" && cd "$_";
