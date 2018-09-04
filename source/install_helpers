@@ -65,3 +65,10 @@ install_tmux() {
 		echo "installed tmux config";
 	}
 }
+
+install_spacemacs_preferences() {
+	[[ ! -e ${HOME}/.vimrc && ! -L ${HOME}/.vimrc ]] && {
+		ln -sf "$ATLAS_ROOT/settings/.spacemacs" "$HOME/.spacemacs";
+		echo "installed spacemacs config";
+	}
+}
