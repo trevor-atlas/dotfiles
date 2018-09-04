@@ -9,11 +9,12 @@ export ATLAS_SCREENSHOT_DIR="$ATLAS_STORAGE_DIR/Screenshots"
 export ATLAS_PROJECTS_DIR="$HOME/projects"
 export EDITOR=v
 
-for file in ${ATLAS_ROOT}/source/*; do
-	[[ -f "$file" ]] && source "$file"
-done
+source ${ATLAS_ROOT}/source/install_helpers
+source ${ATLAS_ROOT}/source/alias
+source ${ATLAS_ROOT}/source/functions
 
 # init vim and tmux config if they don't exist
 install_nvim
 install_vim
 install_tmux
+install_spacemacs_preferences

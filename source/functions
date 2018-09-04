@@ -15,29 +15,22 @@ select_file() {
 	fzf --preview="cat {}" --preview-window=right:70%:wrap --query="$given_file"
 }
 
-notes() {
-	cd "$ATLAS_NOTES_DIR"
-	edit_file ""
-}
-
-export NOTESDIR="$ATLAS_NOTES_DIR"
-
 nn() {
   local note_name="$*"
   local note_date="`date +%F`"
-  local note_ext="md"
+  local note_ext="org"
   if [[ $note_name == "" ]]
   then
     note_name="$note_date.$note_ext"
   fi
-  mkdir -p $NOTESDIR
-  vim -c 'startinsert' "$NOTESDIR/$note_name"
+  mkdir -p $ATLAS_NOTES_DIR
+  emacs "$ATLAS_NOTES_DIR/$note_name"
 }
 
 ns() {
   local file
   [ -z "$1" ] && echo "No argument supplied - Enter a term to search" && return 1
-  file="$(rg --files-with-matches --no-ignore --ignore-case --hidden --no-heading --no-messages $1 $NOTESDIR | fzf --preview "head -100 {}")"
+  file="$(rg --files-with-matches --no-ignore --ignore-case --hidden --no-heading --no-messages $1 $ATLAS_NOTES_DIR | fzf --preview "head -100 {}")"
   if [[ -n $file ]]
   then
     vim $file
@@ -46,7 +39,7 @@ ns() {
 
 nl() {
   local files
-  files="$(rg --files $NOTESDIR | fzf --preview "head -100 {}")"
+  files="$(rg --files $ATLAS_NOTES_DIR | fzf --preview "head -100 {}")"
   if [[ -n $files ]]; then
     vim $files
   fi
