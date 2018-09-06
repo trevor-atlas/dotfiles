@@ -135,7 +135,7 @@ values."
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font, or prioritized list of fonts. `powerline-scale' allows to
    ;; quickly tweak the mode-line size to make separators look not too crappy.
-   dotspacemacs-default-font '("Source Code Pro"
+   dotspacemacs-default-font '("Fira Code"
                                :size 13
                                :weight normal
                                :width normal
@@ -314,6 +314,18 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
+
+  (setq org-capture-templates
+      '(("t" "Task" entry (file "~/org/inbox.org")
+         "* TODO %?\n")
+        ("d" "Review: Daily Review" entry (file+olp+datetree "/tmp/reviews.org")
+         (file "~/Dropbox/notes/org-templates/daily-review.org"))
+        ("w" "Review: Weekly Review" entry (file+olp+datetree "/tmp/reviews.org")
+         (file "~/Dropbox/notes/org-templates/weekly-review.org"))
+        ("m" "Review: Monthly Review" entry (file+olp+datetree "/tmp/reviews.org")
+         (file "~/Dropbox/notes/org-templates/monthly-review.org"))
+        ("j" "Journal" entry (file+datetree "~/Dropbox/notes/journal/journal.org")
+         "* %?")))
   )
 
 ;; Do not write anything past this comment. This is where Emacs will

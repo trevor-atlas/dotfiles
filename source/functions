@@ -164,3 +164,15 @@ umls() { ls ${ATLAS_DEV_DIR} }
 banner() {
 	figlet -f banner "$1" | sed -e "s/#/:${2}:/g" | sed -e 's/ /:blank:/g' | pbcopy
 }
+
+webpage_to_org() {
+	if [[ -z $1 ]]; then
+		echo "must provide a website"
+		return 1
+	fi
+	if [[ -z $2 ]]; then
+		echo "must provide a output filename (without extension)"
+		return 1
+	fi
+	curl -sL ${1} | pandoc -o ${2}.org --from=html --to=org
+}
