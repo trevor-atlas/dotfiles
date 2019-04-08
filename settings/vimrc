@@ -49,6 +49,9 @@ set hidden
 " Copy the relative path of the current file to the clipboard
 nmap <Leader>cf :silent !echo -n % \| pbcopy<Enter>
 
+map <Leader>j :bn<cr>
+map <Leader>k :bp<cr>
+
 " ================ Turn Off Swap Files ==============
 set noswapfile
 set nobackup
@@ -74,8 +77,8 @@ endif
 
 call plug#begin('~/.vim/plugged')
 	Plug 'christoomey/vim-tmux-navigator'
-	Plug 'editorconfig/editorconfig-vim'
-	Plug 'kien/ctrlp.vim'
+	Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+	Plug 'junegunn/fzf.vim'
 	Plug 'wincent/terminus'
 	Plug 'Quramy/vim-js-pretty-template'
 	Plug 'tpope/vim-scriptease'
@@ -83,7 +86,6 @@ call plug#begin('~/.vim/plugged')
 	Plug 'tpope/vim-unimpaired'
 	Plug 'arcticicestudio/nord-vim'
 	Plug 'itchyny/lightline.vim'
-	Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 	Plug 'tpope/vim-sensible'
 	Plug 'othree/yajs'
 	Plug 'easymotion/vim-easymotion'
@@ -100,6 +102,7 @@ call plug#begin('~/.vim/plugged')
 	Plug 'HerringtonDarkholme/yats'
 	Plug 'zchee/deoplete-go', { 'do': 'make'}
 	Plug 'mhartington/nvim-typescript', { 'do': './install.sh' }
+	Plug 'neoclide/coc.nvim', {'do': { -> coc#util#install()}}
 	if has('nvim')
 		Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 	else
@@ -149,14 +152,36 @@ nnoremap <esc> :noh<return><esc>
 nnoremap <esc>^[ <esc>^[
 
 " ctrlp
-let g:ctrlp_map = '<c-p>'
-let g:ctrlp_cmd = 'CtrlP'
-let g:ctrlp_show_hidden = 1
-set wildignore+=*/.git/*,*/tmp/*,*.swp
-if executable('rg')
-  let g:ctrlp_user_command = 'rg %s --files --color=never --glob ""'
-  let g:ctrlp_use_caching = 0
-endif
+"let g:ctrlp_map = '<c-p>'
+"let g:ctrlp_cmd = 'CtrlP'
+"let g:ctrlp_show_hidden = 1
+"set wildignore+=*/.git/*,*/tmp/*,*.swp
+"if executable('rg')
+  "let g:ctrlp_user_command = 'rg %s --files --color=never --glob ""'
+  "let g:ctrlp_use_caching = 0
+"endif
+
+
+" fzf
+let g:fzf_action = {
+  \ 'ctrl-t': 'tab split',
+  \ 'ctrl-x': 'split',
+  \ 'ctrl-v': 'vsplit' }
+
+" Default fzf layout
+" - down / up / left / right
+let g:fzf_layout = { 'down': '~40%' }
+
+" In Neovim, you can set up fzf window using a Vim command
+let g:fzf_layout = { 'window': 'enew' }
+let g:fzf_layout = { 'window': '-tabnew' }
+let g:fzf_layout = { 'window': '10split' }
+
+" Enable per-command history.
+" CTRL-N and CTRL-P will be automatically bound to next-history and
+" previous-history instead of down and up. If you don't like the change,
+" explicitly bind the keys to down and up in your $FZF_DEFAULT_OPTS.
+let g:fzf_history_dir = '~/.local/share/fzf-history'
 
 " autocomplete
 " if !exists("g:ycm_semantic_triggers")
@@ -171,6 +196,7 @@ autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 map <C-e> :NERDTreeToggle<CR>
 let g:NERDTreeDirArrowExpandable = '▸'
 let g:NERDTreeDirArrowCollapsible = '▾'
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 " Automatically close NerdTree when you open a file:
 let NERDTreeQuitOnOpen = 1
@@ -178,9 +204,16 @@ let NERDTreeQuitOnOpen = 1
 let NERDTreeAutoDeleteBuffer = 1
 let NERDTreeMinimalUI = 1
 let NERDTreeDirArrows = 1
+let NERDTreeShowHidden=1
 
 let g:better_whitespace_enabled = 0 " Dont' highlight whitespace in red
 let g:strip_whitespace_on_save = 1
+
+" ctrl-p search for files
+nnoremap <C-p> :Files<Cr>
+
+" ctrl-g search in file content
+nnoremap <C-g> :Rg<Cr>
 
 " remapping
 nnoremap j gj
@@ -222,7 +255,7 @@ set splitright
 
 " show trailing whitespace
 " set listchars=tab:·,trail:·
-:set listchars=tab:➝\ ,trail:~
+set listchars=tab:➝\ ,trail:~
 set list
 
 " make line joins more sane
