@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Set personal aliases
-alias emacs='open -a /Applications/Emacs.app $1'
+#alias emacs='open -a /Applications/Emacs.app $1'
 alias ec='/Applications/Emacs.app/Contents/MacOS/bin/emacsclient'
 alias zshconfig="code $HOME/.zshrc"
 alias ohmyzsh="code $HOME/.oh-my-zsh"
@@ -35,6 +35,4 @@ sudo gem update --system;'
 alias stfu="osascript -e 'set volume output muted true'"
 alias pumpitup="osascript -e 'set volume output volume 100'"
 
-# aquicore stuff
-alias killplay="kill `jps -v | grep framework/play-1. | cut -f1 -d \" \"`"
-alias runAQ='play run -Djobs.run=false -Duser.timezone=UTC'
+alias neofetch='neofetch --ascii ~/.config/atlas/shrek --ascii_colors 2 5 6 1'

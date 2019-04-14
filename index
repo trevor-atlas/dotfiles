@@ -17,4 +17,4 @@ source ${ATLAS_ROOT}/source/functions
 install_nvim
 install_vim
 install_tmux
-install_spacemacs_preferences
+#install_spacemacs_preferences
