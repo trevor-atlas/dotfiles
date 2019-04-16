@@ -14,10 +14,13 @@ brew install coreutils
 
 # Install some other useful utilities like `sponge`.
 brew install moreutils
+
 # Install GNU `find`, `locate`, `updatedb`, and `xargs`, `g`-prefixed.
 brew install findutils
+
 # Install GNU `sed`, overwriting the built-in `sed`.
 brew install gnu-sed --with-default-names
+
 # Install `wget` with IRI support.
 brew install wget --with-iri
 
@@ -65,18 +68,15 @@ brew install z
 brew cask install alfred
 brew cask install bartender
 brew cask install betterzipql
-brew cask install brave
 brew cask install docker
 brew cask install dropbox
 brew cask install firefox
-brew cask install flux
 brew cask install font-fira-code
 brew cask install font-hack-nerd-font
-brew cask install github
 brew cask install google-chrome
-brew cask install intellij-idea-ce
 brew cask install iterm2
-brew cask install macvim
+brew cask install alacritty
+brew cask install vimr
 brew cask install ngrok
 brew cask install postman
 brew cask install psequel
