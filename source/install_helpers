@@ -72,3 +72,19 @@ install_spacemacs_preferences() {
 		echo "installed spacemacs config";
 	}
 }
+
+install_i3_preferences() {
+	determine_os OS;
+	[[ "$OS" -eq "linux" && ! -e ${HOME}/.i3 && ! -L ${HOME}/.i3 ]] && {
+		ln -sf "$ATLAS_ROOT/.i3" "$HOME/.i3";
+		echo "installed i3 config";
+	}
+}
+
+install_i3blocks_preferences() {
+	determine_os OS;
+	[[ "$OS" -eq "linux" && ! -e ${HOME}/i3blocks && ! -L ${HOME}/i3blocks ]] && {
+		ln -sf "$ATLAS_ROOT/i3blocks" "$HOME/i3blocks";
+		echo "installed i3blocks config";
+	}
+}
