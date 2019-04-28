@@ -19,4 +19,4 @@ install_vim
 install_tmux
 install_i3_preferences
 install_i3blocks_preferences
-#install_spacemacs_preferences
+install_spacemacs_preferences
