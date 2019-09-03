@@ -7,7 +7,6 @@ export ATLAS_MEDIA_DIR="$ATLAS_STORAGE_DIR/media"
 export ATLAS_BLOG_DIR="$ATLAS_STORAGE_DIR/Trevor\’s\ blog"
 export ATLAS_SCREENSHOT_DIR="$ATLAS_STORAGE_DIR/Screenshots"
 export ATLAS_PROJECTS_DIR="$HOME/projects"
-export EDITOR=v
 
 source ${ATLAS_ROOT}/source/install_helpers
 source ${ATLAS_ROOT}/source/alias
