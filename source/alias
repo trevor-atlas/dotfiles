@@ -35,4 +35,4 @@ sudo gem update --system;'
 alias stfu="osascript -e 'set volume output muted true'"
 alias pumpitup="osascript -e 'set volume output volume 100'"
 
-alias neofetch='neofetch --ascii ~/.config/atlas/shrek --ascii_colors 2 5 6 1'
+alias neofetch='neofetch --ascii ~/.config/atlas/ascii/shrek --ascii_colors 2 5 6 1'
