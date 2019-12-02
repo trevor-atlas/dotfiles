@@ -36,8 +36,8 @@ determine_os() {
 atlas_update_from_local() {
 	# update spectacle config
 	[[ ! -f ${HOME}/Library/Application\ Support/Spectacle ]] && {
-		rm "$ATLAS_ROOT/settings/spectacle-app.json";
-		cp "$HOME/Library/Application\ Support/Spectacle/Shortcuts.json" ./settings/spectacle-app.json;
+		rm "$ATLAS_ROOT/settings/Shortcuts.json";
+		cp "$HOME/Library/Application\ Support/Spectacle/Shortcuts.json" "$ATLAS_ROOT/settings/";
 	}
 }
 
