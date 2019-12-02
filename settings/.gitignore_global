@@ -1,0 +1,11 @@
+## Configuration
+# git config --global core.excludesfile ~/.gitignore_global
+
+# UndoTree
+*.un~
+
+# OSX
+.DS_Store
+
+# Vor
+.vor

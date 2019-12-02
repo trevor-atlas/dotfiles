@@ -1,0 +1,47 @@
+[color]
+	ui = true
+[user]
+	email = me@trevoratlas.com
+	name = Trevor Atlas
+[github]
+	user = trevor-atlas
+[format]
+	pretty = format:%C(blue)%ad%Creset %C(yellow)%h%C(green)%d%Creset %C(blue)%s %C(magenta) [%an]%Creset
+[branch]
+	autosetuprebase = always
+	autosetupmerge = true
+[merge]
+	summary = true
+	verbosity = 1
+	tool = vimdiff
+[mergetool]
+	keepBackup = false
+	prompt = false
+[apply]
+	whitespace = nowarn
+[push]
+	# 'git push' will push the current branch to its tracking branch
+	# the usual default is to push all branches
+	default = tracking
+[core]
+	autocrlf = false
+	ignorecase = true
+	editor = vim
+	excludesfile = ~/.gitignore_global
+	pager = diff-so-fancy | less --tabs=4 -RFX
+[color "diff-highlight"]
+	oldNormal = red bold
+	oldHighlight = red bold 52
+	newNormal = green bold
+	newHighlight = green bold 22
+[color "diff"]
+	meta = yellow
+	frag = magenta bold
+	commit = yellow bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse
+[diff-so-fancy]
+	markEmptyLines = false
+	changeHunkIndicators = false
+	stripLeadingSymbols = false

@@ -1,16 +1,33 @@
 #!/usr/bin/env bash
 
+# ATLAS_ROOT is the base of this project and provides a safe entry point for other scripts
 export ATLAS_ROOT="$HOME/.config/atlas"
 export ATLAS_STORAGE_DIR="$HOME/Dropbox"
 export ATLAS_NOTES_DIR="$ATLAS_STORAGE_DIR/notes"
 export ATLAS_MEDIA_DIR="$ATLAS_STORAGE_DIR/media"
-export ATLAS_BLOG_DIR="$ATLAS_STORAGE_DIR/Trevor\’s\ blog"
 export ATLAS_SCREENSHOT_DIR="$ATLAS_STORAGE_DIR/Screenshots"
 export ATLAS_PROJECTS_DIR="$HOME/projects"
 
-source ${ATLAS_ROOT}/source/install_helpers
-source ${ATLAS_ROOT}/source/alias
-source ${ATLAS_ROOT}/source/functions
+# VIRTUAL_ENV_NAME  -- basename for VIRTUAL_ENV
+export VIRTUAL_ENV_NAME="dotfiles"
+
+# VIRTUAL_ENV       -- current virtualenv path         [virtualenv]
+export VIRTUAL_ENV="${ATLAS_HOME}/${VIRTUAL_ENV_NAME}"
+cd $VIRTUAL_ENV               # cdv cdvirtualenv [venv, virtualenvwrapper]
+
+# _SRC              -- basepath of source repositories (e.g. for pip)
+_SRC="${VIRTUAL_ENV}/src"
+cd $_SRC                      # cdsrc cds                    [venv]
+
+# _APP              -- basename of current working directory [venv]
+_APP="dotfiles"
+
+source "$ATLAS_ROOT/source/install_helpers"
+source "$ATLAS_ROOT/source/alias"
+source "$ATLAS_ROOT/source/functions"
+
+# Above sources are order dependent at the moment so we don't use a loop.
+# for f in "$ATLAS_ROOT/source*"; do source $f; done;
 
 # init vim and tmux config if they don't exist
 install_nvim
