@@ -3,3 +3,5 @@ autoload
 node_modules
 lib.pyc
 __pycache__
+pyenv
+venv
