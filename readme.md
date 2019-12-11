@@ -1,8 +1,12 @@
 # My XDG compliant dotfiles
 
-### install with this command:
+## Install
+
+### oh-my-zsh
+`sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"`
+
+### dotfiles
 ```
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" &&\
 git clone https://github.com/trevor-atlas/config ~/.config/atlas &&\
 echo "source $HOME/.config/atlas/index" >> .zshrc &&\
 source "$HOME/.zshrc" &&\

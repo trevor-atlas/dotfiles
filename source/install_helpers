@@ -13,6 +13,7 @@ install_dotfiles_once() {
 	touch "$HOME/.hushlogin"
 	mkdir -p "$HOME/projects"
 	mkdir -p "$HOME/go"
+	mkdir -p "$HOME/.config/nvim"
 }
 
 determine_os() {
