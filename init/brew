@@ -46,7 +46,7 @@ brew install heroku
 brew install htop
 brew install httpie
 brew install hub
-brew install imagemagick --with-webp
+brew install imagemagick
 brew install neovim
 brew install nvm
 brew install noti
@@ -63,6 +63,9 @@ brew install watchman
 brew install xz
 brew install yarn
 brew install z
+
+brew install zsh-syntax-highlighting
+echo "source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> "$HOME/.zshrc"
 
 
 # install casks (desktop applications)
