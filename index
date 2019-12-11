@@ -8,20 +8,6 @@ export ATLAS_MEDIA_DIR="$ATLAS_STORAGE_DIR/media"
 export ATLAS_SCREENSHOT_DIR="$ATLAS_STORAGE_DIR/Screenshots"
 export ATLAS_PROJECTS_DIR="$HOME/projects"
 
-# VIRTUAL_ENV_NAME  -- basename for VIRTUAL_ENV
-export VIRTUAL_ENV_NAME="dotfiles"
-
-# VIRTUAL_ENV       -- current virtualenv path         [virtualenv]
-export VIRTUAL_ENV="${ATLAS_HOME}/${VIRTUAL_ENV_NAME}"
-cd $VIRTUAL_ENV               # cdv cdvirtualenv [venv, virtualenvwrapper]
-
-# _SRC              -- basepath of source repositories (e.g. for pip)
-_SRC="${VIRTUAL_ENV}/src"
-cd $_SRC                      # cdsrc cds                    [venv]
-
-# _APP              -- basename of current working directory [venv]
-_APP="dotfiles"
-
 source "$ATLAS_ROOT/source/install_helpers"
 source "$ATLAS_ROOT/source/alias"
 source "$ATLAS_ROOT/source/functions"

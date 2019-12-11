@@ -43,14 +43,14 @@ atlas_update_from_local() {
 
 install_nvim() {
 	[[ ! -e ${HOME}/.config/nvim/init.vim && ! -L ${HOME}/.config/nvim/init.vim ]] && {
-		ln -sf "$ATLAS_ROOT/settings/vimrc" "$HOME/.config/nvim/init.vim";
+		ln -sf "$ATLAS_ROOT/settings/.vimrc" "$HOME/.config/nvim/init.vim";
 		echo "installed nvim config";
 	}
 }
 
 install_vim() {
 	[[ ! -e ${HOME}/.vimrc && ! -L ${HOME}/.vimrc ]] && {
-		ln -sf "$ATLAS_ROOT/settings/vimrc" "$HOME/.vimrc";
+		ln -sf "$ATLAS_ROOT/settings/.vimrc" "$HOME/.vimrc";
 		echo "installed vim config";
 	}
 }
@@ -61,7 +61,7 @@ install_tmux() {
 		echo "installed tmux plugin manager"
 	}
 	[[ ! -e ${HOME}/.tmux.conf && ! -L ${HOME}/.tmux.conf ]] && {
-		ln -sf "$ATLAS_ROOT/settings/tmux.conf" "$HOME/.tmux.conf";
+		ln -sf "$ATLAS_ROOT/settings/.tmux.conf" "$HOME/.tmux.conf";
 		echo "installed tmux config";
 	}
 }

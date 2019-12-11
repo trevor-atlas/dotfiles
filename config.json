@@ -1,0 +1,35 @@
+[
+	{
+		"name": ".gitconfig",
+		"dest": "@HOME"
+	},
+	{
+		"name": ".gitignore_global",
+		"dest": "@HOME"
+	},
+	{
+		"name": ".spacemacs",
+		"dest": "@HOME"
+	},
+	{
+		"name": ".tmux.conf",
+		"mkdir": "@HOME/.tmux",
+		"dest": "@HOME",
+		"cmd": "git clone https://github.com/tmux-plugins/tpm @HOME/.tmux/plugins/tpm"
+	},
+	{
+		"name": ".vimrc",
+		"dest": "@HOME"
+	},
+	{
+		"name": ".vimrc",
+		"mkdir": "@XDG_HOME/nvim",
+		"dest": "@XDG_HOME/nvim",
+		"as": "init.vim"
+	},
+	{
+		"name": "alacritty.yml",
+		"mkdir": "@XDG_HOME/alacritty",
+		"dest": "@XDG_HOME/alacritty"
+	}
+]

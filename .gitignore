@@ -1,3 +1,5 @@
 autoload
 .DS_Store
 node_modules
+lib.pyc
+__pycache__

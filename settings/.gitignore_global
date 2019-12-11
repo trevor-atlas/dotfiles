@@ -9,3 +9,9 @@
 
 # Vor
 .vor
+
+# Python
+__pycache__
+
+# Jetbrains
+.idea
