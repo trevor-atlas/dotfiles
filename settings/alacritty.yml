@@ -356,10 +356,14 @@ live_config_reload: true
 # Default:
 #   - (Linux/macOS) /bin/bash --login
 #   - (Windows) powershell
-#shell:
-#  program: /bin/bash
-#  args:
-#    - --login
+shell:
+  program: /usr/local/bin/zsh
+  args:
+    - --login
+  program: /usr/local/bin/tmux
+  args:
+   - -u # force UTF-8 in tmux
+
 
 # Windows 10 ConPTY backend (Windows only)
 #
@@ -486,7 +490,7 @@ key_bindings:
 
   - { key: Paste,                   action: Paste                            }
   - { key: Copy,                    action: Copy                             }
-  - { key: L,        mods: Control, action: ClearLogNotice                   }
+    #- { key: L,        mods: Control, action: ClearLogNotice                   }
   - { key: L,        mods: Control, chars: "\x0c"                            }
   - { key: Home,     mods: Alt,     chars: "\x1b[1;3H"                       }
   - { key: Home,                    chars: "\x1bOH",        mode: AppCursor  }
