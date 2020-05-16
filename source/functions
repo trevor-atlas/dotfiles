@@ -97,7 +97,7 @@ json() {
 # given location
 v() {
 	if [ $# -eq 0 ]; then
-		nvim .;
+		nvim;
 	else
 		nvim "$@";
 	fi;
@@ -182,4 +182,47 @@ tag() {
     git fetch --tags
     git tag -a "$1" -m "Release $1"
     git push origin "$1" --tag
+}
+
+unbool() {
+	tmux kill-server
+}
+
+bool() {
+	SESSION_NAME="Bool"
+	tmux has-session -t $SESSION_NAME 2>/dev/null
+
+	if [[ $? != 0 ]]; then
+		# Start New Session with our name
+		tmux new-session -t "$SESSION_NAME" -d
+
+		# Name first Window and start zsh
+		tmux rename-window -t 1 'Main'
+
+		# Create and setup pane for work
+		WINDOW_WORK="Work"
+		tmux new-window -t "$SESSION_NAME":2 -n "$WINDOW_WORK"
+		tmux send-keys -t "$WINDOW_WORK" "cd ~/projects/aquicore" C-m
+
+		# Create and setup pane for projects
+		WINDOW_PROJECTS="Projects"
+		tmux new-window -t "$SESSION_NAME":3 -n "$WINDOW_PROJECTS"
+		tmux send-keys -t "$WINDOW_PROJECTS" "cd ~/projects" C-m
+
+		WINDOW_MISC="Misc"
+		tmux new-window -t "$SESSION_NAME":4 -n "$WINDOW_MISC"
+	fi
+
+	# Attach Session, on the Main window
+	tmux a -t "$SESSION_NAME"
+}
+
+convert_gifs() {
+	for i in *.gif;
+		do convert_gif $i;
+	done
+}
+
+convert_gif() {
+	ffmpeg -f gif -i "$1" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4";
 }
