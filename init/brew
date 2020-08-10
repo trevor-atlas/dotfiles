@@ -98,7 +98,7 @@ brew cask install quicklook-json
 brew cask install quicklookase
 brew cask install react-native-debugger
 brew cask install slack
-brew cask install spectacle
+brew cask install rectangle
 brew cask install spotify
 brew cask install suspicious-package
 brew cask install visual-studio-code

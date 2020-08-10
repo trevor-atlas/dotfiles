@@ -97,9 +97,9 @@ json() {
 # given location
 v() {
 	if [ $# -eq 0 ]; then
-		nvim;
+		$EDITOR;
 	else
-		nvim "$@";
+		$EDITOR "$@";
 	fi;
 }
 
@@ -197,20 +197,26 @@ bool() {
 		tmux new-session -t "$SESSION_NAME" -d
 
 		# Name first Window and start zsh
-		tmux rename-window -t 1 'Main'
+		tmux rename-window -t 1 '🔥'
 
 		# Create and setup pane for work
-		WINDOW_WORK="Work"
+		WINDOW_WORK='🟣'
 		tmux new-window -t "$SESSION_NAME":2 -n "$WINDOW_WORK"
-		tmux send-keys -t "$WINDOW_WORK" "cd ~/projects/aquicore" C-m
+		tmux send-keys -t "$WINDOW_WORK" "cd ~/projects/ifit" C-m
+		# Create and setup pane for work
+		WINDOW_WORK2='🟪'
+		tmux new-window -t "$SESSION_NAME":3 -n "$WINDOW_WORK2"
+		tmux send-keys -t "$WINDOW_WORK2" "cd ~/projects/ifit" C-m
 
 		# Create and setup pane for projects
-		WINDOW_PROJECTS="Projects"
-		tmux new-window -t "$SESSION_NAME":3 -n "$WINDOW_PROJECTS"
+		WINDOW_PROJECTS='🟠'
+		tmux new-window -t "$SESSION_NAME":4 -n "$WINDOW_PROJECTS"
 		tmux send-keys -t "$WINDOW_PROJECTS" "cd ~/projects" C-m
 
-		WINDOW_MISC="Misc"
-		tmux new-window -t "$SESSION_NAME":4 -n "$WINDOW_MISC"
+		# Create and setup pane for projects
+		WINDOW_PROJECTS2='🔶'
+		tmux new-window -t "$SESSION_NAME":5 -n "$WINDOW_PROJECTS2"
+		tmux send-keys -t "$WINDOW_PROJECTS2" "cd ~/projects" C-m
 	fi
 
 	# Attach Session, on the Main window
@@ -225,4 +231,37 @@ convert_gifs() {
 
 convert_gif() {
 	ffmpeg -f gif -i "$1" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4";
+}
+
+checkNVM() {
+     if [[ -f .nvmrc  ]] ; then
+         A=$(cat .nvmrc)
+         A="v$A"
+         B=$(nvm current 2>&1)
+         # only get B equal to length of A
+         B=${B:0:${#A}}
+         if [[ $A != $B  ]] ; then echo "nvm use $A" && nvm use > /dev/null ; fi;
+    fi;
+}
+
+checkNVM
+
+cd() {
+     builtin cd $@ ; checkNVM
+}
+
+colortest() {
+	awk 'BEGIN{
+		s="/\\/\\/\\/\\/\\"; s=s s s s s s s s s s s s s s s s s s s s s s s;
+		for (colnum = 0; colnum<256; colnum++) {
+			r = 255-(colnum*255/255);
+			g = (colnum*510/255);
+			b = (colnum*255/255);
+			if (g>255) g = 510-g;
+			printf "\033[48;2;%d;%d;%dm", r,g,b;
+			printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b;
+			printf "%s\033[0m", substr(s,colnum+1,1);
+		}
+		printf "\n";
+	}'
 }

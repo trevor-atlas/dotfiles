@@ -56,6 +56,14 @@ install_vim() {
 	}
 }
 
+install_alacritty() {
+	[[ ! -e ${HOME}/.config/alacritty/alacritty.yml && ! -L ${HOME}/.config/alacritty/alacritty.yml ]] && {
+		mkdir -p "$HOME/.config/alacritty";
+		ln -sf "$ATLAS_ROOT/settings/alacritty.yml" "$HOME/.config/alacritty/alacritty.yml";
+		echo "installed alacritty config";
+	}
+}
+
 install_tmux() {
 	[[ ! -d ${HOME}/.tmux/plugins ]] && {
 		git clone https://github.com/tmux-plugins/tpm ${HOME}/.tmux/plugins/tpm;

@@ -1,38 +1,39 @@
 #!/usr/bin/env bash
 
-# Set personal aliases
-#alias emacs='open -a /Applications/Emacs.app $1'
-alias ec='/Applications/Emacs.app/Contents/MacOS/bin/emacsclient'
 alias zshconfig="code $HOME/.zshrc"
-alias ohmyzsh="code $HOME/.oh-my-zsh"
 alias editconfig="code $ATLAS_ROOT"
 alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222"
 alias ls="exa -glam --group-directories-first"
 alias githistory='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
 alias git=hub
-alias pulls='hub browse -- pulls'
-alias issues='hub browse -- issues'
 alias cat=bat
 alias ping="$ATLAS_ROOT/prettyping --nolegend"
 alias nodescripts="jq '.scripts' package.json"
 alias htop=gtop
-alias worklog=nvim "$ATLAS_STORAGE_DIR/notepad/work/worklog.md"
 alias preview="fzf --preview 'bat --color \"always\" {}'"
+
 # add support for ctrl+o to open selected file in VS Code
 export FZF_DEFAULT_OPTS="--bind='ctrl-o:execute(code {})+abort'"
-alias help='tldr'
+alias help="tldr"
+
+# utf-8 support
+alias tmux='tmux -u'
 
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew, npm, and their installed packages
-alias update='sudo softwareupdate -i -a;\
+alias update="sudo softwareupdate -i -a;\
 brew update;\
 brew upgrade;\
 brew cleanup;\
 npm install npm -g;\
 npm update -g;\
-sudo gem update --system;'
+sudo gem update --system;"
 
 # Stuff I never really use but cannot delete either because of http://xkcd.com/530/
 alias stfu="osascript -e 'set volume output muted true'"
 alias pumpitup="osascript -e 'set volume output volume 100'"
 
-alias neofetch='neofetch --ascii ~/.config/atlas/ascii/shrek --ascii_colors 2 5 6 1'
+alias neofetch="neofetch --ascii ~/.config/atlas/ascii/shrek --ascii_colors 2 5 6 1"
+
+alias docker_ifit="docker run -d -p 27017-27019:27017-27019 --name mongodb mongo:3.4.9; docker run -d -p 6379:6379 --name ifit-redis redis:latest"
+alias ifit_redis="docker exec -it ifit-redis bash"
+alias ifit_mongo="docker exec -it mongodb bash"
