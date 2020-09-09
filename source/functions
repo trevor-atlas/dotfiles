@@ -197,24 +197,24 @@ bool() {
 		tmux new-session -t "$SESSION_NAME" -d
 
 		# Name first Window and start zsh
-		tmux rename-window -t 1 '🔥'
+		tmux rename-window -t 1 '✪'
 
 		# Create and setup pane for work
-		WINDOW_WORK='🟣'
+		WINDOW_WORK='♢'
 		tmux new-window -t "$SESSION_NAME":2 -n "$WINDOW_WORK"
 		tmux send-keys -t "$WINDOW_WORK" "cd ~/projects/ifit" C-m
 		# Create and setup pane for work
-		WINDOW_WORK2='🟪'
+		WINDOW_WORK2='♧'
 		tmux new-window -t "$SESSION_NAME":3 -n "$WINDOW_WORK2"
 		tmux send-keys -t "$WINDOW_WORK2" "cd ~/projects/ifit" C-m
 
 		# Create and setup pane for projects
-		WINDOW_PROJECTS='🟠'
+		WINDOW_PROJECTS='☃︎'
 		tmux new-window -t "$SESSION_NAME":4 -n "$WINDOW_PROJECTS"
 		tmux send-keys -t "$WINDOW_PROJECTS" "cd ~/projects" C-m
 
 		# Create and setup pane for projects
-		WINDOW_PROJECTS2='🔶'
+		WINDOW_PROJECTS2='❖'
 		tmux new-window -t "$SESSION_NAME":5 -n "$WINDOW_PROJECTS2"
 		tmux send-keys -t "$WINDOW_PROJECTS2" "cd ~/projects" C-m
 	fi
