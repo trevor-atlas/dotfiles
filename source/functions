@@ -189,7 +189,7 @@ unbool() {
 }
 
 bool() {
-	SESSION_NAME="Bool"
+	local SESSION_NAME="Bool"
 	tmux has-session -t $SESSION_NAME 2>/dev/null
 
 	if [[ $? != 0 ]]; then
@@ -264,4 +264,22 @@ colortest() {
 		}
 		printf "\n";
 	}'
+}
+
+dump_ifit_mongo() {
+    docker exec mongodb ~/.atlas/scripts/dump-mongo
+}
+
+rename_files() {
+	local old=$1
+	local new=$2
+	find . -name "*.$old" -exec bash -c 'mv "$1" "${1%.$old}".$new' - '{}' +
+}
+
+gpub() {
+	git push --set-upstream origin $(git_current_branch)
+}
+
+gcr() {
+	git checkout -t origin/"${@}"
 }
