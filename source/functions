@@ -223,6 +223,16 @@ bool() {
 	tmux a -t "$SESSION_NAME"
 }
 
+convert_aiffs() {
+	for i in *.aiff;
+		do convert_aiff $i;
+	done
+}
+
+convert_aiff() {
+	ffmpeg -y -i "$1" -c:a libvorbis -q:a 4 "_${1.*}.ogg";
+}
+
 convert_gifs() {
 	for i in *.gif;
 		do convert_gif $i;
