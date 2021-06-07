@@ -179,6 +179,10 @@ call plug#begin('~/.config/nvim/autoload/plugged')
 		Plug 'airblade/vim-rooter'
 		" Better Comments
 		Plug 'tpope/vim-commentary'
+		" highlight yanks
+		Plug 'machakann/vim-highlightedyank'
+		" better matching with %
+		Plug 'andymass/vim-matchup'
 		" Add some color
 		Plug 'norcalli/nvim-colorizer.lua'
 		Plug 'junegunn/rainbow_parentheses.vim'
@@ -250,6 +254,11 @@ nnoremap <esc>^[ <esc>^[
 
 nnoremap <space>/ :Commentary<CR>
 vnoremap <space>/ :Commentary<CR>
+
+" highlight yanks from 'machakann/vim-highlightedyank'
+if !exists('##TextYankPost')
+  map y <Plug>(highlightedyank)
+endif
 
 " fzf
 " This is the default extra key bindings
