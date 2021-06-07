@@ -230,7 +230,7 @@ convert_aiffs() {
 }
 
 convert_aiff() {
-	ffmpeg -y -i "$1" -c:a libvorbis -q:a 4 "_${1.*}.ogg";
+	ffmpeg -y -i "$1" -c:a libvorbis -q:a 4 "_$1.ogg";
 }
 
 convert_gifs() {
@@ -241,6 +241,10 @@ convert_gifs() {
 
 convert_gif() {
 	ffmpeg -f gif -i "$1" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4";
+}
+
+convert_webm() {
+	ffmpeg -fflags +genpts -i "$1" -r 24 "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4"
 }
 
 checkNVM() {
@@ -293,3 +297,4 @@ gpub() {
 gcr() {
 	git checkout -t origin/"${@}"
 }
+
