@@ -39,3 +39,9 @@ alias neofetch="neofetch --ascii ~/.config/atlas/ascii/shrek --ascii_colors 2 5 
 alias docker_ifit="docker run -d -p 27017-27019:27017-27019 --name mongodb mongo:3.4.9; docker run -d -p 6379:6379 --name ifit-redis redis:latest"
 alias ifit_redis="docker exec -it ifit-redis bash"
 alias ifit_mongo="docker exec -it mongodb bash"
+
+# upgrade all the mp things in one go:
+alias mpup='yarn upgrade -L -C -P "@ifit/mp-*"'
+
+# lerna
+alias mpclean="npx lerna exec -- rm -rf ./dist && yarn build"

@@ -162,7 +162,7 @@ if empty(glob('~/.config/nvim/autoload/plug.vim'))
 endif
 
 call plug#begin('~/.config/nvim/autoload/plugged')
-	if !exists('g:vscode')
+	if !exists('g:vscode') && !exists('g:IsIdea')
 		Plug 'christoomey/vim-tmux-navigator'
 		Plug 'itchyny/lightline.vim'
 		" Better Syntax Support
@@ -180,7 +180,7 @@ call plug#begin('~/.config/nvim/autoload/plugged')
 		" Better Comments
 		Plug 'tpope/vim-commentary'
 		" highlight yanks
-		Plug 'machakann/vim-highlightedyank'
+		"Plug 'machakann/vim-highlightedyank'
 		" better matching with %
 		Plug 'andymass/vim-matchup'
 		" Add some color
@@ -256,9 +256,9 @@ nnoremap <space>/ :Commentary<CR>
 vnoremap <space>/ :Commentary<CR>
 
 " highlight yanks from 'machakann/vim-highlightedyank'
-if !exists('##TextYankPost')
-  map y <Plug>(highlightedyank)
-endif
+" if !exists('##TextYankPost')
+"   map y <Plug>(highlightedyank)
+" endif
 
 " fzf
 " This is the default extra key bindings
