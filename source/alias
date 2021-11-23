@@ -3,7 +3,6 @@
 alias zshconfig="code $HOME/.zshrc"
 alias editconfig="code $ATLAS_ROOT"
 alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222"
-alias ls="exa -glam --group-directories-first"
 alias ngrok3000='ngrok start tatlas'
 
 # git
