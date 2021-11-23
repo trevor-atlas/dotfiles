@@ -3,6 +3,7 @@ const completeIcebreakers = require('./complete-icebreakers.json');
 const fs = require('fs');
 const util = require('util');
 const write = util.promisify(fs.writeFile);
+const { join } = require('path');
 const complete = { ...completeIcebreakers };
 const colors = require('./colors');
 
@@ -43,8 +44,7 @@ function colorString(color, string) {
   }
 
   const content = JSON.stringify(complete, null, 2);
-
-  await write('complete-icebreakers.json', content, {
+  await write(join(__dirname, 'complete-icebreakers.json'), content, {
     encoding: 'utf8',
   });
 })();
