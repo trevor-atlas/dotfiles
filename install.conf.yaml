@@ -1,0 +1,22 @@
+- defaults:
+    link:
+      relink: true
+
+- clean: ["~"]
+
+- link:
+    ~/.tmux.conf: settings/.tmux.conf
+    ~/.config/nvim: settings/nvim
+    ~/.gitconfig: settings/.gitconfig
+    ~/.gitignore_global: settings/.gitignore_global
+    ~/.config/alacritty/alacritty.yml: settings/alacritty.yml
+    ~/.spacemacs: settings/.spacemacs
+    ~/.i3: settings/.i3
+    ~/.inputrc: settings/.inputrc
+
+- create:
+    - ~/projects
+
+- shell:
+    - [git submodule update --init --recursive, Installing submodules]
+

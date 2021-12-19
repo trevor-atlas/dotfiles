@@ -19,14 +19,3 @@ export VISUAL
 
 # Above sources are order dependent at the moment so we don't use a loop.
 # for f in "$ATLAS_ROOT/source*"; do source $f; done;
-
-# init vim and tmux config if they don't exist
-# install_nvim
-# install_vim
-install_alacritty
-install_tmux
-install_i3_preferences
-install_i3blocks_preferences
-install_spacemacs_preferences
-
-# rectangle app preferences live at ~/Library/Preferences/com.knollsoft.Rectangle.plist
