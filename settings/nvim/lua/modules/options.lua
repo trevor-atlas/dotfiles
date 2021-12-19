@@ -27,6 +27,7 @@ opt.ignorecase = true         -- ignore case letters when search
 opt.smartcase = true          -- ignore lowercase for the whole pattern
 opt.linebreak = true          -- wrap on word boundary
 opt.scrolloff = 999
+opt.encoding = 'utf-8'
 
  -- open new split panes to right and bottom, which feels more natural than Vim’s default
 opt.splitbelow = true

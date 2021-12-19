@@ -17,5 +17,9 @@ export EDITOR
 VISUAL="$EDITOR"
 export VISUAL
 
+install_dotfiles() {
+  sh "$ATLAS_ROOT"/install
+}
+
 # Above sources are order dependent at the moment so we don't use a loop.
 # for f in "$ATLAS_ROOT/source*"; do source $f; done;
