@@ -2,3 +2,5 @@ autoload
 .DS_Store
 .vscode
 .idea
+complete-icebreakers.json
+scripts/complete-icebreakers.json
