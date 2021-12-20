@@ -13,7 +13,6 @@ install_dotfiles_once() {
 	touch "$HOME/.hushlogin"
 	mkdir -p "$HOME/projects"
 	mkdir -p "$HOME/go"
-	mkdir -p "$HOME/.config/nvim"
 }
 
 determine_os() {
@@ -33,67 +32,3 @@ determine_os() {
 	fi
 }
 
-# update this project with local system changes
-atlas_update_from_local() {
-	# update spectacle config
-	[[ ! -f ${HOME}/Library/Application\ Support/Spectacle ]] && {
-		rm "$ATLAS_ROOT/settings/Shortcuts.json";
-		cp "$HOME/Library/Application\ Support/Spectacle/Shortcuts.json" "$ATLAS_ROOT/settings/";
-	}
-}
-
-install_nvim() {
-	[[ ! -e ${HOME}/.config/nvim/init.vim && ! -L ${HOME}/.config/nvim/init.vim ]] && {
-		ln -sf "$ATLAS_ROOT/settings/.vimrc" "$HOME/.config/nvim/init.vim";
-		echo "installed nvim config";
-	}
-}
-
-install_vim() {
-	[[ ! -e ${HOME}/.vimrc && ! -L ${HOME}/.vimrc ]] && {
-		ln -sf "$ATLAS_ROOT/settings/.vimrc" "$HOME/.vimrc";
-		echo "installed vim config";
-	}
-}
-
-install_alacritty() {
-	[[ ! -e ${HOME}/.config/alacritty/alacritty.yml && ! -L ${HOME}/.config/alacritty/alacritty.yml ]] && {
-		mkdir -p "$HOME/.config/alacritty";
-		ln -sf "$ATLAS_ROOT/settings/alacritty.yml" "$HOME/.config/alacritty/alacritty.yml";
-		echo "installed alacritty config";
-	}
-}
-
-install_tmux() {
-	[[ ! -d ${HOME}/.tmux/plugins ]] && {
-		git clone https://github.com/tmux-plugins/tpm ${HOME}/.tmux/plugins/tpm;
-		echo "installed tmux plugin manager"
-	}
-	[[ ! -e ${HOME}/.tmux.conf && ! -L ${HOME}/.tmux.conf ]] && {
-		ln -sf "$ATLAS_ROOT/settings/.tmux.conf" "$HOME/.tmux.conf";
-		echo "installed tmux config";
-	}
-}
-
-install_spacemacs_preferences() {
-	[[ ! -e ${HOME}/.vimrc && ! -L ${HOME}/.vimrc ]] && {
-		ln -sf "$ATLAS_ROOT/settings/.spacemacs" "$HOME/.spacemacs";
-		echo "installed spacemacs config";
-	}
-}
-
-install_i3_preferences() {
-	determine_os OS;
-	[[ "$OS" -eq "linux" && ! -e ${HOME}/.i3 && ! -L ${HOME}/.i3 ]] && {
-		ln -sf "$ATLAS_ROOT/.i3" "$HOME/.i3";
-		echo "installed i3 config";
-	}
-}
-
-install_i3blocks_preferences() {
-	determine_os OS;
-	[[ "$OS" -eq "linux" && ! -e ${HOME}/i3blocks && ! -L ${HOME}/i3blocks ]] && {
-		ln -sf "$ATLAS_ROOT/i3blocks" "$HOME/i3blocks";
-		echo "installed i3blocks config";
-	}
-}
