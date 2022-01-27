@@ -2,6 +2,9 @@
 
 ## Dependencies
 
+### [Brew](https://brew.sh)
+Follow install directions
+
 ### [oh-my-zsh](https://ohmyz.sh)
 `sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"`
 
