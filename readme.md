@@ -6,8 +6,10 @@
 `sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"`
 
 ### [hub](https://hub.github.com)
-brew install hub
+`brew install hub`
 
+### [Tmux plugin manager](https://github.com/tmux-plugins/tpm)
+`git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm`
 
 ## Installation
 ```
