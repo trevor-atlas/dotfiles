@@ -129,6 +129,10 @@ else
 fi
 }
 
+dl() {
+  curl "$1" --output "$2"
+}
+
 mdless() {
 	pandoc -s -f markdown -t man $1 | groff -T utf8 -man | less
 }
