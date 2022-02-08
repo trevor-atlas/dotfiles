@@ -44,3 +44,5 @@ alias mpup='yarn upgrade -L -C -P "@ifit/mp-*"'
 
 # lerna
 alias mpclean="npx lerna exec -- rm -rf ./dist && yarn build"
+
+alias -g ding="osascript -e 'display notification \"Done!\" sound name \"glass\"' || osascript -e 'display notification \"Error!\" sound name \"basso\"'"

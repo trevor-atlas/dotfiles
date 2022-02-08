@@ -1,7 +1,7 @@
 [color]
 	ui = true
 [user]
-	email = me@trevoratlas.com
+	email = tatlas@hubspot.com
 	name = Trevor Atlas
 [github]
 	user = trevor-atlas
@@ -14,6 +14,7 @@
 	summary = true
 	verbosity = 1
 	tool = vimdiff
+  conflictstyle = diff3
 [mergetool]
 	keepBackup = false
 	prompt = false
@@ -28,20 +29,13 @@
 	ignorecase = true
 	editor = nvim
 	excludesfile = ~/.gitignore_global
-	pager = diff-so-fancy | less --tabs=2 -RFX
-[color "diff-highlight"]
-	oldNormal = red bold
-	oldHighlight = red bold 52
-	newNormal = green bold
-	newHighlight = green bold 22
-[color "diff"]
-	meta = yellow
-	frag = magenta bold
-	commit = yellow bold
-	old = red bold
-	new = green bold
-	whitespace = red reverse
-[diff-so-fancy]
-	markEmptyLines = false
-	changeHunkIndicators = false
-	stripLeadingSymbols = false
+	pager = delta
+	hooksPath = /Users/tatlas/.git_hooks
+[interactive]
+  diffFilter = delta --color-only
+[delta]
+  navigate = true # use n and N to move between diff sections
+  side-by-side = true
+  line-numbers = true
+[diff]
+  colorMoved = default
