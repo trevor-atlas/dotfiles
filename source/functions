@@ -246,7 +246,7 @@ checkNVM() {
 checkNVM
 
 cd() {
-     builtin cd $@ ; checkNVM
+  builtin cd $@ ; checkNVM
 }
 
 colortest() {
