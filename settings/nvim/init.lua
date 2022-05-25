@@ -4,6 +4,8 @@ require('modules.options')
 require('modules.keybinds')
 require('modules.commands')
 
+vim.g.neovide_cursor_vfx_mode = "railgun"
+
 require'nvim-tree'.setup {
     disable_netrw       = true,
     hijack_netrw        = true,

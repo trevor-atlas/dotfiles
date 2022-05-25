@@ -325,6 +325,13 @@ function gclean() {
 	command git fetch --prune
 }
 
+gitb() {
+  local branchname=$(echo $@ | sed 's/ /-/g')
+  local datestr=$(date +%F)
+  branchname=$(echo "$USER"/"$datestr"/"$branchname")
+  git checkout -b $branchname
+}
+
 
 tag() {
     command git checkout master
