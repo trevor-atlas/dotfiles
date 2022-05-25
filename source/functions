@@ -179,21 +179,28 @@ bool() {
 		tmux new-session -t "$SESSION_NAME" -d
 
 		# Name first Window and start zsh
-		tmux rename-window -t 1 '🔆'
+		tmux rename-window -t 1 '🌀'
 
-		# Create and setup panes for work
-		WINDOW_WORK='💻'
-		tmux new-window -t "$SESSION_NAME":2 -n "$WINDOW_WORK"
-		tmux send-keys -t "$WINDOW_WORK" "cd ~/projects" C-m
+		# Create and setup panes 
+		local two='🌮'
+		tmux new-window -t "$SESSION_NAME":2 -n "$two"
+		tmux send-keys -t "$two" "cd ~/projects && clear" C-m
 
-		WINDOW_WORK2='💻'
-		tmux new-window -t "$SESSION_NAME":3 -n "$WINDOW_WORK2"
-		tmux send-keys -t "$WINDOW_WORK2" "cd ~/projects" C-m
+		local three='💣'
+		tmux new-window -t "$SESSION_NAME":3 -n "$three"
+		tmux send-keys -t "$three" "cd ~/projects && clear" C-m
 
-		# Create and setup pane for projects
-		WINDOW_PROJECTS2='❖'
-		tmux new-window -t "$SESSION_NAME":4 -n "$WINDOW_PROJECTS2"
-		tmux send-keys -t "$WINDOW_PROJECTS2" "cd ~/projects" C-m
+		local four='💎'
+		tmux new-window -t "$SESSION_NAME":4 -n "$four"
+		tmux send-keys -t "$four" "cd ~/projects && clear" C-m
+
+		local five='🪝'
+		tmux new-window -t "$SESSION_NAME":5 -n "$five"
+		tmux send-keys -t "$five" "cd ~/projects && clear" C-m
+
+		local six='🧩'
+		tmux new-window -t "$SESSION_NAME":6 -n "$six"
+		tmux send-keys -t "$six" "cd ~/projects && clear" C-m
 	fi
 
 	# Attach Session, on the Main window
@@ -246,7 +253,7 @@ checkNVM() {
 checkNVM
 
 cd() {
-     builtin cd $@ ; checkNVM
+  builtin cd $@ ; checkNVM
 }
 
 colortest() {
