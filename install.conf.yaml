@@ -13,6 +13,7 @@
     ~/.spacemacs: settings/.spacemacs
     ~/.i3: settings/.i3
     ~/.inputrc: settings/.inputrc
+    ~/.config/kitty: settings/kitty
 
 - create:
     - ~/projects
