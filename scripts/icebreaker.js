@@ -1,5 +1,5 @@
 const icebreakers = require('./icebreakers.json');
-const completeIcebreakers = require('./complete-icebreakers.json');
+const completeIcebreakers = {}; //require('./complete-icebreakers.json');
 const fs = require('fs');
 const util = require('util');
 const write = util.promisify(fs.writeFile);

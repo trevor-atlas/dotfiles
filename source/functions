@@ -218,7 +218,7 @@ convert_aiffs() {
 }
 
 convert_aiff() {
-	ffmpeg -y -i "$1" -c:a libvorbis -q:a 4 "_$1.ogg";
+	ffmpeg -hide_banner -loglevel error -y -i "$1" -c:a libvorbis -q:a 4 "_$1.ogg";
 }
 
 convert_gifs() {
@@ -228,12 +228,21 @@ convert_gifs() {
 }
 
 convert_gif() {
-	ffmpeg -f gif -i "$1" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4";
+	ffmpeg -hide_banner -loglevel error -y -f gif -i "$1" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4";
+}
+
+convert_webms() {
+	for i in *.webm;
+		do convert_webm $i;
+	done
 }
 
 convert_webm() {
-	ffmpeg -fflags +genpts -i "$1" -r 24 "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4"
+	echo "Converting $1"
+	# ffmpeg -fflags +genpts -i "$1" -r 24 "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4"
+	ffmpeg -hide_banner -loglevel error -fflags +genpts -i "$1" -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -r 24 "${1%.*}.mp4"
 }
+
 
 ##########
 # Utilities
