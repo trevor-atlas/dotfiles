@@ -181,7 +181,7 @@ bool() {
 		# Name first Window and start zsh
 		tmux rename-window -t 1 '🌀'
 
-		# Create and setup panes 
+		# Create and setup panes
 		local two='🌮'
 		tmux new-window -t "$SESSION_NAME":2 -n "$two"
 		tmux send-keys -t "$two" "cd ~/projects && clear" C-m
@@ -343,4 +343,57 @@ tag() {
 
 icebreaker() {
 	node "$ATLAS_ROOT/scripts/icebreaker.js"
+}
+
+####################################################
+# HUBSPOT
+####################################################
+# Set to the directory you typically clone your git repos
+HUBSPOT_CODE_DIR=$HOME/projects
+
+# Completion for repo
+_repo_comp() {
+  reply=(`ls $HUBSPOT_CODE_DIR`);
+}
+
+repo() {
+  if [ ! -d "$HUBSPOT_CODE_DIR/$1" ]; then
+    echo "⚠️ Repo missing: \"$1\", cloning into $HUBSPOT_CODE_DIR/$1"
+    cd $HUBSPOT_CODE_DIR
+    git clone "git@git.hubteam.com:HubSpot/$1.git" || git clone "git@git.hubteam.com:HubSpotProtected/$1.git" || echo "🚨 uh oh, something went wrong cloning $1" && exit $EXITCODE
+  fi
+
+  cd $HUBSPOT_CODE_DIR/$1
+}
+
+compctl -M 'm:{a-z}={A-Z}' -K _repo_comp repo
+
+# pulls latest changes from remote if there are any
+# stores the current branch name and then switches to the master branch
+# switches to the branch name after updating from master
+# does nothing if branch is dirty
+update_repo() {
+  local branch=$(git_current_branch)
+  # if the branch is dirty, don't update
+  if [[ $(git diff --stat) != '' ]]; then
+    echo "⚠️ '$(pwd)' is dirty, skipping..."
+  else
+    git checkout master &> /dev/null
+    git pull &> /dev/null
+    git checkout "$branch" &>/dev/null
+  fi
+}
+
+update_repos() {
+  for i in $HUBSPOT_CODE_DIR/*;
+    do cd $i && update_repo;
+  done
+}
+
+tail_bend_logs() {
+	tail -f ~/.cache/nvim/asset-bender.log 
+}
+
+pretty() {
+  bpx hs-prettier --write $(git diff --name-only --cached)
 }
