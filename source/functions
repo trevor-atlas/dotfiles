@@ -10,9 +10,72 @@ edit_file() {
 	fi
 }
 
+cat() {
+   if hash bat 2>/dev/null; then
+        bat -pp "$@"
+   else
+        command cat "$@"
+   fi
+}
+
 select_file() {
 	given_file="$1"
 	fzf --preview="cat {}" --preview-window=right:70%:wrap --query="$given_file"
+}
+
+# gh issue list --label "Front End" --assignee "@me" --repo HubSpot/Merchant-Experience-Team
+ghe_issues() {
+	local repo="$1"
+	if [ -z "$repo" ]; then
+    repo='HubSpot/Merchant-Experience-Team'
+  fi
+	gh issue list --label 'Front End' --assignee '@me' --repo "$repo" --json 'title'
+}
+
+make_branch() {
+		ghe_issues | echo |
+    sed -e 's/"\(.*\)"/\1/' -e 's/\\t/\t/' |
+    fzf \
+      --with-nth=1 \
+      --delimiter='\t' \
+      --preview='echo -e {2}' \
+      --preview-window=top:wrap |
+    cut -f1 |
+    sed -e 's/\. /\t/' -e 's/[^a-zA-Z0-9\t]/-/g' |
+    awk '{printf "%s/%s", $1, tolower($2)}' | echo
+}
+
+gch() {
+ git checkout "$(git branch --all | fzf | tr -d '[:space:]')"
+}
+
+pr_checkout() {
+  local jq_template pr_number
+
+  jq_template='"'\
+'#\(.number) - \(.title)'\
+'\t'\
+'Author: \(.user.login)\n'\
+'Created: \(.created_at)\n'\
+'Updated: \(.updated_at)\n\n'\
+'\(.body)'\
+'"'
+
+  pr_number=$(
+    gh api 'repos/:owner/:repo/pulls' |
+    jq ".[] | $jq_template" |
+    sed -e 's/"\(.*\)"/\1/' -e 's/\\t/\t/' |
+    fzf \
+      --with-nth=1 \
+      --delimiter='\t' \
+      --preview='echo -e {2}' \
+      --preview-window=top:wrap |
+    sed 's/^#\([0-9]\+\).*/\1/'
+  )
+
+  if [ -n "$pr_number" ]; then
+    gh pr checkout "$pr_number"
+  fi
 }
 
 nn() {
@@ -138,7 +201,7 @@ mdless() {
 }
 
 umedit() {
-	mkdir -p ${ATLAS_DEV_DIR}; vim ${ATLAS_DEV_DIR}/$1;
+	mkdir -p ${ATLAS_DEV_DIR}; v ${ATLAS_DEV_DIR}/$1;
 }
 
 um() { mdless ${ATLAS_DEV_DIR}"$1"; }
@@ -403,6 +466,11 @@ tail_bend_logs() {
 	tail -f ~/.cache/nvim/asset-bender.log 
 }
 
+nvim_logs() {
+	nvim /Users/tatlas/.cache/nvim
+}
+
 pretty() {
   bpx hs-prettier --write $(git diff --name-only --cached)
 }
+
