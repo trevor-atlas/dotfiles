@@ -4,7 +4,7 @@ set -e
 
 trap 'exit 130' INT
 
-if [[ -z $(command -v foo) ]]; then
+if [[ -z $(command -v gum) ]]; then
 	message=$(cat <<-MSG
 	  ╔════════════════════════════════╗
   ║                                ║

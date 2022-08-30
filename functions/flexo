@@ -4,19 +4,19 @@ set -eu
 
 trap 'exit 130' INT
 
-# if [[ -z $(command -v bend) ]]; then
-# 	message=$(cat <<-MSG
-# 	  ╔════════════════════════════════╗
-#   ║                                ║
-#   ║     This script requires       ║
-#   ║     HubSpot Asset Bender       ║
-#   ║                                ║
-#   ╚════════════════════════════════╝
-# MSG
-# )
-#   echo "$message";
-#   exit 1;
-# fi
+if [[ -z $(command -v bend) ]]; then
+	message=$(cat <<-MSG
+	  ╔════════════════════════════════╗
+  ║                                ║
+  ║     This script requires       ║
+  ║     HubSpot Asset Bender       ║
+  ║                                ║
+  ╚════════════════════════════════╝
+MSG
+)
+  echo "$message";
+  exit 1;
+fi
 
 if [[ -z $(command -v gum) ]]; then
 	message=$(cat <<-MSG
@@ -35,7 +35,7 @@ fi
 # Where do you clone your HubSpot projects
 HS_PROJECTS_DIR="$HOME/repos"
 
-# ~8gigs
+# ~8gigs (new m1 macbooks have ~64GB of ram so this is pretty reasonable)
 NODE_ARGS="NODE_OPTIONS='--max_old_space_size=8192'"
 
 # zsh associative array
@@ -56,8 +56,13 @@ join_newlines() {
   done
 }
 
+run_with_bend() {
+  $("$NODE_ARGS" bend reactor serve "$1")
+}
+
 cd $HS_PROJECTS_DIR
 
+# select from predefined_projects to run if we call this script with 'projects'
 if [[ $1 == "project" ]]; then
   project_options=""
 
@@ -65,17 +70,14 @@ if [[ $1 == "project" ]]; then
     project_options="${project_options}$key\n"
   done
 
-  selected_projects=$(echo $project_options | command gum choose --height 15)
+  selected_project=$(echo $project_options | gum choose --height 15)
+  printf "running '$NODE_ARGS bend reactor serve %s'" $predefined_projects[$selected_project]
+  run_with_bend $predefined_projects[$selected_project]
 
-  printf "running '$NODE_ARGS bend reactor serve %s'" $predefined_projects[$selected_projects]
-
-  bend reactor serve $predefined_projects[$selected_projects]
+  # else manually select from all repos
 else
-  selected_projects=$(list_project_directories | command gum choose --no-limit --height 15  | join_newlines)
-  printf "running '$NODE_ARGS bend reactor serve %s'" $selected_projects
-  bend reactor serve "$selected_projects"
+  selected_repos=$(list_project_directories | gum choose --no-limit --height 15  | join_newlines)
+  printf "running '$NODE_ARGS bend reactor serve %s'" $selected_repos
+  run_with_bend $selected_repos
 fi
-
-
-
 
