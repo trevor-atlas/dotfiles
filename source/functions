@@ -25,7 +25,7 @@ nn() {
 		note_name="$note_name.$note_ext"
 	fi
 	mkdir -p $ATLAS_NOTES_DIR
-	vim "$ATLAS_NOTES_DIR/$note_name"
+	v "$ATLAS_NOTES_DIR/$note_name"
 }
 
 ns() {
@@ -34,7 +34,7 @@ ns() {
   file="$(rg --files-with-matches --no-ignore --ignore-case --hidden --no-heading --no-messages $1 $ATLAS_NOTES_DIR | fzf --preview "head -100 {}")"
   if [[ -n $file ]]
   then
-    vim $file
+    v $file
   fi
 }
 
@@ -42,7 +42,7 @@ nl() {
   local files
   files="$(rg --files $ATLAS_NOTES_DIR | fzf --preview "head -100 {}")"
   if [[ -n $files ]]; then
-    vim $files
+v $files
   fi
 }
 
@@ -138,7 +138,7 @@ mdless() {
 }
 
 umedit() {
-	mkdir -p ${ATLAS_DEV_DIR}; vim ${ATLAS_DEV_DIR}/$1;
+	mkdir -p ${ATLAS_DEV_DIR}; v ${ATLAS_DEV_DIR}/$1;
 }
 
 um() { mdless ${ATLAS_DEV_DIR}"$1"; }

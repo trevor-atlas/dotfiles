@@ -1,0 +1,81 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+trap 'exit 130' INT
+
+# if [[ -z $(command -v bend) ]]; then
+# 	message=$(cat <<-MSG
+# 	  ╔════════════════════════════════╗
+#   ║                                ║
+#   ║     This script requires       ║
+#   ║     HubSpot Asset Bender       ║
+#   ║                                ║
+#   ╚════════════════════════════════╝
+# MSG
+# )
+#   echo "$message";
+#   exit 1;
+# fi
+
+if [[ -z $(command -v gum) ]]; then
+	message=$(cat <<-MSG
+	  ╔════════════════════════════════╗
+  ║                                ║
+  ║     This script requires       ║
+  ║  github.com/charmbracelet/gum  ║
+  ║                                ║
+  ╚════════════════════════════════╝
+MSG
+)
+  echo "$message";
+  exit 1;
+fi
+
+# Where do you clone your HubSpot projects
+HS_PROJECTS_DIR="$HOME/repos"
+
+# ~8gigs
+NODE_ARGS="NODE_OPTIONS='--max_old_space_size=8192'"
+
+# zsh associative array
+# map=("key1" "value1" "key2" "value2")
+typeset -A predefined_projects=(
+  "payment settings" "settings-ui-payments"
+  "product settings" "settings-ui-products products-ui"
+  "payments + crm index" "crm-index-ui customer-data-sidebar commerce-sidebar-cards"
+)
+
+list_project_directories() {
+  command ls -d */ | command cut -f1 -d '/'
+}
+
+join_newlines() {
+  while read -r lines; do
+    command tr '\n' ' ' | command sed 's/ $/\n/'
+  done
+}
+
+cd $HS_PROJECTS_DIR
+
+if [[ $1 == "project" ]]; then
+  project_options=""
+
+  for key in ${(k)predefined_projects}; do
+    project_options="${project_options}$key\n"
+  done
+
+  selected_projects=$(echo $project_options | command gum choose --height 15)
+
+  printf "running '$NODE_ARGS bend reactor serve %s'" $predefined_projects[$selected_projects]
+
+  bend reactor serve $predefined_projects[$selected_projects]
+else
+  selected_projects=$(list_project_directories | command gum choose --no-limit --height 15  | join_newlines)
+  printf "running '$NODE_ARGS bend reactor serve %s'" $selected_projects
+  bend reactor serve "$selected_projects"
+fi
+
+
+
+
