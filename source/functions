@@ -421,7 +421,7 @@ icebreaker() {
 # HUBSPOT
 ####################################################
 # Set to the directory you typically clone your git repos
-HUBSPOT_CODE_DIR=$HOME/projects
+HUBSPOT_CODE_DIR=$HOME/repos
 
 # Completion for repo
 _repo_comp() {
@@ -429,13 +429,15 @@ _repo_comp() {
 }
 
 repo() {
-  if [ ! -d "$HUBSPOT_CODE_DIR/$1" ]; then
-    echo "⚠️ Repo missing: \"$1\", cloning into $HUBSPOT_CODE_DIR/$1"
-    cd $HUBSPOT_CODE_DIR
-    git clone "git@git.hubteam.com:HubSpot/$1.git" || git clone "git@git.hubteam.com:HubSpotProtected/$1.git" || echo "🚨 uh oh, something went wrong cloning $1" && exit $EXITCODE
-  fi
-
-  cd $HUBSPOT_CODE_DIR/$1
+  # if [ ! -d "$HUBSPOT_CODE_DIR/$1" ]; then
+  #   echo "⚠️ Repo missing: \"$1\", cloning into $HUBSPOT_CODE_DIR/$1"
+  #   cd $HUBSPOT_CODE_DIR
+  #   git clone "git@git.hubteam.com:HubSpot/$1.git" || git clone "git@git.hubteam.com:HubSpotProtected/$1.git" || echo "🚨 uh oh, something went wrong cloning $1" && exit $EXITCODE
+  # fi
+  # if [ -d "$HUBSPOT_CODE_DIR/$1" ]; then
+  #   cd $HUBSPOT_CODE_DIR/$1
+  # fi
+  ~/.config/atlas/scripts/repo.ts "$1"
 }
 
 compctl -M 'm:{a-z}={A-Z}' -K _repo_comp repo
