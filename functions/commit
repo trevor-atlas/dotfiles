@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -e
+
+trap 'exit 130' INT
+
+if [[ -z $(command -v gum) ]]; then
+	message=$(cat <<-MSG
+	  ╔════════════════════════════════╗
+  ║                                ║
+  ║     This script requires       ║
+  ║  github.com/charmbracelet/gum  ║
+  ║                                ║
+  ╚════════════════════════════════╝
+MSG
+)
+  echo "$message";
+  exit 1;
+fi
+
+COMMIT_TYPES="Fix\nFeat\nDocs\nStyle\nRefactor\nTest\nChore\nRevert";
+#fzf -i --height=15 --border=rounded --header="What type of change is this?" --header-first --inline-info);
+type=$(printf "$COMMIT_TYPES" | gum filter);
+scope=$(gum input --placeholder "Scope (What is the primary change related to?)");
+if [[ -z "$scope" ]]; then
+  summary=$(gum input --value "$type: " --placeholder "Summary of this change")
+else
+  summary=$(gum input --value "$type($scope): " --placeholder "Summary of this change")
+fi
+gum confirm "Commit changes?" && git commit -m "$summary"
+
