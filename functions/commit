@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 trap 'exit 130' INT
 
 if [[ -z $(command -v gum) ]]; then

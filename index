@@ -13,7 +13,7 @@ source "$ATLAS_ROOT/source/alias"
 source "$ATLAS_ROOT/source/functions"
 
 alias commit="$ATLAS_ROOT/functions/commit"
-alias flexo="$ATLAS_ROOT/functions/flexo"
+flexo() { . "$ATLAS_ROOT/functions/flexo" }
 
 
 EDITOR=nvim

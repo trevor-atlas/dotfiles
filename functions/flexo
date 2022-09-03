@@ -1,83 +1,143 @@
 #!/usr/bin/env zsh
 
-set -eu
+# <UserConfig>
+	# Where do you clone your HubSpot projects
+	if [[ -z $HS_PROJECTS_DIR ]]; then 
+		# default if not in env
+  	HS_PROJECTS_DIR="$HOME/repos"
+	else 
+		# pull from env if you already export this somewhere
+    HS_PROJECTS_DIR=${HS_PROJECTS_DIR}
+	fi
 
-trap 'exit 130' INT
+	# Allow node up to ~8gigs (new m1 macbooks have ~64GB of ram so this is pretty reasonable)
+	# Doesn't use env because you probably don't want to use this much memory for every node process
+	# Note: might be too much if you are on an intel macbook
+	if [[ -z $FLEXO_NODE_ARGS ]]; then 
+		# default if not in env
+		FLEXO_NODE_ARGS="NODE_OPTIONS='--max_old_space_size=8192'"
+	else 
+		# pull from env if you already export this somewhere
+    FLEXO_NODE_ARGS=${FLEXO_NODE_ARGS}
+	fi
 
-if [[ -z $(command -v bend) ]]; then
-	message=$(cat <<-MSG
-	  ╔════════════════════════════════╗
-  ║                                ║
-  ║     This script requires       ║
-  ║     HubSpot Asset Bender       ║
-  ║                                ║
-  ╚════════════════════════════════╝
-MSG
-)
-  echo "$message";
-  exit 1;
-fi
+	# zsh associative array
+	# map=("key1" "value1" "key2" "value2")
+	typeset -A predefined_projects=(
+  	"payment settings" "settings-ui-payments"
+  	"product settings" "settings-ui-products payments-ui"
+  	"payments + crm index" "crm-index-ui customer-data-sidebar commerce-sidebar-cards"
+  	"payments + crm records" "crm-index-ui customer-data-sidebar commerce-sidebar-cards"
+	)
+#</UserConfig>
+
+RED='\033[0;31m'
+PURPLE='\033[0;35m'
+BOLD_PURPLE='\033[1;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
 
 if [[ -z $(command -v gum) ]]; then
-	message=$(cat <<-MSG
+	message=$(cat <<-EOF
 	  ╔════════════════════════════════╗
   ║                                ║
-  ║     This script requires       ║
+  ║         Flexo requires         ║
   ║  github.com/charmbracelet/gum  ║
+  ║      ${CYAN}brew install gum${NC}          ║
   ║                                ║
   ╚════════════════════════════════╝
-MSG
+EOF
 )
-  echo "$message";
-  exit 1;
+  echo $message;
+  return;
 fi
 
-# Where do you clone your HubSpot projects
-HS_PROJECTS_DIR="$HOME/repos"
+_FLEXO="[${BOLD_PURPLE}Flexo${NC}]"
 
-# ~8gigs (new m1 macbooks have ~64GB of ram so this is pretty reasonable)
-NODE_ARGS="NODE_OPTIONS='--max_old_space_size=8192'"
-
-# zsh associative array
-# map=("key1" "value1" "key2" "value2")
-typeset -A predefined_projects=(
-  "payment settings" "settings-ui-payments"
-  "product settings" "settings-ui-products products-ui"
-  "payments + crm index" "crm-index-ui customer-data-sidebar commerce-sidebar-cards"
-)
-
-list_project_directories() {
-  command ls -d */ | command cut -f1 -d '/'
+flexo_print_error() {
+	printf "$_FLEXO Error: ${RED}%s${NC}\n" $1
 }
 
-join_newlines() {
-  while read -r lines; do
-    command tr '\n' ' ' | command sed 's/ $/\n/'
-  done
+flexo_print_info() {
+  printf "$_FLEXO Running \x22${CYAN}%s${NC}\x22 \n" $1
 }
 
-run_with_bend() {
-  $("$NODE_ARGS" bend reactor serve "$1")
+flexo_print_help() {
+	printf "$_FLEXO runs bend processes for you\n"
+	printf "Flexo will always pass \x22${CYAN}$FLEXO_NODE_ARGS${NC}\x22 to any bend commands it spawns\n"
+	printf "\nCommands\n"
+
+	local cmds=$(cat <<EOF
+${BOLD_PURPLE}flexo${NC}\tChoose from a list of your repos in 'HS_PROJECTS_DIR'
+${BOLD_PURPLE}flexo --project${NC}\tChoose from the list predefined projects in the 'predefined_projects' map
+${BOLD_PURPLE}flexo repo-one repo-two${NC}\tanalogous to \x22${CYAN}$FLEXO_NODE_ARGS bend reactor serve repo-one repo-two --update${NC}\x22 Takes any number of repo names
+EOF
+	)
+	echo $cmds | column -ts $'\t'
+
+	printf "\nEnvironment Variables\n"
+	local envs=$(cat <<EOF
+${BOLD_PURPLE}HS_PROJECTS_DIR${NC}\t Where are your hubspot repos located? (use \$HOME for the ~ directory, using a literal '~' does wonky stuff. export HS_PROJECTS_DIR="\$HOME/my_projects_dir")
+${BOLD_PURPLE}FLEXO_NODE_ARGS${NC}\t define the arguments to pass to node. The default is \x22NODE_OPTIONS='--max_old_space_size=8192'\x22
+EOF
+	)
+	echo $envs | column -ts $'\t'
 }
 
-cd $HS_PROJECTS_DIR
+flexo_run_with_bend() {
+	local cmd=$(printf "%s bend reactor serve %s --update\n" $FLEXO_NODE_ARGS $1)
+  flexo_print_info $cmd
+  eval $cmd
+}
 
-# select from predefined_projects to run if we call this script with 'projects'
-if [[ $1 == "project" ]]; then
-  project_options=""
+flexo_exec() {
+	cd $HS_PROJECTS_DIR;
 
-  for key in ${(k)predefined_projects}; do
-    project_options="${project_options}$key\n"
-  done
+	if [[ $1 == "-h" ]] || [[ $1 == "help" ]]; then
+		flexo_print_help
+		return;
+	fi
 
-  selected_project=$(echo $project_options | gum choose --height 15)
-  printf "running '$NODE_ARGS bend reactor serve %s'" $predefined_projects[$selected_project]
-  run_with_bend $predefined_projects[$selected_project]
+	# $* is a single string of all arguments passed
+	# $# is the number of arguments passed
+	if [[ $1 != "--project" ]] && [[ $# -ge 1 ]]; then
+		flexo_run_with_bend $*
+		return;
+	fi
+
+	# select from predefined_projects to run if called with 'project'
+	if [[ $1 == "--project" ]]; then
+  	local project_list=""
+  	for key in ${(k)predefined_projects}; do
+    	project_list="${project_list}$key\n"
+  	done
+
+  	local selected_project=$(echo $project_list | gum filter --height 15 --prompt.foreground "#86A")
+  	if [[ -z $selected_project ]]; then
+    	flexo_print_error "No project selected."
+    	return;
+  	fi
+  	flexo_run_with_bend $predefined_projects[$selected_project]
+		return;
 
   # else manually select from all repos
-else
-  selected_repos=$(list_project_directories | gum choose --no-limit --height 15  | join_newlines)
-  printf "running '$NODE_ARGS bend reactor serve %s'" $selected_repos
-  run_with_bend $selected_repos
-fi
+	else
+		local project_directories=$(command ls -Sd */ | cut -f1 -d '/' | sort -r)
+  	local len=$(echo $project_directories | wc -l | xargs)
+  	if [[ $len -gt 25 ]]; then
+  		len=25
+  	fi
+  	local selected_repos=$(echo $project_directories | gum choose --no-limit --height "$len" --cursor.foreground "#86A")
+  	if [[ -z $selected_repos ]]; then
+    	flexo_print_error "No repos selected (use spacebar to select, hit return to confirm selection)"
+    	return;
+  	fi
+  	local args=$(echo$selected_repos | xargs)
+  	flexo_run_with_bend $args
+		return;
+	fi
+}
+
+flexo_exec "$@"
 

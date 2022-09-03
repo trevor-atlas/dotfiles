@@ -247,23 +247,23 @@ bool() {
 		# Create and setup panes
 		local two='🌮'
 		tmux new-window -t "$SESSION_NAME":2 -n "$two"
-		tmux send-keys -t "$two" "cd ~/projects && clear" C-m
+		tmux send-keys -t "$two" "cd ~/repos && clear" C-m
 
 		local three='💣'
 		tmux new-window -t "$SESSION_NAME":3 -n "$three"
-		tmux send-keys -t "$three" "cd ~/projects && clear" C-m
+		tmux send-keys -t "$three" "cd ~/repos && clear" C-m
 
 		local four='💎'
 		tmux new-window -t "$SESSION_NAME":4 -n "$four"
-		tmux send-keys -t "$four" "cd ~/projects && clear" C-m
+		tmux send-keys -t "$four" "cd ~/repos && clear" C-m
 
 		local five='🪝'
 		tmux new-window -t "$SESSION_NAME":5 -n "$five"
-		tmux send-keys -t "$five" "cd ~/projects && clear" C-m
+		tmux send-keys -t "$five" "cd ~/repos && clear" C-m
 
 		local six='🧩'
 		tmux new-window -t "$SESSION_NAME":6 -n "$six"
-		tmux send-keys -t "$six" "cd ~/projects && clear" C-m
+		tmux send-keys -t "$six" "cd ~/repos && clear" C-m
 	fi
 
 	# Attach Session, on the Main window
