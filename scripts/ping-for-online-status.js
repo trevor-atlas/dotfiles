@@ -5,12 +5,13 @@ const rl = require('readline');
 const GOT_BYTES = /bytes from/i;
 const INTERVAL = 2; // in seconds
 // this needs to become a hubspot vpn address
-const IP = '8.8.8.8';
+const IP = '8.8.8';
 
 let proc;
 let cpu;
 let emitter;
 let offlineCount = 0;
+let ticks = 0;
 
 function init() {
   proc = spawn('ping', ['-v', '-n', '-i', INTERVAL, IP]);
@@ -40,27 +41,30 @@ function controller() {
       // then just listen for the `online` and `offline` events ...
       .on('online', () => {
         offlineCount = 0;
-        // console.log('🌎 online!');
+        logEveryTen(`${timestamp()} 🌎 online`, ticks);
       })
       .on('offline', () => {
         offlineCount++;
         if (offlineCount > 5) {
-          console.log(
-            new Date().toLocaleString('en-us'),
-            '🚨 Offline! restarting bender!'
-          );
-          spawn('brew', ['services', 'restart', 'benderthing']).stderr.on(
-            'data',
-            (data) => {
-              console.error(`stderr: ${data}`);
-            }
-          );
+          console.log(timestamp(), 'Offline! restarting bender!');
+          const restart = spawn('brew', ['services', 'restart', 'benderthing']);
+          restart.stdout.on('data', (data) => {
+            console.log(`🧡 Restarted bender`);
+          });
+          restart.stderr.on('data', (data) => {
+            console.log(`💔 Error restarting bender:
+${data}
+`);
+          });
           offlineCount = 0;
         }
-        // console.log('🚨 offline!');
+        logEveryTen(`${timestamp()} 🚨 Offline!`, ticks);
       })
   );
 }
+
+const timestamp = () =>
+  `[${new Date().toLocaleString('en-us').split(', ')[1]}]`;
 
 // emit `online` and `offline` events to the controller based on the ping output
 function eventEmitter(proc, controller) {
@@ -71,5 +75,16 @@ function eventEmitter(proc, controller) {
     } else {
       controller.emit('offline');
     }
+    if (ticks > 100) {
+      ticks = 0;
+    } else {
+      ticks++;
+    }
   });
 }
+
+const logEveryTen = (str, ticks) => {
+  if (ticks % 10 === 0) {
+    console.log(str);
+  }
+};
