@@ -129,115 +129,20 @@ set nowb
 " Source depending on if VSCode is our client
 if exists('g:vscode')
     " VSCode extension
-    source $HOME/.config/nvim/vscode/windows.vim
+    " source $HOME/.config/nvim/vscode/windows.vim
 else
     " ordinary neovim
 
-	nnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.focusBelowGroup')<CR>
-	xnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.focusBelowGroup')<CR>
-	nnoremap <silent> <C-k> :call VSCodeNotify('workbench.action.focusAboveGroup')<CR>
-	xnoremap <silent> <C-k> :call VSCodeNotify('workbench.action.focusAboveGroup')<CR>
-	nnoremap <silent> <C-h> :call VSCodeNotify('workbench.action.focusLeftGroup')<CR>
-	xnoremap <silent> <C-h> :call VSCodeNotify('workbench.action.focusLeftGroup')<CR>
-	nnoremap <silent> <C-l> :call VSCodeNotify('workbench.action.focusRightGroup')<CR>
+	" nnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.focusBelowGroup')<CR>
+	" xnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.focusBelowGroup')<CR>
+	" nnoremap <silent> <C-k> :call VSCodeNotify('workbench.action.focusAboveGroup')<CR>
+	" xnoremap <silent> <C-k> :call VSCodeNotify('workbench.action.focusAboveGroup')<CR>
+	" nnoremap <silent> <C-h> :call VSCodeNotify('workbench.action.focusLeftGroup')<CR>
+	" xnoremap <silent> <C-h> :call VSCodeNotify('workbench.action.focusLeftGroup')<CR>
+	" nnoremap <silent> <C-l> :call VSCodeNotify('workbench.action.focusRightGroup')<CR>
 
-	xnoremap <silent> <C-l> :call VSCodeNotify('workbench.action.focusRightGroup')<CR>
+	" xnoremap <silent> <C-l> :call VSCodeNotify('workbench.action.focusRightGroup')<CR>
 endif
-
-" ================ Persistent Undo ==================
-" Keep undo history across sessions, by storing in file.
-" Only works all the time.
-if has('persistent_undo')
-  silent !mkdir ~/.config/nvim/backups > /dev/null 2>&1
-  set undodir=~/.config/nvim/backups
-  set undofile
-endif
-
-" auto-install vim-plug
-if empty(glob('~/.config/nvim/autoload/plug.vim'))
-  silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
-    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  "autocmd VimEnter * PlugInstall
-  autocmd VimEnter * PlugInstall | source $MYVIMRC
-endif
-
-call plug#begin('~/.config/nvim/autoload/plugged')
-	if !exists('g:vscode') && !exists('g:IsIdea')
-		Plug 'christoomey/vim-tmux-navigator'
-		Plug 'itchyny/lightline.vim'
-		" Better Syntax Support
-		Plug 'sheerun/vim-polyglot'
-		" Auto pairs for '(' '[' '{'
-		Plug 'jiangmiao/auto-pairs'
-		" Themes
-		Plug 'christianchiarulli/onedark.vim'
-		" Intellisense
-		Plug 'neoclide/coc.nvim', {'branch': 'release'}
-		" FZF
-		Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-		Plug 'junegunn/fzf.vim'
-		Plug 'airblade/vim-rooter'
-		" Better Comments
-		Plug 'tpope/vim-commentary'
-		" highlight yanks
-		"Plug 'machakann/vim-highlightedyank'
-		" better matching with %
-		Plug 'andymass/vim-matchup'
-		" Add some color
-		Plug 'norcalli/nvim-colorizer.lua'
-		Plug 'junegunn/rainbow_parentheses.vim'
-		" Git
-		Plug 'airblade/vim-gitgutter'
-		" Terminal
-		Plug 'voldikss/vim-floaterm'
-		" Start Screen
-		Plug 'mhinz/vim-startify'
-		" Surround
-		Plug 'tpope/vim-surround'
-		" Vista
-		Plug 'liuchengxu/vista.vim'
-		"
-	endif
-call plug#end()
-
-" Automatically install missing plugins on startup
-autocmd VimEnter *
-  \  if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
-  \|   PlugInstall --sync | q
-  \| endif
-
-
-" Trigger a highlight in the appropriate direction when pressing these keys:
-let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
-
-autocmd FileType * RainbowParentheses
-let g:rainbow#max_level = 16
-let g:rainbow#pairs = [['(', ')'], ['[', ']'], ['{', '}']]
-
-let g:lightline = {
-      \ 'colorscheme': 'one',
-      \ }
-
-" Theme
-syntax on
-
-" onedark.vim override: Don't set a background color when running in a terminal;
-if (has("autocmd") && !has("gui_running"))
-  augroup colorset
-    autocmd!
-    let s:white = { "gui": "#ABB2BF", "cterm": "145", "cterm16" : "7" }
-    autocmd ColorScheme * call onedark#set_highlight("Normal", { "fg": s:white }) " `bg` will not be styled since there is no `bg` setting
-  augroup END
-endif
-
-"autocmd ColorScheme * call onedark#set_highlight("Normal", { "fg": s:white }) " `bg` will not be styled since there is no `bg` setting
-
-hi Comment cterm=italic
-let g:onedark_hide_endofbuffer=1
-let g:onedark_terminal_italics=1
-let g:onedark_termcolors=256
-
-colorscheme onedark
 
 
 " checks if your terminal has 24-bit color support
@@ -254,94 +159,6 @@ nnoremap <esc>^[ <esc>^[
 
 nnoremap <space>/ :Commentary<CR>
 vnoremap <space>/ :Commentary<CR>
-
-" highlight yanks from 'machakann/vim-highlightedyank'
-" if !exists('##TextYankPost')
-"   map y <Plug>(highlightedyank)
-" endif
-
-" fzf
-" This is the default extra key bindings
-let g:fzf_action = {
-  \ 'ctrl-t': 'tab split',
-  \ 'ctrl-x': 'split',
-  \ 'ctrl-v': 'vsplit' }
-
-" Enable per-command history.
-" CTRL-N and CTRL-P will be automatically bound to next-history and
-" previous-history instead of down and up. If you don't like the change,
-" explicitly bind the keys to down and up in your $FZF_DEFAULT_OPTS.
-let g:fzf_history_dir = '~/.local/share/fzf-history'
-
-map <C-p> :Files<CR>
-map <leader>b :Buffers<CR>
-nnoremap <leader>g :Rg<CR>
-nnoremap <leader>t :Tags<CR>
-nnoremap <leader>m :Marks<CR>
-
-" ctrl-g search in file content
-nnoremap <C-g> :RG<Cr>
-
-nnoremap <silent> <leader>gl :Commits<CR>
-nnoremap <silent> <leader>ga :BCommits<CR>
-nnoremap <silent> <leader>ft :Filetypes<CR>
-
-
-let g:fzf_tags_command = 'ctags -R'
-" Border color
-let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.8, 'height': 0.8,'yoffset':0.5,'xoffset': 0.5, 'highlight': 'Todo', 'border': 'sharp' } }
-
-let $FZF_DEFAULT_OPTS = '--layout=reverse --info=inline'
-let $FZF_DEFAULT_COMMAND="rg --files --hidden"
-
-
-" Customize fzf colors to match your color scheme
-let g:fzf_colors =
-\ { 'fg':      ['fg', 'Normal'],
-  \ 'bg':      ['bg', 'Normal'],
-  \ 'hl':      ['fg', 'Comment'],
-  \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
-  \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
-  \ 'hl+':     ['fg', 'Statement'],
-  \ 'info':    ['fg', 'PreProc'],
-  \ 'border':  ['fg', 'Ignore'],
-  \ 'prompt':  ['fg', 'Conditional'],
-  \ 'pointer': ['fg', 'Exception'],
-  \ 'marker':  ['fg', 'Keyword'],
-  \ 'spinner': ['fg', 'Label'],
-  \ 'header':  ['fg', 'Comment'] }
-
-"Get Files
-command! -bang -nargs=? -complete=dir Files
-    \ call fzf#vim#files(<q-args>, fzf#vim#with_preview({'options': ['--layout=reverse', '--info=inline']}), <bang>0)
-
-
-" Get text in files with Rg
-command! -bang -nargs=* Rg
-  \ call fzf#vim#grep(
-  \   'rg --column --line-number --no-heading --color=always --smart-case '.shellescape(<q-args>), 1,
-  \   fzf#vim#with_preview(), <bang>0)
-
-" Ripgrep advanced
-function! RipgrepFzf(query, fullscreen)
-  let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
-  let initial_command = printf(command_fmt, shellescape(a:query))
-  let reload_command = printf(command_fmt, '{q}')
-  let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
-  call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
-endfunction
-
-command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
-
-" Git grep
-command! -bang -nargs=* GGrep
-  \ call fzf#vim#grep(
-  \   'git grep --line-number '.shellescape(<q-args>), 0,
-  \   fzf#vim#with_preview({'dir': systemlist('git rev-parse --show-toplevel')[0]}), <bang>0)
-
-let g:better_whitespace_enabled = 0 " Dont' highlight whitespace in red
-let g:strip_whitespace_on_save = 1
-
 
 " remapping
 nnoremap j gj

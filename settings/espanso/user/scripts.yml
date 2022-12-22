@@ -1,0 +1,30 @@
+name: scripts
+parent: default
+
+matches:
+  - trigger: ":time"
+    replace: "{{mytime}}"
+    vars:
+      - name: mytime
+        type: date
+        params:
+          format: "%H:%M"
+  - trigger: ":rfc"
+    replace: |
+      interface ComponentProps {
+        children: React.ReactNode;
+      }
+      const Component = (props: ComponentProps) => {
+        return (
+          <>
+          </>
+        );
+      };
+
+export default {{}};
+
+    vars:
+      - name: mydate
+        type: string
+        params:
+          format: "%d/%m/%Y"

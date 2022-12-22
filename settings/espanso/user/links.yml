@@ -1,0 +1,13 @@
+name: links
+parent: default
+
+matches:
+  - trigger: ":twitter"
+    replace: "https://twitter.com/trevoratlas"
+  - trigger: ":github"
+    replace: "https://github.com/trevor-atlas"
+  - trigger: ":website"
+    replace: "https://trevoratlas.com"
+  - trigger: ":linkedin"
+    replace: "https://www.linkedin.com/in/trevoratlas/"
+
