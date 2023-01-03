@@ -98,6 +98,13 @@ function getController() {
     })
     .on('offline', () => {
       offlineCount++;
+      if (offlineCount > 100) {
+        console.log(
+          timestamp(),
+          '🤔 Offline for over 100 ticks, are you on the vpn? Stopping.'
+        );
+        process.exit(1);
+      }
       if (ticks > 0 && offlineCount < 5) {
         return;
       }
