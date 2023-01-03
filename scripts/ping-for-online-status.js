@@ -11,7 +11,18 @@ let offlineCount = 0;
 let ticks = 0;
 let paused = false;
 
-// maybe use something like this to detect system sleep/wake and throttle or stop the ping
+const globe = ['🌎', '🌍', '🌏'];
+let globeIndex = 0;
+const getGlobe = () => {
+  if (globeIndex >= globe.length) {
+    globeIndex = 0;
+  }
+  const res = globe.at(globeIndex);
+  globeIndex++;
+  return res;
+};
+
+// this is an attempt to detect system sleep/wake and throttle or stop the event loop during that time.
 const SAMPLE_RATE = 3000; // 3 seconds
 let lastSample = Date.now();
 function sample() {
@@ -37,52 +48,11 @@ const timestamp = () => {
   return `[${year}-${month}-${date} at ${hours}:${minutes}:${seconds}]`;
 };
 
-const throttledLog = (...str) => {
+const throttledFunc = (fn) => {
   if (ticks % 2 === 0) {
-    console.log(...str);
+    fn();
   }
 };
-
-const globe = ['🌎', '🌍', '🌏'];
-
-function init() {
-  controller = getController();
-  controller.emit('init');
-
-  // emit `online` and `offline` events to the controller based on curl output
-  (async () => {
-    while (true) {
-      sample();
-      if (paused) {
-        await setTimeout(INTERVAL * 1000);
-        continue;
-      }
-      try {
-        const res = await execSync(`curl ${ADDRESS}`, {
-          encoding: 'utf8',
-          stdio: ['pipe', 'pipe', 'ignore'],
-        });
-        if (GOT_BYTES.test(res)) {
-          controller.emit('online');
-        } else {
-          controller.emit('offline');
-        }
-      } catch (e) {
-        controller.emit('offline');
-      }
-      if (ticks > 100) {
-        ticks = 0;
-      } else {
-        ticks++;
-      }
-      await setTimeout(INTERVAL * 1000);
-    }
-  })();
-}
-
-init();
-
-process.on('exit', () => {});
 
 // listen for `online` and `offline` events and act accordingly
 function getController() {
@@ -94,14 +64,14 @@ function getController() {
     })
     .on('online', () => {
       offlineCount = 0;
-      throttledLog(timestamp(), globe.at(ticks % globe.length), 'Online');
+      throttledFunc(() => console.log(timestamp(), getGlobe(), 'Online'));
     })
     .on('offline', () => {
       offlineCount++;
       if (offlineCount > 100) {
         console.log(
           timestamp(),
-          '🤔 Offline for over 100 ticks, are you on the vpn? Stopping.'
+          '🤔 Offline for over 100 ticks, are you on the vpn? Is there a bend process running? Stopping.'
         );
         process.exit(1);
       }
@@ -122,3 +92,42 @@ ${data.toString()}
       ticks = -1;
     });
 }
+
+async function checkService(controller) {
+  try {
+    const res = await execSync(`curl ${ADDRESS}`, {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    });
+    // emit `online` and `offline` events to the controller based on curl output
+    if (GOT_BYTES.test(res)) {
+      controller.emit('online');
+    } else {
+      controller.emit('offline');
+    }
+  } catch (e) {
+    controller.emit('offline');
+  }
+}
+
+(async function main() {
+  controller = getController();
+  controller.emit('init');
+
+  while (true) {
+    sample();
+    if (paused) {
+      await setTimeout(INTERVAL * 1000);
+      continue;
+    }
+    await checkService(controller);
+    if (ticks > 100) {
+      ticks = 0;
+    } else {
+      ticks++;
+    }
+    await setTimeout(INTERVAL * 1000);
+  }
+})();
+
+process.on('exit', () => {});
