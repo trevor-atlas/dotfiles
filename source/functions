@@ -147,16 +147,6 @@ v() {
 	fi;
 }
 
-# `o` with no arguments opens the current directory, otherwise opens the given
-# location
-o() {
-	if [ $# -eq 0 ]; then
-		open .;
-	else
-		open "$@";
-	fi;
-}
-
 # `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring
 # the `.git` directory, listing directories first. The output gets piped into
 # `less` with options to preserve color and line numbers, unless the output is
@@ -311,23 +301,6 @@ convert_webm() {
 # Utilities
 ##########
 
-checkNVM() {
-     if [[ -f .nvmrc  ]] ; then
-         A=$(cat .nvmrc)
-         A="v$A"
-         B=$(fnm current 2>&1)
-         # only get B equal to length of A
-         B=${B:0:${#A}}
-         if [[ $A != $B  ]] ; then echo "fnm use $A" && fnm use > /dev/null ; fi;
-    fi;
-}
-
-checkNVM
-
-cd() {
-  builtin cd $@ ; checkNVM
-}
-
 colortest() {
 	awk 'BEGIN{
 		s="/\\/\\/\\/\\/\\"; s=s s s s s s s s s s s s s s s s s s s s s s s;
@@ -400,7 +373,7 @@ function gclean() {
 gitb() {
   local branchname=$(echo $@ | sed 's/ /-/g')
   local datestr=$(date +%F)
-  branchname=$(echo "$USER"/"$datestr"/"$branchname")
+  branchname=$(echo "$USER"/"$branchname")
   git checkout -b $branchname
 }
 
@@ -421,7 +394,7 @@ icebreaker() {
 # HUBSPOT
 ####################################################
 # Set to the directory you typically clone your git repos
-HUBSPOT_CODE_DIR=$HOME/repos
+HUBSPOT_CODE_DIR="$HOME/repos"
 
 # Completion for repo
 _repo_comp() {
@@ -465,7 +438,7 @@ update_repos() {
 }
 
 tail_bend_logs() {
-	tail -f ~/.cache/nvim/asset-bender.log 
+	tail -f ~/.cache/nvim/asset-bender.log
 }
 
 nvim_logs() {

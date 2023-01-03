@@ -9,13 +9,14 @@ alias ngrok3000='ngrok start tatlas'
 eval "$(hub alias -s)"
 alias githistory='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
 
-alias ping="$ATLAS_ROOT/prettyping --nolegend"
 alias nodescripts="jq '.scripts' package.json"
 alias preview="fzf --preview 'bat --color \"always\" {}'"
 
 # add support for ctrl+o to open selected file in VS Code
 export FZF_DEFAULT_OPTS="--bind='ctrl-o:execute(code {})+abort'"
 alias help="tldr"
+
+alias exam="exa -lam --group-directories-first --color=always --git"
 
 # utf-8 support
 alias tmux='tmux -u'
@@ -30,7 +31,7 @@ brew cleanup;"
 alias stfu="osascript -e 'set volume output muted true'"
 alias pumpitup="osascript -e 'set volume output volume 100'"
 
-alias neofetch="neofetch --ascii ~/.config/atlas/ascii/shrek --ascii_colors 2 5 6 1"
+alias neofetch="neofetch --ascii ~/.config/atlas/ascii/toucan --ascii_colors 2 5 6 1"
 
 # work related
 # lerna

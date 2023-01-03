@@ -58,10 +58,6 @@ set number
 set relativenumber
 set formatoptions+=j
 
-
-cmap w!! w !sudo tee %                  " You can't stop me
-au! BufWritePost $MYVIMRC source %      " auto source when writing to init.vm alternatively you can run :source $MYVIMRC
-
 scriptencoding utf-8
 autocmd BufReadPre,FileReadPre *.md :set wrap
 autocmd FocusLost * silent! wa " Automatically save file
@@ -128,11 +124,6 @@ set nowb
 
 " Source depending on if VSCode is our client
 if exists('g:vscode')
-    " VSCode extension
-    " source $HOME/.config/nvim/vscode/windows.vim
-else
-    " ordinary neovim
-
 	" nnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.focusBelowGroup')<CR>
 	" xnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.focusBelowGroup')<CR>
 	" nnoremap <silent> <C-k> :call VSCodeNotify('workbench.action.focusAboveGroup')<CR>
