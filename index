@@ -17,8 +17,8 @@ source "$ATLAS_ROOT/source/alias"
 source "$ATLAS_ROOT/source/functions"
 
 alias commit="$ATLAS_ROOT/functions/commit"
-flexo() { node "$ATLAS_ROOT/flexo/build/main.js" "$@" }
-flexodev() { NODE_ENV=development node "$ATLAS_ROOT/flexo/build/main.js" "$@" }
+flexo() { node "~/repos/flexo/build/main.js" "$@" }
+flexodev() { NODE_ENV=development node "~/repos/flexo/build/main.js" "$@" }
 
 
 export EDITOR="nvim"

@@ -122,27 +122,6 @@ set nobackup
 set nowb
 
 
-" Source depending on if VSCode is our client
-if exists('g:vscode')
-	" nnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.focusBelowGroup')<CR>
-	" xnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.focusBelowGroup')<CR>
-	" nnoremap <silent> <C-k> :call VSCodeNotify('workbench.action.focusAboveGroup')<CR>
-	" xnoremap <silent> <C-k> :call VSCodeNotify('workbench.action.focusAboveGroup')<CR>
-	" nnoremap <silent> <C-h> :call VSCodeNotify('workbench.action.focusLeftGroup')<CR>
-	" xnoremap <silent> <C-h> :call VSCodeNotify('workbench.action.focusLeftGroup')<CR>
-	" nnoremap <silent> <C-l> :call VSCodeNotify('workbench.action.focusRightGroup')<CR>
-
-	" xnoremap <silent> <C-l> :call VSCodeNotify('workbench.action.focusRightGroup')<CR>
-endif
-
-
-" checks if your terminal has 24-bit color support
-if (has("termguicolors"))
-    set termguicolors
-    hi LineNr ctermbg=NONE guibg=NONE
-endif
-set tabstop=4
-set shiftwidth=4
 
 " Clear highlighting on escape in normal mode
 nnoremap <esc> :noh<return><esc>
