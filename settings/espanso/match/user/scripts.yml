@@ -1,0 +1,36 @@
+name: scripts
+parent: default
+
+matches:
+  - trigger: ":time"
+    replace: "{{mytime}}"
+    vars:
+      - name: mytime
+        type: date
+        params:
+          format: "%H:%M"
+  - trigger: ":rfc"
+    replace: "{{component}}"
+    vars:
+      - name: form1
+        type: form
+        params:
+          layout: |
+            Name [[name]]
+            Type [[type]]
+          fields:
+            name:
+              type: text
+              label: Name
+            type:
+              type: list
+              label: Type
+              default: function
+              values:
+                - function
+                - arrow
+      - name: component
+        type: shell
+        params:
+          cmd: "node /Users/atlas/.config/atlas/scripts/snippets.js 'component' '{{form1.name}}' '{{form1.type}}'"
+          shell: zsh

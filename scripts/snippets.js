@@ -5,85 +5,41 @@ function toTitleCase(str) {
   );
 }
 
-function state(name) {
-  if (!name) {
-    return '';
-  }
-  return `const [${name}, set${
-    name.charAt(0).toUpperCase() + name.slice(1)
-  }] = useState();`;
-}
-
-const props = (name) => `props: ${name}Props`;
-const jsx = (name) => `
-  return (
-    <>${name}</>
-  );`;
-
-const propType = (name) => `interface ${name}Props {
-  children: React.ReactNode;
-}`;
-
-const imports = (stateName) =>
-  `import React${stateName ? ', { useState } ' : ' '}from 'react';`;
-
-const component = (type, name, body) => {
+const component = (type, name) => {
   const declaration =
     type === 'function'
-      ? `function ${name}(${props(name)}) {`
-      : `const ${name} = (${props(name)}) => {`;
+      ? `function ${name}(props: ${name}Props) {`
+      : `const ${name} = (props: ${name}Props) => {`;
 
+  console.log(declaration);
   return `${declaration}
-  ${body}
+  return (
+    <>${name}</>
+  );
 };`;
 };
 
 function ReactComponent(name, type, stateName) {
   name = toTitleCase(name);
+  return `interface ${name}Props {
+  children: React.ReactNode;
+}
 
-  const body = `${state(stateName)}
-  ${jsx(name)}`;
-
-  return `
-${imports(stateName)}
-
-${propType(name)}
-
-${component(type, name, body)}
+${component(type, name)}
 `;
 }
+const print = (str) => console.log(str);
 
-function InlineReactComponent(name) {
-  name = toTitleCase(name);
-
-  return component('arrow', name, jsx(name));
-}
-
-function ReactMemo(name) {
-  return `const ${name} = useMemo(() => {
-    return
-  }, []);`;
-}
-
-function ReactUseEffect(name) {
-  return `useEffect(() => {
-    return
-  }, []);`;
-}
-
-function ReactUseRef(name) {
-  return `const ${name} = useRef();`;
-}
-
-function ReactUseContext(name) {
-  return `const ${name} = useContext();`;
-}
-
-function ReactUseEffect() {
-  return `useEffect(() => {
-    return
-  }, []);`;
-}
+(function main() {
+  const [action, ...args] = process.argv.slice(2);
+  switch (action) {
+    case 'component':
+      return print(ReactComponent(...args));
+    default:
+      return print(ReactComponent(...args));
+      return print('No action found');
+  }
+})();
 
 const toScreamingSnakeCase = (name) => name.toUpperCase().replace(/\s/g, '_');
 

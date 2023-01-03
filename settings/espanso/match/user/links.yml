@@ -10,4 +10,3 @@ matches:
     replace: "https://trevoratlas.com"
   - trigger: ":linkedin"
     replace: "https://www.linkedin.com/in/trevoratlas/"
-

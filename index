@@ -6,7 +6,11 @@ export ATLAS_STORAGE_DIR="$HOME/Dropbox"
 export ATLAS_NOTES_DIR="$ATLAS_STORAGE_DIR/notes"
 export ATLAS_MEDIA_DIR="$ATLAS_STORAGE_DIR/media"
 export ATLAS_SCREENSHOT_DIR="$ATLAS_STORAGE_DIR/Screenshots"
-export ATLAS_PROJECTS_DIR="$HOME/projects"
+export ATLAS_PROJECTS_DIR="$HOME/repos"
+export WEBSITE_DIR="$HOME/repos/trevor-atlas"
+export BLOG_DIR="$WEBSITE_DIR/posts"
+export UNSPLASH_DOWNLOAD_PATH="$WEBSITE_DIR/public/images"
+
 
 source "$ATLAS_ROOT/source/install_helpers"
 source "$ATLAS_ROOT/source/alias"
@@ -16,10 +20,8 @@ alias commit="$ATLAS_ROOT/functions/commit"
 flexo() { . "$ATLAS_ROOT/functions/flexo" }
 
 
-EDITOR=nvim
-export EDITOR
-VISUAL="$EDITOR"
-export VISUAL
+export EDITOR="nvim"
+export VISUAL="code"
 
 install_dotfiles() {
   sh "$ATLAS_ROOT"/install
