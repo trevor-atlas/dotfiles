@@ -11,6 +11,13 @@ export WEBSITE_DIR="$HOME/repos/trevor-atlas"
 export BLOG_DIR="$WEBSITE_DIR/posts"
 export UNSPLASH_DOWNLOAD_PATH="$WEBSITE_DIR/public/images"
 
+# reduce the number of syscalls
+# https://blog.packagecloud.io/set-environment-variable-save-thousands-of-system-calls/
+export TZ="America/New_York"
+# force ASCII charset for fs searches
+# because it's much faster
+# https://www.inmotionhosting.com/support/website/speed-up-grep-searches-with-lc-all/
+export LC_ALL=C
 
 source "$ATLAS_ROOT/source/install_helpers"
 source "$ATLAS_ROOT/source/alias"
