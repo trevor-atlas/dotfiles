@@ -1,12 +1,24 @@
-const EventEmitter = require('events').EventEmitter;
-const { spawn, execSync } = require('child_process');
-const { setTimeout } = require('node:timers/promises');
+#!/usr/bin/env ts-node
+
+import { EventEmitter } from 'events';
+import { spawn, execSync } from 'child_process';
+import { setTimeout } from 'node:timers/promises';
+import { FgGreen, FgRed, Reset } from './colors';
 
 const GOT_BYTES = /bender-proxy/gim;
+const STARTUP_ERR = /Bootstrap failed/gim;
 const INTERVAL = 5; // in seconds
 const ADDRESS = 'local.hubspotqa.com';
 
-let controller;
+const logPrefix = '[🔎]';
+const log = (...msgs: any[]) => console.log(logPrefix, ...msgs);
+const logger = {
+  print: log,
+  error: (...msgs: any[]) => console.error(logPrefix, FgRed, ...msgs, Reset),
+  success: (...msgs: any[]) => console.log(logPrefix, FgGreen, ...msgs, Reset),
+};
+
+let controller: EventEmitter;
 let offlineCount = 0;
 let ticks = 0;
 let paused = false;
@@ -40,15 +52,15 @@ const timestamp = () => {
   const now = new Date();
   const date = now.getDate().toString().padStart(2, '0');
   const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const year = now.getFullYear();
+  const year = now.getFullYear().toString().split('').slice(2).join('');
   const hours = now.getHours().toString().padStart(2, '0');
   const minutes = now.getMinutes().toString().padStart(2, '0');
   const seconds = now.getSeconds().toString().padStart(2, '0');
 
-  return `[${year}-${month}-${date} at ${hours}:${minutes}:${seconds}]`;
+  return `${year}-${month}-${date} at ${hours}:${minutes}:${seconds}`;
 };
 
-const throttledFunc = (fn) => {
+const throttledFunc = (fn: Function) => {
   if (ticks % 2 === 0) {
     fn();
   }
@@ -58,18 +70,20 @@ const throttledFunc = (fn) => {
 function getController() {
   return new EventEmitter()
     .on('init', () => {
-      console.log('🚀 initializing...');
+      logger.print('starting watcher for bend-proxy...');
       offlineCount = 0;
       ticks = 0;
     })
     .on('online', () => {
       offlineCount = 0;
-      throttledFunc(() => console.log(timestamp(), getGlobe(), 'Online'));
+      throttledFunc(() =>
+        logger.print(timestamp(), getGlobe(), `${FgGreen}Online${Reset}`)
+      );
     })
     .on('offline', () => {
       offlineCount++;
       if (offlineCount > 100) {
-        console.log(
+        logger.error(
           timestamp(),
           '🤔 Offline for over 100 ticks, are you on the vpn? Is there a bend process running? Stopping.'
         );
@@ -78,13 +92,19 @@ function getController() {
       if (ticks > 0 && offlineCount < 5) {
         return;
       }
-      console.log(timestamp(), '🚨 Offline!');
+      logger.print(timestamp(), '🚨 Offline!');
       const restart = spawn('brew', ['services', 'restart', 'bender-proxy']);
       restart.stdout.on('data', (data) => {
-        console.log(timestamp(), '✅ Successfully restarted bender-proxy');
+        if (STARTUP_ERR.test(data.toString())) {
+          logger.error(`💣 Error restarting bender-proxy:
+${data.toString()}
+`);
+          return;
+        }
+        logger.success(timestamp(), '✅ Successfully restarted bender-proxy');
       });
       restart.stderr.on('data', (data) => {
-        console.log(`💣 Error restarting bender:
+        logger.error(`💣 Error restarting bender-proxy:
 ${data.toString()}
 `);
       });
@@ -93,7 +113,7 @@ ${data.toString()}
     });
 }
 
-async function checkService(controller) {
+async function checkService(controller: EventEmitter) {
   try {
     const res = await execSync(`curl ${ADDRESS}`, {
       encoding: 'utf8',

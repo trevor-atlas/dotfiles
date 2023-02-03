@@ -1,17 +1,18 @@
-function toTitleCase(str) {
+#!/usr/bin/env ts-node
+
+function toTitleCase(str: string) {
   return str.replace(
     /\w\S*/g,
     (txt) => txt.charAt(0).toUpperCase() + txt.substr(1)
   );
 }
 
-const component = (type, name) => {
+const component = (type: ReactComponentType, name: string) => {
   const declaration =
     type === 'function'
       ? `function ${name}(props: ${name}Props) {`
       : `const ${name} = (props: ${name}Props) => {`;
 
-  console.log(declaration);
   return `${declaration}
   return (
     <>${name}</>
@@ -19,7 +20,9 @@ const component = (type, name) => {
 };`;
 };
 
-function ReactComponent(name, type, stateName) {
+type ReactComponentType = 'function' | 'arrow';
+
+function ReactComponent(name: string, type: ReactComponentType) {
   name = toTitleCase(name);
   return `interface ${name}Props {
   children: React.ReactNode;
@@ -28,7 +31,7 @@ function ReactComponent(name, type, stateName) {
 ${component(type, name)}
 `;
 }
-const print = (str) => console.log(str);
+const print = (str: string) => console.log(str);
 
 (function main() {
   const [action, ...args] = process.argv.slice(2);
@@ -37,19 +40,19 @@ const print = (str) => console.log(str);
       return print(ReactComponent(...args));
     default:
       return print(ReactComponent(...args));
-      return print('No action found');
   }
 })();
 
-const toScreamingSnakeCase = (name) => name.toUpperCase().replace(/\s/g, '_');
+const toScreamingSnakeCase = (name: string) =>
+  name.toUpperCase().replace(/\s/g, '_');
 
-function ReactUseQuery(queryName) {
+function ReactUseQuery(queryName: string) {
   return `const { data, loading, error } = useQuery(${toScreamingSnakeCase(
     queryName
   )});`;
 }
 
-function ReactUseMutation(mutationName) {
+function ReactUseMutation(mutationName: string) {
   return `const [${mutationName}, { data, loading, error }] = useMutation(${toScreamingSnakeCase(
     mutationName
   )});`;

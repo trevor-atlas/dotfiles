@@ -23,59 +23,78 @@ select_file() {
 	fzf --preview="cat {}" --preview-window=right:70%:wrap --query="$given_file"
 }
 
-# gh issue list --label "Front End" --assignee "@me" --repo HubSpot/Merchant-Experience-Team
-ghe_issues() {
-	local repo="$1"
-	if [ -z "$repo" ]; then
-    repo='HubSpot/Merchant-Experience-Team'
+ID_COLOUR="\033[36m"
+TEXT_COLOUR="\033[34m"
+STATUS_COLOUR="\033[33m"
+SHELL_COLOUR="\033[0m"
+
+
+my_issues() {
+  local repo="${1:-HubSpot/Billing-Management-Team}"
+	# gh issue list --label 'FE' --assignee '@me' --repo HubSpot/Merchant-Experience-Team
+	local issue_list=$(GH_FORCE_TTY=true gh issue list --label 'FE' --repo "$repo" --assignee '@me')
+
+  if [[ -z $issue_list ]]; then
+    return 1
   fi
-	gh issue list --label 'Front End' --assignee '@me' --repo "$repo" --json 'title'
+
+  if [[ ${issue_list} == no* ]]; then
+    return 1
+  fi
+
+	local issue="$(echo "$issue_list" | awk -F'\t' -v ID_COLOUR="$ID_COLOUR" -v TEXT_COLOUR="$TEXT_COLOUR" -v STATUS_COLOUR="$STATUS_COLOUR" -v SHELL_COLOUR="$SHELL_COLOUR" \
+		'{print ID_COLOUR $1 SHELL_COLOUR"\t"TEXT_COLOUR $3 SHELL_COLOUR"\t"STATUS_COLOUR $2}' |
+		fzf -d' ' \
+			--ansi \
+			--prompt="my issues in $repo:")"
+
+	echo "$issue" | cut -f-2
+  #xargs -n1 gh issue view -R "$repo" -c
 }
 
+# A SysOps guy once taught me the Three-Fingered Claw technique
+# These functions are *NIX OS and shell flavor-robust. Put them at the beginning of your script (bash or otherwise), try() your statement and code on.
+# Explanation
+
+# yell: print the script name and all arguments to stderr:
+# $0 is the path to the script ;
+# $* are all arguments.
+# >&2 means > redirect stdout to & pipe 2. pipe 1 would be stdout itself.
+yell() {
+  echo "$0: $*" >&2;
+}
+
+# die does the same as yell, but exits with a non-0 exit status, which means “fail”.
+die() {
+  yell "$*"; return 111;
+}
+
+# try uses the || (boolean OR), which only evaluates the right side if the left one failed.
+# $@ is all arguments again, [but different](https://stackoverflow.com/a/3008734/5770188).
+try() {
+  "$@" || die "cannot $*";
+}
+
+echoerr() { printf "\e[31;1m%s\e[0m\n" "$*" >&2; }
+
 make_branch() {
-		ghe_issues | echo |
-    sed -e 's/"\(.*\)"/\1/' -e 's/\\t/\t/' |
-    fzf \
-      --with-nth=1 \
-      --delimiter='\t' \
-      --preview='echo -e {2}' \
-      --preview-window=top:wrap |
-    cut -f1 |
-    sed -e 's/\. /\t/' -e 's/[^a-zA-Z0-9\t]/-/g' |
-    awk '{printf "%s/%s", $1, tolower($2)}' | echo
+		local issue=$(my_issues)
+		local exit_code="$?"
+    if [[ $exit_code -gt 0 ]]; then
+      echoerr "No issues found"
+      return 1
+    fi
+
+		if [[ -z $issue ]]; then
+			echoerr "No issue selected"
+			return 1
+		fi
+		echo "would have made branch for $issue"
+    # gitb "$issue"
 }
 
 gch() {
  git checkout "$(git branch --all | fzf | tr -d '[:space:]')"
-}
-
-pr_checkout() {
-  local jq_template pr_number
-
-  jq_template='"'\
-'#\(.number) - \(.title)'\
-'\t'\
-'Author: \(.user.login)\n'\
-'Created: \(.created_at)\n'\
-'Updated: \(.updated_at)\n\n'\
-'\(.body)'\
-'"'
-
-  pr_number=$(
-    gh api 'repos/:owner/:repo/pulls' |
-    jq ".[] | $jq_template" |
-    sed -e 's/"\(.*\)"/\1/' -e 's/\\t/\t/' |
-    fzf \
-      --with-nth=1 \
-      --delimiter='\t' \
-      --preview='echo -e {2}' \
-      --preview-window=top:wrap |
-    sed 's/^#\([0-9]\+\).*/\1/'
-  )
-
-  if [ -n "$pr_number" ]; then
-    gh pr checkout "$pr_number"
-  fi
 }
 
 nn() {
@@ -182,38 +201,14 @@ else
 fi
 }
 
+# download a file from $1 and save it in a file $2
 dl() {
-  curl "$1" --output "$2"
+  curl "$1" --output "~/Downloads/$2"
 }
-
-mdless() {
-	pandoc -s -f markdown -t man $1 | groff -T utf8 -man | less
-}
-
-umedit() {
-	mkdir -p ${ATLAS_DEV_DIR}; v ${ATLAS_DEV_DIR}/$1;
-}
-
-um() { mdless ${ATLAS_DEV_DIR}"$1"; }
-
-umls() { ls ${ATLAS_DEV_DIR} }
 
 banner() {
 	figlet -f banner "$1" | sed -e "s/#/:${2}:/g" | sed -e 's/ /:blank:/g' | pbcopy
 }
-
-webpage_to_org() {
-	if [[ -z $1 ]]; then
-		echo "must provide a website"
-		return 1
-	fi
-	if [[ -z $2 ]]; then
-		echo "must provide a output filename (without extension)"
-		return 1
-	fi
-	curl -sL ${1} | pandoc -o ${2}.org --from=html --to=org
-}
-
 
 ##########
 # TMUX
@@ -317,10 +312,6 @@ colortest() {
 	}'
 }
 
-dump_ifit_mongo() {
-    docker exec mongodb ~/.atlas/scripts/dump-mongo
-}
-
 rename_files() {
 	local old=$1
 	local new=$2
@@ -328,16 +319,16 @@ rename_files() {
 }
 
 confirm() {
-    # call with a prompt string or use a default
-    read -r -p "${1:-Are you sure? [y/N]} " response
-    case "$response" in
-        [yY][eE][sS]|[yY])
-            true
-            ;;
-        *)
-            false
-            ;;
-    esac
+  # call with a prompt string or use a default
+  read -r -p "${1:-Are you sure? [y/N]} " response
+  case "$response" in
+      [yY][eE][sS]|[yY])
+          true
+          ;;
+      *)
+          false
+          ;;
+  esac
 }
 
 ##########
@@ -361,7 +352,7 @@ gcr() {
 # Clean up local branches that have been merged
 function gclean() {
 	branch=$1
-	if [[ -z "$branch" ]] then
+	if [[ -z "$branch" ]]; then
 		branch=$(gdefault)
 	fi
 	confirm "Are you on a clean branch?" &&
@@ -370,24 +361,43 @@ function gclean() {
 	command git fetch --prune
 }
 
+# Create a new branch and switch to it
 gitb() {
-  local branchname=$(echo $@ | sed 's/ /-/g')
-  local datestr=$(date +%F)
+  # [          # start of character class
+  # [:space:]  # The POSIX character class for whitespace characters. It's
+               # functionally identical to [ \t\r\n\v\f] which matches a space,
+               # tab, carriage return, newline, vertical tab, or form feed. See
+               # https://en.wikipedia.org/wiki/Regular_expression#POSIX_character_classes
+  # ]          # end of character class
+  # \+         # one or more of the previous item (anything matched in the brackets).
+  local branchname=$(echo $1 | sed 's/-//g' | sed -re 's/[[:blank:]]/-/g')
+   if [[ $branchname = no-issue-found* ]]; then
+    echo "No issues found."
+    return 1
+  fi
+  # local datestr=$(date +%F)
   branchname=$(echo "$USER"/"$branchname")
   git checkout -b $branchname
 }
 
 
+# Create a new tag and push it to origin
 tag() {
-    command git checkout master
-    command git pull origin master
-    command git fetch --tags
-    command git tag -a "$1" -m "Release $1"
-    command git push origin "$1" --tag
+  command git checkout master
+  command git pull origin master
+  command git fetch --tags
+  command git tag -a "$1" -m "Release $1"
+  command git push origin "$1" --tag
 }
 
+# print a random icebreaker question
 icebreaker() {
 	node "$ATLAS_ROOT/scripts/icebreaker.js"
+}
+
+# open the neovim log file
+nvim_logs() {
+	nvim ~/.cache/nvim
 }
 
 ####################################################
@@ -401,6 +411,8 @@ _repo_comp() {
   reply=(`ls $HUBSPOT_CODE_DIR`);
 }
 
+# clone a repo if it doesn't exist
+# repo some-repo-name
 repo() {
   # if [ ! -d "$HUBSPOT_CODE_DIR/$1" ]; then
   #   echo "⚠️ Repo missing: \"$1\", cloning into $HUBSPOT_CODE_DIR/$1"
@@ -413,6 +425,8 @@ repo() {
   ~/.config/atlas/scripts/repo.ts "$1"
 }
 
+# add completion for repos in $HUBSPOT_CODE_DIR
+# https://zsh.sourceforge.io/Doc/Release/Completion-Using-compctl.html
 compctl -M 'm:{a-z}={A-Z}' -K _repo_comp repo
 
 # pulls latest changes from remote if there are any
@@ -431,21 +445,24 @@ update_repo() {
   fi
 }
 
+# update all repos in $HUBSPOT_CODE_DIR
 update_repos() {
   for i in $HUBSPOT_CODE_DIR/*;
     do cd $i && update_repo;
   done
 }
 
+# tail the asset bender log file
 tail_bend_logs() {
 	tail -f ~/.cache/nvim/asset-bender.log
 }
 
-nvim_logs() {
-	nvim /Users/tatlas/.cache/nvim
-}
-
+# run prettier on all staged files
 pretty() {
   bpx hs-prettier --write $(git diff --name-only --cached)
 }
 
+# run hs projects with my preferred settings
+flexo() {
+  NODE_OPTIONS="--max_old_space_size=8192" bend reactor serve "$@" --update --ts-watch
+}
