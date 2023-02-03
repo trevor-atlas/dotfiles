@@ -4,3 +4,4 @@ autoload
 .idea
 complete-icebreakers.json
 scripts/complete-icebreakers.json
+.vscode
