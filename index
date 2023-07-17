@@ -34,4 +34,4 @@ install_dotfiles() {
 
 # Above sources are order dependent at the moment so we don't use a loop.
 # for f in "$ATLAS_ROOT/source*"; do source $f; done;
-set -i vi
+set -o vi

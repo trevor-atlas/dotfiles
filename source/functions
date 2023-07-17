@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 edit_file() {
-	previous_file="$1"
-	file_to_edit=`select_file $previous_file`
+  previous_file="$1"
+  file_to_edit=`select_file $previous_file`
 
-	if [ -n "$file_to_edit" ] ; then
-		"$EDITOR" "$file_to_edit"
-		edit_file "$file_to_edit"
-	fi
+  if [ -n "$file_to_edit" ] ; then
+    "$EDITOR" "$file_to_edit"
+    edit_file "$file_to_edit"
+  fi
 }
 
 cat() {
@@ -19,8 +19,8 @@ cat() {
 }
 
 select_file() {
-	given_file="$1"
-	fzf --preview="cat {}" --preview-window=right:70%:wrap --query="$given_file"
+  given_file="$1"
+  fzf --preview="cat {}" --preview-window=right:70%:wrap --query="$given_file"
 }
 
 ID_COLOUR="\033[36m"
@@ -31,8 +31,8 @@ SHELL_COLOUR="\033[0m"
 
 my_issues() {
   local repo="${1:-HubSpot/Billing-Management-Team}"
-	# gh issue list --label 'FE' --assignee '@me' --repo HubSpot/Merchant-Experience-Team
-	local issue_list=$(GH_FORCE_TTY=true gh issue list --label 'FE' --repo "$repo" --assignee '@me')
+  # gh issue list --label 'FE' --assignee '@me' --repo HubSpot/Merchant-Experience-Team
+  local issue_list=$(GH_FORCE_TTY=true gh issue list --label 'FE' --repo "$repo" --assignee '@me')
 
   if [[ -z $issue_list ]]; then
     return 1
@@ -42,13 +42,13 @@ my_issues() {
     return 1
   fi
 
-	local issue="$(echo "$issue_list" | awk -F'\t' -v ID_COLOUR="$ID_COLOUR" -v TEXT_COLOUR="$TEXT_COLOUR" -v STATUS_COLOUR="$STATUS_COLOUR" -v SHELL_COLOUR="$SHELL_COLOUR" \
-		'{print ID_COLOUR $1 SHELL_COLOUR"\t"TEXT_COLOUR $3 SHELL_COLOUR"\t"STATUS_COLOUR $2}' |
-		fzf -d' ' \
-			--ansi \
-			--prompt="my issues in $repo:")"
+  local issue="$(echo "$issue_list" | awk -F'\t' -v ID_COLOUR="$ID_COLOUR" -v TEXT_COLOUR="$TEXT_COLOUR" -v STATUS_COLOUR="$STATUS_COLOUR" -v SHELL_COLOUR="$SHELL_COLOUR" \
+    '{print ID_COLOUR $1 SHELL_COLOUR"\t"TEXT_COLOUR $3 SHELL_COLOUR"\t"STATUS_COLOUR $2}' |
+    fzf -d' ' \
+      --ansi \
+      --prompt="my issues in $repo:")"
 
-	echo "$issue" | cut -f-2
+  echo "$issue" | cut -f-2
   #xargs -n1 gh issue view -R "$repo" -c
 }
 
@@ -78,19 +78,19 @@ try() {
 echoerr() { printf "\e[31;1m%s\e[0m\n" "$*" >&2; }
 
 make_branch() {
-		local issue=$(my_issues)
-		local exit_code="$?"
-    if [[ $exit_code -gt 0 ]]; then
-      echoerr "No issues found"
-      return 1
-    fi
+  local issue=$(my_issues)
+  local exit_code="$?"
+  if [[ $exit_code -gt 0 ]]; then
+    echoerr "No issues found"
+    return 1
+  fi
 
-		if [[ -z $issue ]]; then
-			echoerr "No issue selected"
-			return 1
-		fi
-		echo "would have made branch for $issue"
-    # gitb "$issue"
+  if [[ -z $issue ]]; then
+    echoerr "No issue selected"
+    return 1
+  fi
+  echo "would have made branch for $issue"
+  # gitb "$issue"
 }
 
 gch() {
@@ -98,16 +98,16 @@ gch() {
 }
 
 nn() {
-	local note_name="$*"
-	local note_date="`date +%F`"
-	local note_ext="md"
-	if [[ $note_name == "" ]]; then
-		note_name="$note_date.$note_ext"
-	else
-		note_name="$note_name.$note_ext"
-	fi
-	mkdir -p $ATLAS_NOTES_DIR
-	v "$ATLAS_NOTES_DIR/$note_name"
+  local note_name="$*"
+  local note_date="`date +%F`"
+  local note_ext="md"
+  if [[ $note_name == "" ]]; then
+    note_name="$note_date.$note_ext"
+  else
+    note_name="$note_name.$note_ext"
+  fi
+  mkdir -p $ATLAS_NOTES_DIR
+  v "$ATLAS_NOTES_DIR/$note_name"
 }
 
 ns() {
@@ -130,40 +130,40 @@ v $files
 
 # Create a new directory and enter it
 mkd() {
-	mkdir -p "$@" && cd "$_";
+  mkdir -p "$@" && cd "$_";
 }
 
 # Determine size of a file or total size of a directory
 fs() {
-	if du -b /dev/null > /dev/null 2>&1; then
-		local arg=-sbh;
-	else
-		local arg=-sh;
-	fi
-	if [[ -n "$@" ]]; then
-		du $arg -- "$@";
-	else
-		du $arg .[^.]* ./*;
-	fi;
+  if du -b /dev/null > /dev/null 2>&1; then
+    local arg=-sbh;
+  else
+    local arg=-sh;
+  fi
+  if [[ -n "$@" ]]; then
+    du $arg -- "$@";
+  else
+    du $arg .[^.]* ./*;
+  fi;
 }
 
 # Create a data URL from a file
 dataurl() {
-	local mimeType=$(file -b --mime-type "$1");
-	if [[ $mimeType == text/* ]]; then
-		mimeType="${mimeType};charset=utf-8";
-	fi
-	echo "data:${mimeType};base64,$(openssl base64 -in "$1" | tr -d '\n')";
+  local mimeType=$(file -b --mime-type "$1");
+  if [[ $mimeType == text/* ]]; then
+    mimeType="${mimeType};charset=utf-8";
+  fi
+  echo "data:${mimeType};base64,$(openssl base64 -in "$1" | tr -d '\n')";
 }
 
 # `v` with no arguments opens the current directory in Neovim, otherwise opens the
 # given location
 v() {
-	if [ $# -eq 0 ]; then
-		$EDITOR;
-	else
-		$EDITOR "$@";
-	fi;
+  if [ $# -eq 0 ]; then
+    $EDITOR;
+  else
+    $EDITOR "$@";
+  fi;
 }
 
 # `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring
@@ -171,33 +171,33 @@ v() {
 # `less` with options to preserve color and line numbers, unless the output is
 # small enough for one screen.
 tre() {
-	tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX;
+  tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX;
 }
 
 # Copy website and its contents
 copy_website () {
-	wget -e robots=off -p -k "$1"
+  wget -e robots=off -p -k "$1"
 }
 
 # Extract most know archives with one command
 extract () {
 if [ -f $1 ]; then
-	case $1 in
-		*.tar.bz2)	tar xjf $1;;
-		*.tar.gz)	tar xzf $1;;
-		*.bz2)		bunzip2 $1;;
-		*.rar)		unrar e $1;;
-		*.gz)		gunzip $1;;
-		*.tar)		tar xf $1;;
-		*.tbz2)		tar xjf $1;;
-		*.tgz)		tar xzf $1;;
-		*.zip)		unzip $1;;
-		*.Z)		uncompress $1;;
-		*.7z)		7z x $1;;
-		*)			echo "'$1' cannot be extracted via extract()" ;;
-	esac
+  case $1 in
+    *.tar.bz2)	tar xjf $1;;
+    *.tar.gz)	tar xzf $1;;
+    *.bz2)		bunzip2 $1;;
+    *.rar)		unrar e $1;;
+    *.gz)		gunzip $1;;
+    *.tar)		tar xf $1;;
+    *.tbz2)		tar xjf $1;;
+    *.tgz)		tar xzf $1;;
+    *.zip)		unzip $1;;
+    *.Z)		uncompress $1;;
+    *.7z)		7z x $1;;
+    *)			echo "'$1' cannot be extracted via extract()" ;;
+  esac
 else
-	echo "'$1' is not a valid file"
+  echo "'$1' is not a valid file"
 fi
 }
 
@@ -207,7 +207,7 @@ dl() {
 }
 
 banner() {
-	figlet -f banner "$1" | sed -e "s/#/:${2}:/g" | sed -e 's/ /:blank:/g' | pbcopy
+  figlet -f banner "$1" | sed -e "s/#/:${2}:/g" | sed -e 's/ /:blank:/g' | pbcopy
 }
 
 ##########
@@ -215,44 +215,44 @@ banner() {
 ##########
 
 unbool() {
-	tmux kill-server
+  tmux kill-server
 }
 
 bool() {
-	local SESSION_NAME="Bool"
-	tmux has-session -t $SESSION_NAME 2>/dev/null
+  local SESSION_NAME="Bool"
+  tmux has-session -t $SESSION_NAME 2>/dev/null
 
-	if [[ $? != 0 ]]; then
-		# Start New Session with our name
-		tmux new-session -t "$SESSION_NAME" -d
+  if [[ $? != 0 ]]; then
+    # Start New Session with our name
+    tmux new-session -t "$SESSION_NAME" -d
 
-		# Name first Window and start zsh
-		tmux rename-window -t 1 '🌀'
+    # Name first Window and start zsh
+    tmux rename-window -t 1 '🌀'
 
-		# Create and setup panes
-		local two='🌮'
-		tmux new-window -t "$SESSION_NAME":2 -n "$two"
-		tmux send-keys -t "$two" "cd ~/repos && clear" C-m
+    # Create and setup panes
+    local two='🌮'
+    tmux new-window -t "$SESSION_NAME":2 -n "$two"
+    tmux send-keys -t "$two" "cd ~/repos && clear" C-m
 
-		local three='💣'
-		tmux new-window -t "$SESSION_NAME":3 -n "$three"
-		tmux send-keys -t "$three" "cd ~/repos && clear" C-m
+    local three='💣'
+    tmux new-window -t "$SESSION_NAME":3 -n "$three"
+    tmux send-keys -t "$three" "cd ~/repos && clear" C-m
 
-		local four='💎'
-		tmux new-window -t "$SESSION_NAME":4 -n "$four"
-		tmux send-keys -t "$four" "cd ~/repos && clear" C-m
+    local four='💎'
+    tmux new-window -t "$SESSION_NAME":4 -n "$four"
+    tmux send-keys -t "$four" "cd ~/repos && clear" C-m
 
-		local five='🪝'
-		tmux new-window -t "$SESSION_NAME":5 -n "$five"
-		tmux send-keys -t "$five" "cd ~/repos && clear" C-m
+    local five='🪝'
+    tmux new-window -t "$SESSION_NAME":5 -n "$five"
+    tmux send-keys -t "$five" "cd ~/repos && clear" C-m
 
-		local six='🧩'
-		tmux new-window -t "$SESSION_NAME":6 -n "$six"
-		tmux send-keys -t "$six" "cd ~/repos && clear" C-m
-	fi
+    local six='🧩'
+    tmux new-window -t "$SESSION_NAME":6 -n "$six"
+    tmux send-keys -t "$six" "cd ~/repos && clear" C-m
+  fi
 
-	# Attach Session, on the Main window
-	tmux a -t "$SESSION_NAME"
+  # Attach Session, on the Main window
+  tmux a -t "$SESSION_NAME"
 }
 
 ##########
@@ -260,35 +260,35 @@ bool() {
 ##########
 
 convert_aiffs() {
-	for i in *.aiff;
-		do convert_aiff $i;
-	done
+  for i in *.aiff;
+    do convert_aiff $i;
+  done
 }
 
 convert_aiff() {
-	ffmpeg -hide_banner -loglevel error -y -i "$1" -c:a libvorbis -q:a 4 "_$1.ogg";
+  ffmpeg -hide_banner -loglevel error -y -i "$1" -c:a libvorbis -q:a 4 "_$1.ogg";
 }
 
 convert_gifs() {
-	for i in *.gif;
-		do convert_gif $i;
-	done
+  for i in *.gif;
+    do convert_gif $i;
+  done
 }
 
 convert_gif() {
-	ffmpeg -hide_banner -loglevel error -y -f gif -i "$1" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4";
+  ffmpeg -hide_banner -loglevel error -y -f gif -i "$1" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4";
 }
 
 convert_webms() {
-	for i in *.webm;
-		do convert_webm $i;
-	done
+  for i in *.webm;
+    do convert_webm $i;
+  done
 }
 
 convert_webm() {
-	echo "Converting $1"
-	# ffmpeg -fflags +genpts -i "$1" -r 24 "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4"
-	ffmpeg -hide_banner -loglevel error -fflags +genpts -i "$1" -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -r 24 "${1%.*}.mp4"
+  echo "Converting $1"
+  # ffmpeg -fflags +genpts -i "$1" -r 24 "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4"
+  ffmpeg -hide_banner -loglevel error -fflags +genpts -i "$1" -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -r 24 "${1%.*}.mp4"
 }
 
 
@@ -297,25 +297,25 @@ convert_webm() {
 ##########
 
 colortest() {
-	awk 'BEGIN{
-		s="/\\/\\/\\/\\/\\"; s=s s s s s s s s s s s s s s s s s s s s s s s;
-		for (colnum = 0; colnum<256; colnum++) {
-			r = 255-(colnum*255/255);
-			g = (colnum*510/255);
-			b = (colnum*255/255);
-			if (g>255) g = 510-g;
-			printf "\033[48;2;%d;%d;%dm", r,g,b;
-			printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b;
-			printf "%s\033[0m", substr(s,colnum+1,1);
-		}
-		printf "\n";
-	}'
+  awk 'BEGIN{
+    s="/\\/\\/\\/\\/\\"; s=s s s s s s s s s s s s s s s s s s s s s s s;
+    for (colnum = 0; colnum<256; colnum++) {
+      r = 255-(colnum*255/255);
+      g = (colnum*510/255);
+      b = (colnum*255/255);
+      if (g>255) g = 510-g;
+      printf "\033[48;2;%d;%d;%dm", r,g,b;
+      printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b;
+      printf "%s\033[0m", substr(s,colnum+1,1);
+    }
+    printf "\n";
+  }'
 }
 
 rename_files() {
-	local old=$1
-	local new=$2
-	find . -name "*.$old" -exec bash -c 'mv "$1" "${1%.$old}".$new' - '{}' +
+  local old=$1
+  local new=$2
+  find . -name "*.$old" -exec bash -c 'mv "$1" "${1%.$old}".$new' - '{}' +
 }
 
 confirm() {
@@ -337,28 +337,28 @@ confirm() {
 
 # get default branch name (branch you should branch from for new work)
 gdefault() {
-	command git branch -rl '*/HEAD' | rev | cut -d/ -f1 | rev
+  command git branch -rl '*/HEAD' | rev | cut -d/ -f1 | rev
 }
 
 # publish local branch
 gpub() {
-	command git push --set-upstream origin $(git_current_branch)
+  command git push --set-upstream origin $(git_current_branch)
 }
 
 gcr() {
-	command git checkout -t origin/"${@}"
+  command git checkout -t origin/"${@}"
 }
 
 # Clean up local branches that have been merged
 function gclean() {
-	branch=$1
-	if [[ -z "$branch" ]]; then
-		branch=$(gdefault)
-	fi
-	confirm "Are you on a clean branch?" &&
-	command git checkout "$branch" &&
-	command git branch -d $(command git branch --merged="$branch" | grep -v "$branch") &&
-	command git fetch --prune
+  branch=$1
+  if [[ -z "$branch" ]]; then
+    branch=$(gdefault)
+  fi
+  confirm "Are you on a clean branch?" &&
+  command git checkout "$branch" &&
+  command git branch -d $(command git branch --merged="$branch" | grep -v "$branch") &&
+  command git fetch --prune
 }
 
 # Create a new branch and switch to it
@@ -392,12 +392,12 @@ tag() {
 
 # print a random icebreaker question
 icebreaker() {
-	node "$ATLAS_ROOT/scripts/icebreaker.js"
+  node "$ATLAS_ROOT/scripts/icebreaker.js"
 }
 
 # open the neovim log file
 nvim_logs() {
-	nvim ~/.cache/nvim
+  nvim ~/.cache/nvim
 }
 
 ####################################################
@@ -407,8 +407,12 @@ nvim_logs() {
 HUBSPOT_CODE_DIR="$HOME/repos"
 
 # Completion for repo
-_repo_comp() {
-  reply=(`ls $HUBSPOT_CODE_DIR`);
+# _repo_comp() {
+#   reply=(`ls $HUBSPOT_CODE_DIR`);
+# }
+
+is_inside_git_repo() {
+    git rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
 
 # clone a repo if it doesn't exist
@@ -427,7 +431,7 @@ repo() {
 
 # add completion for repos in $HUBSPOT_CODE_DIR
 # https://zsh.sourceforge.io/Doc/Release/Completion-Using-compctl.html
-compctl -M 'm:{a-z}={A-Z}' -K _repo_comp repo
+# compctl -M 'm:{a-z}={A-Z}' -K _repo_comp repo
 
 # pulls latest changes from remote if there are any
 # stores the current branch name and then switches to the master branch
@@ -435,6 +439,7 @@ compctl -M 'm:{a-z}={A-Z}' -K _repo_comp repo
 # does nothing if branch is dirty
 update_repo() {
   local branch=$(git_current_branch)
+  local isrepo=$(git status 2>/dev/null; echo $?)
   # if the branch is dirty, don't update
   if [[ $(git diff --stat) != '' ]]; then
     echo "⚠️ '$(pwd)' is dirty, skipping..."
@@ -447,14 +452,17 @@ update_repo() {
 
 # update all repos in $HUBSPOT_CODE_DIR
 update_repos() {
-  for i in $HUBSPOT_CODE_DIR/*;
-    do cd $i && update_repo;
+  for dir in $HUBSPOT_CODE_DIR/*; do
+    [[ -d "$dir" ]] || continue
+    {
+      cd "$dir" && is_inside_git_repo && update_repo
+    }
   done
 }
 
 # tail the asset bender log file
 tail_bend_logs() {
-	tail -f ~/.cache/nvim/asset-bender.log
+  tail -f ~/.cache/nvim/asset-bender.log
 }
 
 # run prettier on all staged files

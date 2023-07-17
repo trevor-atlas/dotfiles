@@ -99,6 +99,8 @@ vnoremap > >gv
 " jump to line start with H and line end with L
 nnoremap H ^
 nnoremap L $
+vnoremap H ^
+vnoremap L $
 
 nmap <Leader>s :write<Enter>
 nmap <Leader>q :q<Enter>
