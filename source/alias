@@ -13,10 +13,27 @@ alias nodescripts="jq '.scripts' package.json"
 alias preview="fzf --preview 'bat --color \"always\" {}'"
 
 # add support for ctrl+o to open selected file in VS Code
-export FZF_DEFAULT_OPTS="--bind='ctrl-o:execute(code {})+abort'"
+export FZF_DEFAULT_OPTS=" \
+--bind='ctrl-o:execute(code {})+abort' \
+--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
+--color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
+--color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8"
+
 alias help="tldr"
 
-alias exam="exa -lam --group-directories-first --color=always --git"
+if [[ "$(command -v exa)" ]]; then
+  unalias -m 'll'
+  unalias -m 'l'
+  unalias -m 'la'
+  unalias -m 'ls'
+  alias ls='exa -G --color auto --icons -a -s type'
+  alias ll='exa -l --color always --icons -a -s type'
+fi
+
+if [[ "$(command -v bat)" ]]; then
+  unalias -m 'cat'
+  alias cat='bat -pp'
+fi
 
 # utf-8 support
 alias tmux='tmux -u'
@@ -30,12 +47,6 @@ brew cleanup;"
 # Stuff I never really use but cannot delete either because of http://xkcd.com/530/
 alias stfu="osascript -e 'set volume output muted true'"
 alias pumpitup="osascript -e 'set volume output volume 100'"
-
-alias neofetch="neofetch --ascii ~/.config/atlas/ascii/toucan --ascii_colors 2 5 6 1"
-
-# work related
-# lerna
-alias mpclean="npx lerna exec -- rm -rf ./dist && yarn build"
 
 # nice ding sound if a script succeeds, error sound if it returns a non-zero exit code
 # nice for long running stuff :)

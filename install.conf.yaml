@@ -5,19 +5,23 @@
 - clean: ["~"]
 
 - link:
-    ~/.tmux.conf: settings/.tmux.conf
     ~/.config/nvim: settings/nvim
+    ~/.config/alacritty/alacritty.yml: settings/alacritty.yml
+    ~/.config/kitty: settings/kitty
+    ~/.config/skhd: settings/skhd
+    ~/.config/yabai: settings/yabai
+    ~/.config/starship.toml: settings/starship.toml
+    ~/.config/brewfile: settings/brewfile
+    ~/.vimrc: settings/.vimrc
+    ~/.tmux.conf: settings/.tmux.conf
     ~/.gitconfig: settings/.gitconfig
     ~/.gitignore_global: settings/.gitignore_global
-    ~/.config/alacritty/alacritty.yml: settings/alacritty.yml
     ~/.spacemacs: settings/.spacemacs
     ~/.i3: settings/.i3
     ~/.inputrc: settings/.inputrc
-    ~/.config/kitty: settings/kitty
-    ~/Library/Application Support/espanso: settings/espanso
 
 - create:
-    - ~/projects
+    - ~/repos
     - ~/.hushlogin
 
 - shell:

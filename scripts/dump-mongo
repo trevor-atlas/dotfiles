@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-rm -rf ./dump && mongodump --host galactica.ifit-dev.com --port 60000 --ssl --sslCAFile /root/.ssh/mongodb.ca.cert.pem --sslPEMKeyFile /root/.ssh/mongodb.vi
-per-user.key-and-cert.pem && mongorestore --drop --noIndexRestore
-
