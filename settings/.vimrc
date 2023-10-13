@@ -93,6 +93,8 @@ nnoremap <C-c> <Esc>
 inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
 
 " Better tabbing
+vnoremap <S-TAB> <gv
+vnoremap <TAB> >gv
 vnoremap < <gv
 vnoremap > >gv
 
