@@ -6,7 +6,7 @@ alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrom
 alias ngrok3000='ngrok start tatlas'
 
 # git
-eval "$(hub alias -s)"
+# eval "$(hub alias -s)"
 alias githistory='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
 
 alias nodescripts="jq '.scripts' package.json"
