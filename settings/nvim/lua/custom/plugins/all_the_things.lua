@@ -1,138 +1,162 @@
 return {
-  "nvim-lua/plenary.nvim",
-  "echasnovski/mini.bufremove",
-  { "max397574/better-escape.nvim", event = "InsertCharPre", opts = { timeout = 300 } },
-  { "NMAC427/guess-indent.nvim", event = "User AstroFile", config = function(_, opts)
-    require("guess-indent").setup(opts)
-    vim.cmd.lua { args = { "require('guess-indent').set_from_buffer('auto_cmd')" }, mods = { silent = true } }
-  end },
-  { -- TODO: REMOVE neovim-session-manager with AstroNvim v4
-    "Shatur/neovim-session-manager",
-    event = "BufWritePost",
-    cmd = "SessionManager",
-    enabled = vim.g.resession_enabled ~= true,
-  },
+  'nvim-lua/plenary.nvim',
+  'echasnovski/mini.bufremove',
+  { 'max397574/better-escape.nvim', event = 'InsertCharPre', opts = { timeout = 300 } },
   {
-    "stevearc/resession.nvim",
-    enabled = vim.g.resession_enabled == true,
-    opts = {
-      -- buf_filter = function(bufnr) return require("astronvim.utils.buffer").is_restorable(bufnr) end,
-      -- tab_buf_filter = function(tabpage, bufnr) return vim.tbl_contains(vim.t[tabpage].bufs, bufnr) end,
-    },
-  },
-  {
-    "s1n7ax/nvim-window-picker",
-    name = "window-picker",
-    opts = { picker_config = { statusline_winbar_picker = { use_winbar = "smart" } } },
-  },
-  {
-    "mrjones2014/smart-splits.nvim",
-    opts = { ignored_filetypes = { "nofile", "quickfix", "qf", "prompt" }, ignored_buftypes = { "nofile" } },
-  },
-  {
-    "windwp/nvim-autopairs",
-    event = "User AstroFile",
-    opts = {
-      check_ts = true,
-      ts_config = { java = false },
-      fast_wrap = {
-        map = "<M-e>",
-        chars = { "{", "[", "(", '"', "'" },
-        pattern = string.gsub([[ [%'%"%)%>%]%)%}%,] ]], "%s+", ""),
-        offset = 0,
-        end_key = "$",
-        keys = "qwertyuiopzxcvbnmasdfghjkl",
-        check_comma = true,
-        highlight = "PmenuSel",
-        highlight_grey = "LineNr",
-      },
-    },
+    'NMAC427/guess-indent.nvim',
     config = function(_, opts)
-      local npairs = require "nvim-autopairs"
-      npairs.setup(opts)
-
-      if not vim.g.autopairs_enabled then npairs.disable() end
-      local cmp_status_ok, cmp = pcall(require, "cmp")
-      if cmp_status_ok then
-        cmp.event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done { tex = false })
-      end
+      require('guess-indent').setup(opts)
+      vim.cmd.lua({ args = { "require('guess-indent').set_from_buffer('auto_cmd')" }, mods = { silent = true } })
     end,
   },
   {
-    "folke/which-key.nvim",
-    event = "VeryLazy",
+    's1n7ax/nvim-window-picker',
+    name = 'window-picker',
+    opts = { picker_config = { statusline_winbar_picker = { use_winbar = 'smart' } } },
+  },
+  {
+    'mrjones2014/smart-splits.nvim',
+    opts = { ignored_filetypes = { 'nofile', 'quickfix', 'qf', 'prompt' }, ignored_buftypes = { 'nofile' } },
+  },
+  {
+    'folke/which-key.nvim',
+    event = 'VeryLazy',
     opts = {
-      icons = { group = vim.g.icons_enabled and "" or "+", separator = "" },
-      disable = { filetypes = { "TelescopePrompt" } },
-    },
-    -- config = require "plugins.configs.which-key",
-  },
-  {
-    "kevinhwang91/nvim-ufo",
-    event = { "User AstroFile", "InsertEnter" },
-    dependencies = { "kevinhwang91/promise-async" },
-    opts = {
-      preview = {
-        mappings = {
-          scrollB = "<C-b>",
-          scrollF = "<C-f>",
-          scrollU = "<C-u>",
-          scrollD = "<C-d>",
-        },
-      },
-      provider_selector = function(_, filetype, buftype)
-        local function handleFallbackException(bufnr, err, providerName)
-          if type(err) == "string" and err:match "UfoFallbackException" then
-            return require("ufo").getFolds(bufnr, providerName)
-          else
-            return require("promise").reject(err)
-          end
-        end
-
-        return (filetype == "" or buftype == "nofile") and "indent" -- only use indent until a file is opened
-          or function(bufnr)
-            return require("ufo")
-              .getFolds(bufnr, "lsp")
-              :catch(function(err) return handleFallbackException(bufnr, err, "treesitter") end)
-              :catch(function(err) return handleFallbackException(bufnr, err, "indent") end)
-          end
-      end,
+      icons = { group = vim.g.icons_enabled and '' or '+', separator = '' },
+      disable = { filetypes = { 'TelescopePrompt' } },
     },
   },
   {
-    "numToStr/Comment.nvim",
-    keys = {
-      { "gc", mode = { "n", "v" }, desc = "Comment toggle linewise" },
-      { "gb", mode = { "n", "v" }, desc = "Comment toggle blockwise" },
-    },
-    opts = function()
-      local commentstring_avail, commentstring = pcall(require, "ts_context_commentstring.integrations.comment_nvim")
-      return commentstring_avail and commentstring and { pre_hook = commentstring.create_pre_hook() } or {}
-    end,
-  },
-  {
-    "akinsho/toggleterm.nvim",
-    cmd = { "ToggleTerm", "TermExec" },
+    'akinsho/toggleterm.nvim',
+    cmd = { 'ToggleTerm', 'TermExec' },
+    init = function() end,
     opts = {
       highlights = {
-        Normal = { link = "Normal" },
-        NormalNC = { link = "NormalNC" },
-        NormalFloat = { link = "NormalFloat" },
-        FloatBorder = { link = "FloatBorder" },
-        StatusLine = { link = "StatusLine" },
-        StatusLineNC = { link = "StatusLineNC" },
-        WinBar = { link = "WinBar" },
-        WinBarNC = { link = "WinBarNC" },
+        Normal = { link = 'Normal' },
+        NormalNC = { link = 'NormalNC' },
+        NormalFloat = { link = 'NormalFloat' },
+        FloatBorder = { link = 'FloatBorder' },
+        StatusLine = { link = 'StatusLine' },
+        StatusLineNC = { link = 'StatusLineNC' },
+        WinBar = { link = 'WinBar' },
+        WinBarNC = { link = 'WinBarNC' },
       },
       size = 10,
-      on_create = function()
-        vim.opt.foldcolumn = "0"
-        vim.opt.signcolumn = "no"
+      on_create = function(term)
+        vim.opt.foldcolumn = '0'
+        vim.opt.signcolumn = 'no'
+        vim.cmd('startinsert!')
       end,
-      open_mapping = [[<F7>]],
+      open_mapping = [[<c-\>]],
       shading_factor = 2,
-      direction = "float",
-      float_opts = { border = "rounded" },
+      direction = 'float',
+      float_opts = {
+        border = 'curved',
+        highlights = {
+          border = 'Normal',
+          background = 'Normal',
+        },
+      },
+    },
+  },
+  {
+    'nvim-tree/nvim-web-devicons',
+    enabled = vim.g.icons_enabled,
+    opts = {
+      override = {
+        default_icon = { icon = '[F]' },
+        deb = { icon = '', name = 'Deb' },
+        lock = { icon = '󰌾', name = 'Lock' },
+        mp3 = { icon = '󰎆', name = 'Mp3' },
+        mp4 = { icon = '', name = 'Mp4' },
+        out = { icon = '', name = 'Out' },
+        ['robots.txt'] = { icon = '󰚩', name = 'Robots' },
+        ttf = { icon = '', name = 'TrueTypeFont' },
+        rpm = { icon = '', name = 'Rpm' },
+        woff = { icon = '', name = 'WebOpenFontFormat' },
+        woff2 = { icon = '', name = 'WebOpenFontFormat2' },
+        xz = { icon = '', name = 'Xz' },
+        zip = { icon = '', name = 'Zip' },
+      },
+    },
+  },
+  {
+    'onsails/lspkind.nvim',
+    opts = {
+      mode = 'symbol',
+      symbol_map = {
+        Array = '??',
+        Boolean = '?',
+        Class = '??',
+        Constructor = '?',
+        Key = '??',
+        Namespace = '??',
+        Null = 'NULL',
+        Number = '#',
+        Object = '??',
+        Package = '??',
+        Property = '?',
+        Reference = '?',
+        Snippet = '?',
+        String = '??',
+        TypeParameter = '??',
+        Unit = '?',
+      },
+      menu = {},
+    },
+    enabled = vim.g.icons_enabled,
+    config = function(_, opts) require('lspkind').init(opts) end,
+  },
+  {
+    'rcarriga/nvim-notify',
+    opts = {
+      on_open = function(win)
+        vim.api.nvim_win_set_config(win, { zindex = 175 })
+        if not vim.g.ui_notifications_enabled then vim.api.nvim_win_close(win, true) end
+        if not package.loaded['nvim-treesitter'] then pcall(require, 'nvim-treesitter') end
+        vim.wo[win].conceallevel = 3
+        local buf = vim.api.nvim_win_get_buf(win)
+        if not pcall(vim.treesitter.start, buf, 'markdown') then vim.bo[buf].syntax = 'markdown' end
+        vim.wo[win].spell = false
+      end,
+    },
+  },
+  {
+    'stevearc/dressing.nvim',
+    opts = {
+      input = { default_prompt = '➤ ' },
+      select = { backend = { 'telescope', 'builtin' } },
+    },
+  },
+  {
+    'NvChad/nvim-colorizer.lua',
+    cmd = { 'ColorizerToggle', 'ColorizerAttachToBuffer', 'ColorizerDetachFromBuffer', 'ColorizerReloadAllBuffers' },
+    opts = { user_default_options = { names = false } },
+  },
+  {
+    'lukas-reineke/indent-blankline.nvim',
+    main = 'ibl',
+    opts = {
+      indent = { char = '▏' },
+      scope = { show_start = false, show_end = false },
+      exclude = {
+        buftypes = {
+          'nofile',
+          'terminal',
+        },
+        filetypes = {
+          'help',
+          'startify',
+          'aerial',
+          'alpha',
+          'dashboard',
+          'lazy',
+          'neogitstatus',
+          'NvimTree',
+          'neo-tree',
+          'Trouble',
+        },
+      },
     },
   },
 }
