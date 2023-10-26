@@ -455,5 +455,5 @@ pretty() {
 
 # run hs projects with my preferred settings
 flexo() {
-  cd "$HUBSPOT_CODE_DIR" && NODE_OPTIONS="--max_old_space_size=8192" bend reactor serve "$@" --update --ts-watch
+  cd "$HUBSPOT_CODE_DIR" && NODE_OPTIONS="--max_old_space_size=8192" bend reactor serve --UNSUPPORTED_LOCAL_DEV_SETTING bend-webpack.enableFastRefresh "$@" --update --ts-watch
 }
