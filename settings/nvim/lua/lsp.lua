@@ -25,7 +25,7 @@ if utils.is_hubspot_machine then settings.tsserver_path = tsserverpath end
 
 require('typescript-tools').setup({
   settings,
-  root_dir = util.root_pattern('.git'),
+  root_dir = util.root_pattern('.git', 'yarn.lock', 'package.json'),
   on_attach = function(server, bufnr)
     if utils.is_hubspot_machine then
       local tsserverVersionForThisFile = getTsServerPathForCurrentFile()

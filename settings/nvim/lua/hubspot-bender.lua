@@ -1,6 +1,7 @@
 local M = {}
 local Job = require('plenary.job')
 local log = require('vim.lsp.log')
+local utils = require('utils')
 
 local jsJsx = 'javascript.jsx'
 local js = 'javascript'
@@ -9,7 +10,7 @@ local tsJsx = 'typescript.jsx'
 local jsReact = 'javascriptreact'
 local tsReact = 'typescriptreact'
 
-vim.lsp.set_log_level('trace')
+-- vim.lsp.set_log_level('trace')
 
 local function log_error(msg) log.error('🚨🤖🚨', msg) end
 local function log_info(msg) log.info('🤖', msg) end
@@ -25,11 +26,8 @@ local filetypes = {
 
 local find_node_modules_ancestor = require('lspconfig').util.find_node_modules_ancestor
 local path_join = require('lspconfig').util.path.join
-local path_sep = vim.loop.os_uname().sysname == 'Windows' and '\\' or '/'
-
 local function get_git_root() return vim.fn.finddir('.git/..', vim.fn.expand('%:p:h') .. '.;') end
 local uv = vim.loop
-
 local current_project_roots = {}
 local current_process = nil
 
@@ -142,6 +140,11 @@ end
 
 local commandName = 'BufEnter'
 local function setupAutocommands()
+
+  if not utils.is_hubspot_machine then
+    log_info('not a HubSpot machine, skipping setting up autocommands')
+    return
+  end
   log_info('setting up autocommands')
   local group = vim.api.nvim_create_augroup('asset-bender.nvim', { clear = true })
 
@@ -149,18 +152,20 @@ local function setupAutocommands()
     group = group,
     desc = 'asset-bender.nvim will check if it needs to start a new process on the event: ' .. commandName,
     callback = function()
-      local data = {
-        buf = vim.fn.expand('<abuf>'),
-        file = vim.fn.expand('<afile>'),
-        match = vim.fn.expand('<amatch>'),
-      }
-      vim.schedule(M.check_start_javascript_lsp)
+        local data = {
+          buf = vim.fn.expand('<abuf>'),
+          file = vim.fn.expand('<afile>'),
+          match = vim.fn.expand('<amatch>'),
+        }
+        vim.schedule(M.check_start_javascript_lsp)
     end,
   })
   vim.api.nvim_create_autocmd('VimLeavePre', {
     group = group,
     desc = 'shut down asset-bender process before exiting',
-    callback = function() vim.schedule(M.stop) end,
+    callback = function()
+        vim.schedule(M.stop)
+    end,
   })
 
   log_info('Asset bender intialized')
@@ -178,22 +183,12 @@ function M.reset()
   vim.cmd('LspStart')
 end
 
-local function splitFilename(strFilename)
-  -- Returns the Path, Filename, and Extension as 3 values
-  return string.match(strFilename, '(.-)([^\\]-([^\\%.]+))$')
-end
-
---[[local fileExtensions = {
-	["js"] = true,
-	["ts"] = true,
-	["tsx"] = true,
-	["jsx"] = true,
-}]]
---
-
 local LATEST = 'latest'
 
 function M.getTsServerPathForCurrentFile()
+  if not utils.is_hubspot_machine then
+    return nil
+  end
   local bufnr = vim.api.nvim_get_current_buf()
   local path = vim.api.nvim_buf_get_name(bufnr)
 
