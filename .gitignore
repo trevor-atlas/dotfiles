@@ -5,3 +5,4 @@ autoload
 complete-icebreakers.json
 scripts/complete-icebreakers.json
 .vscode
+undodir
