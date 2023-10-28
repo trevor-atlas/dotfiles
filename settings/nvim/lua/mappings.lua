@@ -28,10 +28,10 @@ map('v', '<', '<gv', { desc = 'Unindent line' })
 map('v', '>', '>gv', { desc = 'Indent line' })
 
 -- jump to line start with H and line end with L
-map('n', 'H', '^', { desc = 'Jump to start of line' })
-map('n', 'L', '$', { desc = 'Jump to end of line' })
-map('v', 'H', '_', { desc = 'Jump to start of line' })
-map('v', 'L', 'g_', { desc = 'Jump to end of line' })
+map('n', '<S-h>', '^', { desc = 'Jump to start of line' })
+map('n', '<S-l>', '$', { desc = 'Jump to end of line' })
+map('v', '<S-h>', '_', { desc = 'Jump to start of line' })
+map('v', '<S-l>', 'g_', { desc = 'Jump to end of line' })
 
 -- jump buffers with leader j-k
 map('n', '<Leader>k', ':bn<cr>')
@@ -51,6 +51,9 @@ if vim.g.neovide then
   map('c', '<D-v>', '<C-R>+') -- Paste command mode
   map('i', '<D-v>', '<ESC>l"+Pli') -- Paste insert mode
 end
+
+map('n', '<leader>/', function() require('Comment.api').toggle.linewise.current() end, { desc = 'Comment line' })
+map('v', '<leader>/', "<esc><cmd>lua require('Comment.api').toggle.linewise(vim.fn.visualmode())<cr>", { desc = 'Toggle comment line' })
 
 -- QOL cursor movement for long lines
 map('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, desc = 'Move cursor down' })
@@ -99,27 +102,28 @@ map('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message
 map('n', '<leader>d', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 map('n', '<leader>dl', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
 
-map('n', 'lx', '<cmd>TSHighlightCapturesUnderCursor<cr>', { desc = 'describe token under cursor' })
+map('n', '<leader>lx', '<cmd>Inspect<cr>', { desc = 'describe token under cursor' })
 
 -- LSP keymaps
-map('n', '<space>gd', '<cmd>lua vim.lsp.buf.definition()<CR>', { noremap = true, silent = true })
-map('n', '<space>gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', { noremap = true, silent = true })
-map('n', '<space>gr', '<cmd>lua vim.lsp.buf.references()<CR>', { noremap = true, silent = true })
+map('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', { noremap = true, silent = true })
+map('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', { noremap = true, silent = true })
+map('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', { noremap = true, silent = true })
 map('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', { noremap = true, silent = true })
 map('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', { noremap = true, silent = true })
 map('n', '<space>ga', '<cmd>lua vim.lsp.buf.code_action()<CR>', { noremap = true, silent = true })
-map('n', '<space>gsd', '<cmd>lua vim.lsp.buf.show_line_diagnostics({ focusable = false })<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', 'gh', function() vim.diagnostic.open_float({ bufnr = 0 }) end, { remap = true, silent = true })
+--map('n', '<space>gsd', '<cmd>lua vim.lsp.buf.show_line_diagnostics({ focusable = false })<CR>', { noremap = true, silent = true })
+--
+--vim.keymap.set('n', '<space>gsd', function() vim.lsp.buf.show_line_diagnostics({ focusable = false }) end, { noremap = true, silent = true })
 
-if not vim.g.vscode then
-  local toggle_term_cmd = utils.toggle_term_cmd
-  map('n', '<C-\\>', '<cmd>ToggleTerm<cr>', { desc = 'Toggle terminal' })
-  map('n', '<leader>gg', function() toggle_term_cmd('lazygit') end, { desc = 'ToggleTerm lazygit' })
-  map('n', '<leader>tn', function() toggle_term_cmd('node') end, { desc = 'ToggleTerm node' })
-  map('n', '<leader>tu', function() toggle_term_cmd('ncdu') end, { desc = 'ToggleTerm NCDU' })
-  map('n', '<leader>tt', function() toggle_term_cmd('htop') end, { desc = 'ToggleTerm htop' })
-  map('n', '<leader>tp', function() toggle_term_cmd('python') end, { desc = 'ToggleTerm python' })
-  map('n', '<leader>tl', function() toggle_term_cmd('lazygit') end, { desc = 'ToggleTerm lazygit' })
-  map('n', '<leader>tf', '<cmd>ToggleTerm direction=float<cr>', { desc = 'ToggleTerm float' })
-  map('n', '<leader>th', '<cmd>ToggleTerm size=10 direction=horizontal<cr>', { desc = 'ToggleTerm horizontal split' })
-  map('n', '<leader>tv', '<cmd>ToggleTerm size=80 direction=vertical<cr>', { desc = 'ToggleTerm vertical split' })
-end
+local toggle_term_cmd = utils.toggle_term_cmd
+map('n', '<C-\\>', '<cmd>ToggleTerm<cr>', { desc = 'Toggle terminal' })
+map('n', '<leader>gg', function() toggle_term_cmd('lazygit') end, { desc = 'ToggleTerm lazygit' })
+map('n', '<leader>tn', function() toggle_term_cmd('node') end, { desc = 'ToggleTerm node' })
+map('n', '<leader>tu', function() toggle_term_cmd('ncdu') end, { desc = 'ToggleTerm NCDU' })
+map('n', '<leader>tt', function() toggle_term_cmd('htop') end, { desc = 'ToggleTerm htop' })
+map('n', '<leader>tp', function() toggle_term_cmd('python') end, { desc = 'ToggleTerm python' })
+map('n', '<leader>tl', function() toggle_term_cmd('lazygit') end, { desc = 'ToggleTerm lazygit' })
+map('n', '<leader>tf', '<cmd>ToggleTerm direction=float<cr>', { desc = 'ToggleTerm float' })
+map('n', '<leader>th', '<cmd>ToggleTerm size=10 direction=horizontal<cr>', { desc = 'ToggleTerm horizontal split' })
+map('n', '<leader>tv', '<cmd>ToggleTerm size=80 direction=vertical<cr>', { desc = 'ToggleTerm vertical split' })

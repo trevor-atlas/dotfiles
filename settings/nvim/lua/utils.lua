@@ -2,6 +2,24 @@ local Job = require('plenary.job')
 
 local M = {}
 
+---@param table1 {}
+---@param table2 {}
+function M.merge_tables(table1, table2)
+  local result = {}
+
+  for k, v in pairs(table1) do
+    result[k] = v
+  end
+
+  for k, v in pairs(table2) do
+    result[k] = v
+  end
+
+  return result
+end
+
+function M.buffer() return vim.api.nvim_get_current_buf() end
+
 function M.map(mode, from, to, opts)
   opts = opts or { noremap = true, silent = true }
   vim.keymap.set(mode, from, to, opts)
@@ -14,6 +32,7 @@ function M.dir_exists(dirpath)
     args = { dirpath },
     on_exit = function(_, return_val) result = return_val end,
   }):sync()
+  vim.system({ 'ls', dirpath }, { text = true }):wait()
   return result == 0
 end
 
@@ -22,6 +41,8 @@ function M.conditional_func(func, condition, ...)
 end
 
 M.path_sep = vim.loop.os_uname().sysname == 'Windows' and '\\' or '/'
+
+local function is_hubspot_machine() return vim.system({ 'ls', vim.env.HOME .. '/.hubspot' }, { text = true }):wait().code == 0 end
 
 function M.path_join(...) return table.concat(vim.tbl_flatten({ ... }), M.path_sep) end
 
@@ -41,39 +62,15 @@ end
 
 function M.is_available(plugin) return packer_plugins ~= nil and packer_plugins[plugin] ~= nil end
 
-function M.find_root_git_dir()
-  local git_root = ''
-  Job:new({
-    command = 'git',
-    args = { 'rev-parse', '--show-toplevel' },
-    on_exit = function(results, _) git_root = results and results._stdout_results[1] or '' end,
-  }):sync()
-  local result, _ = string.gsub(git_root, '[\r\n]', '')
-  return result
-end
-
-function M.buffer_find_file_dir(bufnr, filename)
-  local bufname = vim.api.nvim_buf_get_name(bufnr)
-  if vim.fn.filereadable(bufname) == 0 then return nil end
-  local dir = bufname
-  while dir ~= '' do
-    dir = dir:gsub(M.path_sep .. '([^' .. M.path_sep .. ']+)$', '')
-    if vim.fn.findfile(filename, vim.fn.finddir(dir)) ~= '' then return dir, bufname end
-  end
-  return nil
-end
+function M.find_root_git_dir() return M.buffer_find_file_dir(M.buffer(), '.git') end
 
 function M.buffer_find_file(bufnr, filename)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   if vim.fn.filereadable(bufname) == 0 then return nil end
-  local dir = bufname
-  while dir ~= '' do
-    dir = dir:gsub(M.path_sep .. '([^' .. M.path_sep .. ']+)$', '')
-    local found_file = vim.fn.findfile(filename, vim.fn.finddir(dir))
-    if found_file ~= '' then return found_file end
-  end
-  return nil
+  return vim.fn.finddir(filename, vim.fn.expand('%:p:h') .. '.;')
 end
+
+function M.buffer_find_file_dir(bufnr, filename) M.buffer_find_file(bufnr, filename .. '/..') end
 
 function M.file_exists(fname)
   local stat = vim.loop.fs_stat(fname)
@@ -82,15 +79,7 @@ end
 
 function M.open_file(file) vim.cmd('e ' .. file) end
 
-function M.get_uname()
-  local result = ''
-  Job:new({
-    command = 'uname',
-    args = { '-a' },
-    on_exit = function(res, return_val) result = res._stdout_results[1] end,
-  }):sync()
-  return result
-end
+function M.get_uname() return vim.loop.os_uname().sysname end
 
 function M.determine_os()
   local uname = M.get_uname()

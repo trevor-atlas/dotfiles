@@ -65,13 +65,21 @@ return {
     -- See `:help telescope.builtin`
     map('n', '<leader>?', builtin.oldfiles, { desc = '[?] Find recently opened files' })
     map('n', '<leader><space>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+    --[[
     map('n', '<leader>/', function()
       -- You can pass additional configuration to telescope to change theme, layout, etc.
       builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown({
         winblend = 10,
         previewer = false,
       }))
-    end, { desc = '[/] Fuzzily search in current buffer' })
+    end, { desc = '[/] Fuzzily search in current buffer' }) ]]
+    --
+
+    map('n', '<leader>gs', function() require('telescope.builtin').git_status() end, { desc = 'Git status' })
+    map('n', '<leader>gb', function() require('telescope.builtin').git_branches() end, { desc = 'Git branches' })
+    map('n', '<leader>gc', function() require('telescope.builtin').git_commits() end, { desc = 'Git commits' })
+
+    map('n', '<leader>sm', function() require('telescope.builtin').man_pages() end, { desc = 'Search man' })
 
     map('n', '<leader>gf', builtin.git_files, { desc = 'Search [G]it [F]iles' })
     map('n', '<leader>sf', builtin.live_grep, { desc = '[S]earch [F]iles' })
