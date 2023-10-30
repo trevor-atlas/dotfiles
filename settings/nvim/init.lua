@@ -20,7 +20,10 @@ require('lazy').setup({
   'nvim-lua/plenary.nvim',
   'nvim-tree/nvim-web-devicons',
   'ggandor/lightspeed.nvim',
-  { 'brenoprata10/nvim-highlight-colors', init = function() require('nvim-highlight-colors').setup({}) end },
+  {
+    'brenoprata10/nvim-highlight-colors',
+    init = function() require('nvim-highlight-colors').setup({}) end,
+  },
   {
     'numToStr/Comment.nvim',
     opts = {
@@ -34,7 +37,7 @@ require('lazy').setup({
   },
   {
     'numToStr/Navigator.nvim',
-    config = function() require('Navigator').setup() end,
+    config = function() require('Navigator').setup({}) end,
   },
   {
     'folke/trouble.nvim',
@@ -52,6 +55,7 @@ require('lazy').setup({
       { 'j-hui/fidget.nvim', tag = 'legacy', opts = {} }, -- Additional lua configuration, makes nvim stuff amazing!
       'folke/neodev.nvim',
     },
+    config = function() require('lspconfig').eslint.setup({}) end,
   },
   {
 
@@ -85,7 +89,7 @@ require('lazy').setup({
       signs = {
         add = { hl = 'GitGutterAdd', text = '+' },
         change = { hl = 'GitGutterChange', text = '~' },
-        delete = { hl = 'GitGutterDelete', text = '_' },
+        delete = { hl = 'GitGutterDelete', text = '-' },
         topdelete = { hl = 'GitGutterDelete', text = '‾' },
         changedelete = { hl = 'GitGutterChange', text = '~' },
       },
@@ -113,9 +117,11 @@ require('lazy').setup({
     config = function() require('fmt') end,
   },
   {
-    -- Color Theme
-    'rebelot/kanagawa.nvim',
-    init = function() vim.cmd.colorscheme('kanagawa') end,
+    'folke/tokyonight.nvim',
+    lazy = false,
+    priority = 1000,
+    opts = {},
+    init = function() vim.cmd.colorscheme('tokyonight-storm') end,
   },
   {
     -- Set lualine as statusline
@@ -156,10 +162,10 @@ require('lazy').setup({
           lualine_a = {
             { 'mode', separator = { left = '' }, right_padding = 2 },
           },
-          lualine_b = { 'filename', 'branch' },
-          lualine_c = { 'fileformat' },
+          lualine_b = { 'filename', 'branch', 'diff' },
+          lualine_c = { 'diagnostics', 'encoding' },
           lualine_x = {},
-          lualine_y = { 'filetype', 'progress' },
+          lualine_y = { 'filetype', 'searchcount' },
           lualine_z = {
             { 'location', separator = { right = '' }, left_padding = 2 },
           },

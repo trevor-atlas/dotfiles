@@ -1,7 +1,8 @@
-local M = {}
-
+-- :Inspect to show the highlight groups under the cursor
+-- :InspectTree to show the parsed syntax tree ("TSPlayground")
+-- :EditQuery to open the Live Query Editor (Nvim 0.10+)
+--
 local palette = {
-
   -- Bg Shades
   sumiInk0 = '#16161D',
   sumiInk1 = '#181820',
@@ -96,7 +97,7 @@ local palette = {
   lotusWhite5 = '#e4d794',
   lotusViolet1 = '#a09cac',
   lotusViolet2 = '#766b90',
-  lotusViolet3 = '#c9cbd1',
+  lotusViolet3 = '#a281f2',
   lotusViolet4 = '#624c83',
   lotusBlue1 = '#c7d7e0',
   lotusBlue2 = '#b5cbd2',
@@ -123,19 +124,17 @@ local palette = {
   lotusTeal2 = '#6693bf',
   lotusTeal3 = '#5a7785',
   lotusCyan = '#d7e3d8',
-}
 
-M.colors = {
+  fg = '#abb2bf',
+  bg = '#1e222a',
+
   white = '#bbc2cf',
   darker_black = '#22262e',
   black = '#282c34',
   black2 = '#2e323a',
   one_bg = '#32363e',
-  one_bg2 = '#3c4048',
-  one_bg3 = '#41454d',
   grey = '#494d55',
   grey_fg = '#53575f',
-  grey_fg2 = '#5d6169',
   light_grey = '#676b73',
   red = '#ff6b5a',
   baby_pink = '#ff7665',
@@ -147,148 +146,293 @@ M.colors = {
   vibrant_green = '#a9cf76',
   nord_blue = '#47a5e5',
   blue = '#61afef',
+  blue_1 = '#40d9ff',
+  blue_2 = '#1b1f27',
+  blue_3 = '#8094B4',
+  blue_4 = '#90c7f3',
   yellow = '#ECBE7B',
   sun = '#f2c481',
   purple = '#dc8ef3',
   dark_purple = '#c678dd',
   teal = '#4db5bd',
   orange = '#ea9558',
-  cyan = '#46D9FF',
-  statusline_bg = '#2d3139',
-  lightbg = '#3a3e46',
-  pmenu_bg = '#98be65',
-  folder_bg = '#51afef',
+  orange_1 = '#ff9640',
+  orange_2 = '#ff8800',
+
+  grey_2 = '#777d86',
+  grey_3 = '#282c34',
+  grey_4 = '#2c323c',
+  grey_5 = '#3e4452',
+  grey_6 = '#3b4048',
+  grey_7 = '#5c5c5c',
+  grey_8 = '#252931',
+  grey_9 = '#787e87',
+  grey_10 = '#D3D3D3',
+
+  none = 'NONE',
+
+  -- icon colors
+  c = '#519aba',
+  css = '#61afef',
+  deb = '#a1b7ee',
+  docker = '#384d54',
+  html = '#de8c92',
+  jpeg = '#c882e7',
+  jpg = '#c882e7',
+  js = '#ebcb8b',
+  jsx = '#519ab8',
+  kt = '#7bc99c',
+  lock = '#c4c720',
+  lua = '#51a0cf',
+  mp3 = '#d39ede',
+  mp4 = '#9ea3de',
+  out = '#abb2bf',
+  png = '#c882e7',
+  py = '#a3b8ef',
+  rb = '#ff75a0',
+  robots = '#abb2bf',
+  rpm = '#fca2aa',
+  rs = '#dea584',
+  toml = '#39bf39',
+  ts = '#519aba',
+  ttf = '#abb2bf',
+  vue = '#7bc99c',
+  woff = '#abb2bf',
+  woff2 = '#abb2bf',
+  zip = '#f9d71c',
+  md = '#519aba',
 }
 
-M.cool = {
-  black = '#151820',
-  bg0 = '#242b38',
-  bg1 = '#2d3343',
-  bg2 = '#343e4f',
-  bg3 = '#363c51',
-  bg_d = '#1e242e',
-  bg_blue = '#6db9f7',
-  bg_yellow = '#f0d197',
-  fg = '#a5b0c5',
-  purple = '#ca72e4',
-  green = '#97ca72',
-  orange = '#d99a5e',
-  blue = '#5ab0f6',
-  yellow = '#ebc275',
-  cyan = '#4dbdcb',
-  red = '#ef5f6b',
-  grey = '#546178',
-  light_grey = '#7d899f',
-  dark_cyan = '#25747d',
-  dark_red = '#a13131',
-  dark_yellow = '#9a6b16',
-  dark_purple = '#8f36a9',
-  diff_add = '#303d27',
-  diff_delete = '#3c2729',
-  diff_change = '#18344c',
-  diff_text = '#265478',
-}
+local interface_type = { fg = palette.waveAqua5, italic = true }
 
-local interface = { fg = palette.waveAqua5, italic = true }
 local theme = {
   syntax = {
+
+    HighlightURL = { underline = true },
+
     -- class interfaces
-    TSTypeDefinition = { fg = M.colors.vibrant_green },
-    typescriptTSType = { fg = M.colors.vibrant_green },
+    TSTypeDefinition = { fg = palette.vibrant_green },
+    typescriptTSType = { fg = palette.vibrant_green },
     Type = { fg = palette.waveAqua3 },
-    Typedef = interface,
+    Typedef = interface_type,
 
     ['@lsp.type.enum'] = { fg = palette.surimiOrange, bold = true },
     ['@lsp.type.type'] = { fg = palette.waveAqua3 },
     ['@lsp.type.interface'] = { fg = palette.waveAqua3 },
     -- ['@lsp.mod.declaration'] = interface,
-    ['@lsp.typemod.interface.declaration'] = interface,
-    ['@type.builtin'] = { fg = palette.lotusViolet4 },
+    ['@lsp.typemod.interface.declaration'] = interface_type,
+    ['@type.builtin'] = { fg = palette.lotusViolet3 },
     -- editor gutter (line numbers, icon column)
     SignColumn = { bg = 'NONE' },
     FoldColumn = { bg = 'NONE' },
-    LineNr = { fg = M.colors.grey, bg = 'NONE' },
+    LineNr = { fg = palette.grey, bg = 'NONE' },
 
     -- editor background
     Normal = { bg = 'NONE' },
     CursorLineNr = { bg = 'NONE' },
 
     -- comments
-    Comment = { fg = M.colors.comments },
-    DiagnosticUnnecessary = { fg = M.colors.light_grey },
+    Comment = { fg = palette.comments },
+    TSComment = { fg = palette.comments },
+    DiagnosticUnnecessary = { fg = palette.light_grey },
 
     --
     Statement = { fg = palette.oniViolet, bold = false },
     ['@lsp.typemod.function.readonly'] = { fg = palette.crystalBlue, bold = false },
 
     -- strings
-    String = { fg = M.colors.strings },
+    String = { fg = palette.strings },
 
-    -- '<' and '>' in html
-    -- vim.api.nvim_set_hl(0, 'TSTagDelimiter', {fg = "#ff9ff5"})
+    -- '<' and '>' in html and jsx
+    TSTagDelimiter = { fg = palette.waveRed },
+    ['@tag.delimiter'] = { fg = palette.waveRed },
 
     -- <TAGNAME/>
-    -- vim.api.nvim_set_hl(0, 'TSTag', {fg = M.colors.dark_purple})
-    -- vim.api.nvim_set_hl(0, 'tsxTSTag', {fg = M.colors.dark_purple})
+    TSTag = { fg = palette.dark_purple },
+    tsxTSTag = { fg = palette.dark_purple },
 
     -- <div attribute="" />
     TSTagAttribute = { fg = '#f0d197' },
-
-    -- vim.api.nvim_set_hl(0, 'tsxTSConstructor', {fg = M.colors.dark_purple})
-    -- vim.api.nvim_set_hl(0, 'typescriptTSConstructor', {fg = M.colors.blue})
+    tsxTSConstructor = { fg = palette.dark_purple },
+    TSConstructor = { fg = palette.blue },
+    ['@tag.tsx'] = { fg = palette.dragonRed },
+    ['@constructor.tsx'] = { fg = palette.dragonRed },
+    ['@keyword'] = { fg = palette.oniViolet },
 
     -- const THING = ''
-    -- vim.api.nvim_set_hl(0, 'TSVariable', {fg = '#b2abe8'})
-
-    -- //comments
-    -- vim.api.nvim_set_hl(0, "TSComment", { fg = "#eaaf8f" })
+    TSVariable = { fg = '#b2abe8' },
   },
   lsp = {
-    DiagnosticError = { fg = M.colors.red },
-    DiagnosticHint = { fg = M.colors.yellow },
-    DiagnosticInfo = { fg = M.colors.white },
-    DiagnosticWarn = { fg = M.colors.orange },
-    DiagnosticInformation = { fg = M.colors.yellow, bold = true },
-    DiagnosticTruncateLine = { fg = M.colors.white, bold = true },
-    DiagnosticUnderlineError = { sp = M.colors.red, undercurl = true },
-    DiagnosticUnderlineHint = { sp = M.colors.red, undercurl = true },
-    DiagnosticUnderlineInfo = { sp = M.colors.red, undercurl = true },
-    DiagnosticUnderlineWarn = { sp = M.colors.red, undercurl = true },
-    LspDiagnosticsFloatingError = { fg = M.colors.red },
-    LspDiagnosticsFloatingHint = { fg = M.colors.yellow },
-    LspDiagnosticsFloatingInfor = { fg = M.colors.white },
-    LspDiagnosticsFloatingWarn = { fg = M.colors.orange },
-    LspFloatWinBorder = { fg = M.colors.white },
-    LspFloatWinNormal = { fg = M.cool.fg, bg = M.colors.black },
-    LspReferenceRead = { fg = 'NONE', bg = M.colors.grey },
-    LspReferenceText = { fg = 'NONE', bg = M.colors.grey },
-    LspReferenceWrite = { fg = 'NONE', bg = M.colors.grey },
-    ProviderTruncateLine = { fg = M.colors.white },
+    DiagnosticError = { fg = palette.red },
+    DiagnosticHint = { fg = palette.yellow },
+    DiagnosticInfo = { fg = palette.white },
+    DiagnosticWarn = { fg = palette.orange },
+    DiagnosticInformation = { fg = palette.yellow, bold = true },
+    DiagnosticTruncateLine = { fg = palette.white, bold = true },
+    DiagnosticUnderlineError = { sp = palette.red, undercurl = true },
+    DiagnosticUnderlineHint = { sp = palette.red, undercurl = true },
+    DiagnosticUnderlineInfo = { sp = palette.red, undercurl = true },
+    DiagnosticUnderlineWarn = { sp = palette.red, undercurl = true },
+    LspDiagnosticsFloatingError = { fg = palette.red },
+    LspDiagnosticsFloatingHint = { fg = palette.yellow },
+    LspDiagnosticsFloatingInfor = { fg = palette.white },
+    LspDiagnosticsFloatingWarn = { fg = palette.orange },
+    LspFloatWinBorder = { fg = palette.white },
+    LspFloatWinNormal = { fg = palette.fg, bg = palette.black },
+    LspReferenceRead = { fg = palette.none, bg = palette.grey },
+    LspReferenceText = { fg = palette.none, bg = palette.grey },
+    LspReferenceWrite = { fg = palette.none, bg = palette.grey },
+    ProviderTruncateLine = { fg = palette.white },
   },
   telescope_theme = {
-    TelescopeBorder = { fg = M.colors.darker_black, bg = M.colors.darker_black },
-    FloatBorder = { fg = M.colors.darker_black, bg = M.colors.darker_black },
-    NormalFloat = { fg = M.colors.white, bg = M.colors.darker_black },
+    TelescopeBorder = { fg = palette.darker_black, bg = palette.darker_black },
+    FloatBorder = { fg = palette.darker_black, bg = palette.darker_black },
+    NormalFloat = { fg = palette.white, bg = palette.darker_black },
     -- search input border
-    TelescopePromptBorder = { fg = M.colors.one_bg, bg = M.colors.one_bg },
+    TelescopePromptBorder = { fg = palette.one_bg, bg = palette.one_bg },
     -- search input
-    TelescopePromptNormal = { fg = M.colors.white, bg = M.colors.one_bg },
+    TelescopePromptNormal = { fg = palette.white, bg = palette.one_bg },
     -- search input prefix (icon)
-    TelescopePromptPrefix = { fg = M.colors.red, bg = M.colors.one_bg },
-    TelescopeNormal = { fg = M.colors.white, bg = M.colors.darker_black },
-    TelescopePreviewTitle = { fg = M.colors.black, bg = M.colors.green },
-    TelescopePromptTitle = { fg = M.colors.black, bg = M.colors.red },
-    TelescopeResultsTitle = { fg = M.colors.white, bg = M.colors.darker_black },
-    TelescopeSelection = { fg = M.colors.white, bg = M.colors.black2 },
+    TelescopePromptPrefix = { fg = palette.red, bg = palette.one_bg },
+    TelescopeNormal = { fg = palette.white, bg = palette.darker_black },
+    TelescopePreviewTitle = { fg = palette.black, bg = palette.green },
+    TelescopePromptTitle = { fg = palette.black, bg = palette.red },
+    TelescopeResultsTitle = { fg = palette.white, bg = palette.darker_black },
+    TelescopeSelection = { fg = palette.white, bg = palette.black2 },
+  },
+  bufferline = {
+    BufferLineBufferVisible = { fg = palette.fg, bg = palette.bg },
+    BufferLineBufferSelected = { fg = palette.white, bg = palette.bg, bold = true },
+    BufferLineTab = { fg = palette.grey_9, bg = palette.bg },
+    BufferLineTabSelected = { fg = palette.fg, bg = palette.bg },
+    BufferLineTabClose = { fg = palette.red_4, bg = palette.bg },
+    BufferLineIndicatorSelected = { fg = palette.bg, bg = palette.bg },
+    BufferLineCloseButtonVisible = { fg = palette.grey_10, bg = palette.bg },
+    BufferLineCloseButtonSelected = { fg = palette.red_4, bg = palette.bg },
+    BufferLineModifiedVisible = { fg = palette.fg, bg = palette.bg },
+    BufferLineModifiedSelected = { fg = palette.green_2, bg = palette.bg },
+    BufferLineError = { fg = palette.red_1, bg = palette.red_1 },
+    BufferLineErrorDiagnostic = { fg = palette.red_1, bg = palette.red_1 },
+  },
+  hop = {
+    HopNextKey = { fg = palette.red, bold = true },
+    HopNextKey1 = { fg = palette.cyan, bold = true },
+    HopNextKey2 = { fg = palette.blue },
+    HopUnmatched = { fg = palette.grey },
+  },
+  indent_blankline = {
+    IndentBlanklineSpaceChar = { fg = palette.grey_6, nocombine = true },
+    IndentBlanklineChar = { fg = palette.grey_6, nocombine = true },
+    IndentBlanklineContextStart = { fg = palette.grey_7, underline = true },
+    IndentBlanklineContextChar = { fg = palette.grey_7, nocombine = true },
+    IndentBlanklineSpaceCharBlankline = { fg = palette.grey_6, nocombine = true },
+  },
+  ['neo-tree'] = {
+    NeoTreeDirectoryIcon = { fg = palette.blue },
+    NeoTreeRootName = { fg = palette.fg, bold = true },
+    NeoTreeFileName = { fg = palette.fg },
+    NeoTreeFileIcon = { fg = palette.fg },
+    NeoTreeFileNameOpened = { fg = palette.green },
+    NeoTreeIndentMarker = { fg = palette.blue_3 },
+    NeoTreeGitAdded = { fg = palette.green },
+    NeoTreeGitConflict = { fg = palette.red },
+    NeoTreeGitModified = { fg = palette.orange },
+    NeoTreeGitUntracked = { fg = palette.yellow },
+    NeoTreeNormal = { bg = palette.blue_2 },
+    NeoTreeNormalNC = { bg = palette.blue_2 },
+    NeoTreeSymbolicLinkTarget = { fg = palette.cyan },
+  },
+  notify = {
+    NotifyERRORBorder = { fg = palette.red },
+    NotifyWARNBorder = { fg = palette.orange_1 },
+    NotifyINFOBorder = { fg = palette.green },
+    NotifyDEBUGBorder = { fg = palette.cyan },
+    NotifyTRACERBorder = { fg = palette.purple },
+    NotifyERRORIcon = { fg = palette.red },
+    NotifyWARNIcon = { fg = palette.orange_1 },
+    NotifyINFOIcon = { fg = palette.green },
+    NotifyDEBUGIcon = { fg = palette.cyan },
+    NotifyTRACEIcon = { fg = palette.purple },
+    NotifyERRORTitle = { fg = palette.red },
+    NotifyWARNTitle = { fg = palette.orange_1 },
+    NotifyINFOTitle = { fg = palette.green },
+    NotifyDEBUGTitle = { fg = palette.cyan },
+    NotifyTRACETitle = { fg = palette.purple },
+    NotifyERRORBody = { fg = palette.fg },
+    NotifyWARNBody = { fg = palette.fg },
+    NotifyINFOBody = { fg = palette.fg },
+    NotifyDEBUGBody = { fg = palette.fg },
+    NotifyTRACEBody = { fg = palette.fg },
+    NotifyLogTime = { fg = palette.grey_2 },
+    NotifyLogTitle = { fg = palette.blue },
+  },
+  icons = {
+    DevIconC = { fg = palette.c },
+    DevIconCss = { fg = palette.css },
+    DevIconDeb = { fg = palette.deb },
+    DevIconDockerfile = { fg = palette.docker },
+    DevIconHtml = { fg = palette.html },
+    DevIconJpeg = { fg = palette.jpeg },
+    DevIconJpg = { fg = palette.jpg },
+    DevIconJs = { fg = palette.js },
+    DevIconJsx = { fg = palette.jsx },
+    DevIconKotlin = { fg = palette.kt },
+    DevIconLock = { fg = palette.lock },
+    DevIconLua = { fg = palette.lua },
+    DevIconMp3 = { fg = palette.mp3 },
+    DevIconMp4 = { fg = palette.mp4 },
+    DevIconOut = { fg = palette.out },
+    DevIconPng = { fg = palette.png },
+    DevIconPy = { fg = palette.py },
+    DevIconRb = { fg = palette.rb },
+    DevIconRobots = { fg = palette.robots },
+    DevIconRpm = { fg = palette.rpm },
+    DevIconRs = { fg = palette.rs },
+    DevIconToml = { fg = palette.toml },
+    DevIconTrueTypeFont = { fg = palette.ttf },
+    DevIconTs = { fg = palette.ts },
+    DevIconVue = { fg = palette.vue },
+    DevIconWebOpenFontFormat = { fg = palette.woff },
+    DevIconWebOpenFontFormat2 = { fg = palette.woff2 },
+    DevIconXz = { fg = palette.zip },
+    DevIconZip = { fg = palette.zip },
+    DevIconMd = { fg = palette.md },
+  },
+  indent_raindow = {
+    rainbowcol1 = { fg = 'Gold' },
+    rainbowcol2 = { fg = 'Orchid' },
+    rainbowcol3 = { fg = 'LightSkyBlue' },
+    rainbowcol4 = { fg = 'Gold' },
+    rainbowcol5 = { fg = 'Orchid' },
+    rainbowcol6 = { fg = 'LightSkyBlue' },
+    rainbowcol7 = { fg = 'Orchid' },
+  },
+  vim_wiki = {
+    VimwikiLink = { fg = palette.cyan, bg = palette.none },
+    VimwikiHeaderChar = { fg = palette.grey, bg = palette.none },
+    VimwikiHR = { fg = palette.yellow, bg = palette.none },
+    VimwikiList = { fg = palette.orange, bg = palette.orange },
+    VimwikiTag = { fg = palette.orange, bg = palette.orange },
+    VimwikiMarkers = { fg = palette.grey, bg = palette.none },
+    VimwikiHeader1 = { fg = palette.orange, bg = palette.none, bold = true },
+    VimwikiHeader2 = { fg = palette.green, bg = palette.none, bold = true },
+    VimwikiHeader3 = { fg = palette.blue, bg = palette.none, bold = true },
+    VimwikiHeader4 = { fg = palette.cyan, bg = palette.none, bold = true },
+    VimwikiHeader5 = { fg = palette.yellow, bg = palette.none, bold = true },
+    VimwikiHeader6 = { fg = palette.purple, bg = palette.none, bold = true },
   },
 }
 
-function M.setup()
+function set_theme()
   for _, options in pairs(theme) do
     for name, values in pairs(options) do
       vim.api.nvim_set_hl(0, name, values)
     end
   end
 end
+
+local M = {}
+
+function M.setup() set_theme() end
 
 return M

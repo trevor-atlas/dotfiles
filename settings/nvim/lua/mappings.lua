@@ -1,5 +1,3 @@
-local utils = require('utils')
-
 -- https://github.com/famiu/bufdelete.nvim
 -- buffer, split and window cheatsheet https://gist.github.com/Starefossen/5957088
 vim.keymap.set('n', '<C-x>', '<cmd>close<cr>', { desc = 'Close Buffer' })
@@ -10,37 +8,41 @@ vim.keymap.set('n', 'n', 'nzzzv', { desc = "centered 'next' when searching" })
 vim.keymap.set('n', 'N', 'Nzzzv', { desc = "centered 'prev' when searching" })
 
 -- Remap for dealing with word wrap
-vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
-vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", {
+  desc = 'Remap for dealing with word wrap',
+  expr = true,
+  silent = true,
+})
+vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", {
+  desc = 'Remap for dealing with word wrap',
+  expr = true,
+  silent = true,
+})
 
--- move selections up and down with J and K
-vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
-vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move selection down one line' })
+vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move selection up one line' })
 
--- paste over selection without losing paste buffer
-vim.keymap.set('x', '<leader>p', "\"_dP")
+vim.keymap.set('x', '<leader>p', '"_dP', { desc = 'paste over selection without losing paste buffer' })
 
--- delete without copying
-vim.keymap.set('n', '<leader>d', "\"_d")
-vim.keymap.set('v', '<leader>d', "\"_d")
+vim.keymap.set('n', '<leader>d', '"_d', { desc = 'Delete without copying' })
+vim.keymap.set('v', '<leader>d', '"_d', { desc = 'Delete without copying' })
 
--- ctrl+c applies vertical edits
-vim.keymap.set('i', '<C-c>', '<Esc>')
+vim.keymap.set('i', '<C-c>', '<Esc>', { desc = 'ctrl+c applies vertical edits' })
 
-vim.keymap.set('n', 'Q', '<nop>')
+vim.keymap.set('n', 'Q', '<nop>', { desc = 'Q does nothing' })
 
 -- Keep the cursor in the same position when wrapping lines with J
-vim.keymap.set("n", "J", "mzJ`z")
+vim.keymap.set('n', 'J', 'mzJ`z', { desc = 'Maintain cursor position when wrapping lines with J' })
 
 -- source current buffer
-vim.keymap.set('n', '<Leader>rr', '<cmd>so<CR>')
+vim.keymap.set('n', '<Leader>rr', '<cmd>so<CR>', { desc = 'source the current buffer' })
 
 -- clear highlights on escape in normal mode
 vim.keymap.set('n', '<esc>', ':noh<CR><esc>')
 vim.keymap.set('n', '<esc>^[', '<esc>^[')
 
 -- replace all occurences of word under cursor
-vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
+vim.keymap.set('n', '<leader>s', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = 'Find and replace word under cursor' })
 
 -- Stay in indent mode (don't lose selection on indent/outdent)
 vim.keymap.set('v', '<S-Tab>', '<gv', { desc = 'Unindent line' })
@@ -57,12 +59,6 @@ vim.keymap.set('v', '<S-l>', 'g_', { desc = 'Jump to end of line' })
 -- jump buffers with leader j-k
 vim.keymap.set('n', '<Leader>k', ':bn<cr>')
 vim.keymap.set('n', '<Leader>j', ':bp<cr>')
-
--- jump splits with ctrl
--- vim.keymap.set('n', '<C-j>', '<C-W><C-J>')
--- vim.keymap.set('n', '<C-k>', '<C-W><C-K>')
--- vim.keymap.set('n', '<C-l>', '<C-W><C-L>')
--- vim.keymap.set('n', '<C-h>', '<C-W><C-H>')
 
 if vim.g.neovide then
   vim.keymap.set('n', '<D-s>', ':w<CR>') -- Save
@@ -96,9 +92,9 @@ vim.keymap.set('n', '<leader>o', function()
 end, { desc = 'Toggle Explorer Focus' })
 
 -- common keymaps for text editor stuff
-vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = 'Save' })
-vim.keymap.set('n', '<leader>q', '<cmd>confirm q<cr>', { desc = 'Quit' })
-vim.keymap.set('n', '<leader>n', '<cmd>enew<cr>', { desc = 'New File' })
+-- vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = 'Save' })
+-- vim.keymap.set('n', '<leader>q', '<cmd>confirm q<cr>', { desc = 'Quit' })
+-- vim.keymap.set('n', '<leader>n', '<cmd>enew<cr>', { desc = 'New File' })
 vim.keymap.set('n', '<C-s>', '<cmd>w!<cr>', { desc = 'Force write' })
 vim.keymap.set('n', '<C-q>', '<cmd>qa!<cr>', { desc = 'Force quit' })
 
@@ -133,13 +129,9 @@ vim.keymap.set('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', { noremap 
 vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<space>ga', '<cmd>lua vim.lsp.buf.code_action()<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', 'gh', function() vim.diagnostic.open_float({ bufnr = 0 }) end, { remap = true, silent = true })
---vim.keymap.set('n', '<space>gsd', '<cmd>lua vim.lsp.buf.show_line_diagnostics({ focusable = false })<CR>', { noremap = true, silent = true })
---
---vim.keymap.set('n', '<space>gsd', function() vim.lsp.buf.show_line_diagnostics({ focusable = false }) end, { noremap = true, silent = true })
-
 
 local user_terminals = {}
-function toggle_term_cmd(term_details)
+local function toggle_term_cmd(term_details)
   -- if a command string is provided, create a basic table for Terminal:new() options
   if type(term_details) == 'string' then term_details = { cmd = term_details, hidden = true } end
   -- use the command as the key for the table
