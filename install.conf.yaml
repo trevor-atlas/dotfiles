@@ -12,11 +12,12 @@
     ~/.config/yabai: settings/yabai
     ~/.config/starship.toml: settings/starship.toml
     ~/.config/brewfile: settings/brewfile
+    ~/.config/emacs: settings/emacs
+    ~/.emacs.d: settings/emacs
     ~/.vimrc: settings/.vimrc
     ~/.tmux.conf: settings/.tmux.conf
     ~/.gitconfig: settings/.gitconfig
     ~/.gitignore_global: settings/.gitignore_global
-    ~/.spacemacs: settings/.spacemacs
     ~/.i3: settings/.i3
     ~/.inputrc: settings/.inputrc
 

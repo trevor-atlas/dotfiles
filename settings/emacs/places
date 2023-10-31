@@ -1,0 +1,4 @@
+;;; -*- coding: utf-8; mode: lisp-data -*-
+(("/Users/tatlas/.emacs.d/"
+  (dired-filename . "/Users/tatlas/.emacs.d/init.el"))
+ ("/Users/tatlas/.emacs.d/init.el" . 5680))
