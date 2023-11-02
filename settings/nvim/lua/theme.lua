@@ -1,7 +1,7 @@
 -- :Inspect to show the highlight groups under the cursor
 -- :InspectTree to show the parsed syntax tree ("TSPlayground")
 -- :EditQuery to open the Live Query Editor (Nvim 0.10+)
---
+
 local palette = {
   -- Bg Shades
   sumiInk0 = '#16161D',
@@ -338,7 +338,7 @@ local theme = {
     NeoTreeGitConflict = { fg = palette.red },
     NeoTreeGitModified = { fg = palette.orange },
     NeoTreeGitUntracked = { fg = palette.yellow },
-    NeoTreeNormal = { bg = palette.blue_2 },
+    NeoTreeNormal = { bg = palette.none },
     NeoTreeNormalNC = { bg = palette.blue_2 },
     NeoTreeSymbolicLinkTarget = { fg = palette.cyan },
   },
