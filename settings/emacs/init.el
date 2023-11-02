@@ -1,27 +1,12 @@
 (setq custom-file (locate-user-emacs-file "custom-vars.el"))
 (load custom-file 'noerror 'nomessage)
 
-;; a comment!
 (setq inhibit-startup-message t
       visible-bell nil)
-
-;; turn off some clunky stuff
-;;(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
 
 ;; always show line-numbers
 (global-display-line-numbers-mode 1)
 (column-number-mode)
-
-;; Disable line numbers for some modes
-(dolist (mode '(org-mode-hook
-                term-mode-hook
-                eshell-mode-hook))
-  (add-hook mode (lambda () (display-line-numbers-mode 0))))
-
-;; set color theme
-(load-theme 'modus-vivendi t)
 
 ;; set font
 (set-face-attribute 'default nil :font "Comic Code Ligatures" :height 160)
@@ -44,23 +29,115 @@
 (setq global-auto-revert-non-file-buffers t)
 
 ;; Make ESC quit prompts
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+;;(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+;; Runtime optimizations
+;; PERF: A second, case-insensitive pass over `auto-mode-alist' is time wasted.
+(setq auto-mode-case-fold nil)
+
+;; PERF: Disable bidirectional text scanning for a modest performance boost.
+;;   I've set this to `nil' in the past, but the `bidi-display-reordering's docs
+;;   say that is an undefined state and suggest this to be just as good:
+(setq-default bidi-display-reordering 'left-to-right
+              bidi-paragraph-direction 'left-to-right)
+
+;; PERF: Disabling BPA makes redisplay faster, but might produce incorrect
+;;   reordering of bidirectional text with embedded parentheses (and other
+;;   bracket characters whose 'paired-bracket' Unicode property is non-nil).
+(setq bidi-inhibit-bpa t)  ; Emacs 27+ only
+
+;; Reduce rendering/line scan work for Emacs by not rendering cursors or regions
+;; in non-focused windows.
+(setq-default cursor-in-non-selected-windows nil)
+(setq highlight-nonselected-windows nil)
+
+;; More performant rapid scrolling over unfontified regions. May cause brief
+;; spells of inaccurate syntax highlighting right after scrolling, which should
+;; quickly self-correct.
+(setq fast-but-imprecise-scrolling t)
+
+;; Don't ping things that look like domain names.
+(setq ffap-machine-p-known 'reject)
+
+;; Emacs "updates" its ui more often than it needs to, so slow it down slightly
+(setq idle-update-delay 1.0)  ; default is 0.5
+
+;; Font compacting can be terribly expensive, especially for rendering icon
+;; fonts on Windows. Whether disabling it has a notable affect on Linux and Mac
+;; hasn't been determined, but do it anyway, just in case. This increases memory
+;; usage, however!
+(setq inhibit-compacting-font-caches t)
+
+;; PGTK builds only: this timeout adds latency to frame operations, like
+;; `make-frame-invisible', which are frequently called without a guard because
+;; it's inexpensive in non-PGTK builds. Lowering the timeout from the default
+;; 0.1 should make childframes and packages that manipulate them (like `lsp-ui',
+;; `company-box', and `posframe') feel much snappier. See emacs-lsp/lsp-ui#613.
+
+;; Increase how much is read from processes in a single chunk (default is 4kb).
+;; This is further increased elsewhere, where needed (like our LSP module).
+(setq read-process-output-max (* 64 1024))  ; 64kb
+
+;; Introduced in Emacs HEAD (b2f8c9f), this inhibits fontification while
+;; receiving input, which should help a little with scrolling performance.
+(setq redisplay-skip-fontification-on-input t)
+
+;; The GC introduces annoying pauses and stuttering into our Emacs experience,
+;; so we use `gcmh' to stave off the GC while we're using Emacs, and provoke it
+;; when it's idle. However, if the idle delay is too long, we run the risk of
+;; runaway memory usage in busy sessions. If it's too low, then we may as well
+;; not be using gcmh at all.
+(setq gcmh-idle-delay 'auto  ; default is 15s
+      gcmh-auto-idle-delay-factor 10
+      gcmh-high-cons-threshold (* 16 1024 1024))  ; 16mb
+
+
+;;; Disable UI elements early
+;; PERF,UI: Doom strives to be keyboard-centric, so I consider these UI elements
+;;   clutter. Initializing them also costs a morsel of startup time. Whats more,
+;;   the menu bar exposes functionality that Doom doesn't endorse. Perhaps one
+;;   day Doom will support these, but today is not that day.
+;;
+;; HACK: I intentionally avoid calling `menu-bar-mode', `tool-bar-mode', and
+;;   `scroll-bar-mode' because they do extra work to manipulate frame variables
+;;   that isn't necessary this early in the startup process.
+(push '(menu-bar-lines . 0)   default-frame-alist)
+(push '(tool-bar-lines . 0)   default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+;; And set these to nil so users don't have to toggle the modes twice to
+;; reactivate them.
+(setq menu-bar-mode nil
+      tool-bar-mode nil
+      scroll-bar-mode nil)
 
 ;; Plugins
 
+;; Initialize package sources
 (require 'package)
-(setq package-archives '(
-  ("melpa" . "https://melpa.org/packages/")
-  ("org" . "https://orgmode.org/elpa/")
-  ("elpa" . "https://elpa.gnu.org/packages/")
-))
-(package-initialize)
-(unless package-archive-contents (package-refresh-contents))
 
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("elpa" . "https://elpa.gnu.org/packages/")))
+
+(package-initialize)
+(unless package-archive-contents
+  (package-refresh-contents))
+
+  ;; Initialize use-package on non-Linux platforms
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
+
 (require 'use-package)
 (setq use-package-always-ensure t)
+
+(use-package auto-package-update
+  :custom
+  (auto-package-update-interval 7)
+  (auto-package-update-prompt-before-update t)
+  (auto-package-update-hide-results t)
+  :config
+  (auto-package-update-maybe)
+  (auto-package-update-at-time "09:00"))
 
 (use-package command-log-mode)
 (use-package rainbow-delimiters
@@ -71,6 +148,9 @@
   :diminish which-key-mode
   :config
   (setq which-key-idle-delay 0.3))
+
+(use-package markdown-mode
+  :ensure t)
 
 (use-package ivy
   :diminish
@@ -90,26 +170,6 @@
   :config
   (ivy-mode 1))
 
-(use-package ivy-rich
-  :init
-  (ivy-rich-mode 1)
-  :config
-  (setq ivy-format-function #'ivy-format-function-line)
-  (setq ivy-rich--display-transformers-list
-        (plist-put ivy-rich--display-transformers-list
-                   'ivy-switch-buffer
-                   '(:columns
-                     ((ivy-rich-candidate (:width 40))
-                      (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right)); return the buffer indicators
-                      (ivy-rich-switch-buffer-major-mode (:width 12 :face warning))          ; return the major mode info
-                      (ivy-rich-switch-buffer-project (:width 15 :face success))             ; return project name using `projectile'
-                      (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))  ; return file path relative to project root or `default-directory' if project is nil
-                     :predicate
-                     (lambda (cand)
-                       (if-let ((buffer (get-buffer cand)))
-                           ;; Don't mess with EXWM buffers
-                           (with-current-buffer buffer
-                             (not (derived-mode-p 'exwm-mode)))))))))
 
 (use-package doom-modeline
   :ensure t
@@ -134,113 +194,110 @@
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
 
-(defun rune/evil-hook ()
-  (dolist (mode '(custom-mode
-                  eshell-mode
-                  git-rebase-mode
-                  erc-mode
-                  circe-server-mode
-                  circe-chat-mode
-                  circe-query-mode
-                  sauron-mode
-                  term-mode))
-   (add-to-list 'evil-emacs-state-modes mode)))
+;; Make ESC quit prompts
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
-(use-package evil
-  :init
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  (setq evil-want-C-u-scroll t)
-  (setq evil-want-C-i-jump nil)
-  :hook (evil-mode . rune/evil-hook)
-  :config
-  (evil-mode 1)
-  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-
-  ;; Use visual line motions even outside of visual-line-mode buffers
-  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-
-  (evil-set-initial-state 'messages-buffer-mode 'normal)
-  (evil-set-initial-state 'dashboard-mode 'normal))
-
-(use-package evil-collection
+(use-package general
   :after evil
   :config
-  (evil-collection-init))
+  (general-create-definer efs/leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
 
-(use-package hydra)
+  (efs/leader-keys
+    "t"  '(:ignore t :which-key "toggles")
+    "tt" '(counsel-load-theme :which-key "choose theme")
+    "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))))
 
-(defhydra hydra-text-scale (:timeout 4)
-  "scale text"
-  ("j" text-scale-increase "in")
-  ("k" text-scale-decrease "out")
-  ("f" nil "finished" :exit t))
+(use-package evil
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-C-i-jump nil)
+    (setq evil-leader/leader "SPC")
+    :config
+    (evil-mode 1)
 
-(rune/leader-keys
-  "ts" '(hydra-text-scale/body :which-key "scale text"))
+    (define-prefix-command 'my-evil-leader-map)
+    (define-key evil-normal-state-map (kbd "SPC") 'my-evil-leader-map)
+
+    ;; Use visual line motions even outside of visual-line-mode buffers
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+    (keymap-set evil-normal-state-map (kbd "H") 'evil-first-non-blank)
+    (keymap-set evil-normal-state-map (kbd "L") 'evil-end-of-line)
+    (keymap-set evil-visual-state-map (kbd "H") 'evil-first-non-blank)
+    (keymap-set evil-visual-state-map (kbd "L") 'evil-end-of-line)
+
+    (define-key my-evil-leader-map (kbd "j") 'previous-buffer)
+    (define-key my-evil-leader-map (kbd "k") 'next-buffer)
+
+    (defun evil-join-and-keep-position ()
+	"Join lines and keep cursor position."
+	(interactive)
+	(let ((current-column (current-column)))
+	(evil-join (line-beginning-position) (line-beginning-position 2))
+	(move-to-column current-column)))
+
+    (define-key evil-normal-state-map (kbd "J") 'evil-join-and-keep-position)
+
+    (defun evil-source-current-buffer ()
+	"Reload the current buffer."
+	(interactive)
+	(load-file (buffer-file-name)))
+
+    (define-key my-evil-leader-map (kbd "rr") 'evil-source-current-buffer)
+
+
+    (defun my/evil-shift-right ()
+	(interactive)
+	(evil-shift-right evil-visual-beginning evil-visual-end)
+	(evil-normal-state)
+	(evil-visual-restore))
+
+    (defun my/evil-shift-left ()
+	(interactive)
+	(evil-shift-left evil-visual-beginning evil-visual-end)
+	(evil-normal-state)
+	(evil-visual-restore))
+
+    (evil-define-key 'visual global-map (kbd ">") 'my/evil-shift-right)
+    (evil-define-key 'visual global-map (kbd "<") 'my/evil-shift-left)
+    ;; Define the key mappings
+    (evil-define-key 'visual global-map (kbd "S-<tab>") 'my/evil-shift-left)
+    (evil-define-key 'visual global-map (kbd "TAB") 'my/evil-shift-right)
+
+    (evil-set-initial-state 'messages-buffer-mode 'normal)
+    (evil-set-initial-state 'dashboard-mode 'normal))
+
+
+(use-package evil-collection
+:after evil
+:config
+(evil-collection-init))
 
 (use-package magit
-  :commands (magit-status magit-get-current-branch)
-  :custom
+:commands (magit-status magit-get-current-branch)
+:custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
-
-(use-package evil-magit
-  :after magit)
 
 ;; plug magit into github - requires some config that I've yet to do
 (use-package forge)
 
-(defun dw/org-mode-setup ()
-  (org-indent-mode)
-  (variable-pitch-mode 1)
-  (auto-fill-mode 0)
-  (visual-line-mode 1)
-  (setq evil-auto-indent nil))
-
-(use-package org
-  :hook (org-mode . dw/org-mode-setup)
-  :config
-  (setq org-ellipsis " ▾"
-        org-hide-emphasis-markers t))
-
-(use-package org-bullets
-  :after org
-  :hook (org-mode . org-bullets-mode)
-  :custom
-  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
-
-;; Replace list hyphen with dot
-(font-lock-add-keywords 'org-mode
-                        '(("^ *\\([-]\\) "
-                          (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-
-(dolist (face '((org-level-1 . 1.2)
-                (org-level-2 . 1.1)
-                (org-level-3 . 1.05)
-                (org-level-4 . 1.0)
-                (org-level-5 . 1.1)
-                (org-level-6 . 1.1)
-                (org-level-7 . 1.1)
-                (org-level-8 . 1.1)))
-    (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
-
-;; Make sure org-indent face is available
-(require 'org-indent)
-
-;; Ensure that anything that should be fixed-pitch in Org files appears that way
-(set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
-(set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
-(set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
-(set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-(set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-(set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-(set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
-
-(use-package lsp-mode
-  :commands (lsp lsp-deferred)
+(use-package ivy-rich
+  :after ivy
   :init
-  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
-  :config
-  (lsp-enable-which-key-integration t))
+  (ivy-rich-mode 1))
+
+;;(use-package counsel
+  ;;:bind (("C-M-j" . 'counsel-switch-buffer)
+         ;;:map minibuffer-local-map
+         ;;("C-r" . 'counsel-minibuffer-history))
+  ;;:custom
+  ;;;;(counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
+  ;;:config
+  ;;(counsel-mode 1))
+
