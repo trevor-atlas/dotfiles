@@ -3,21 +3,35 @@ local luasnip = require('luasnip')
 require('luasnip.loaders.from_vscode').lazy_load()
 luasnip.config.setup({})
 local hs_completion = require('hubspot-completion')
+local lspkind = require('lspkind')
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
 
 cmp.setup({
+  snippet = {
+    expand = function(args) luasnip.lsp_expand(args.body) end,
+  },
+  window = {
+    completion = {
+      winhighlight = 'Normal:Pmenu,FloatBorder:Pmenu,Search:None',
+      col_offset = -3,
+      side_padding = 0,
+    },
+  },
   formatting = {
+    expandable_indicator = true,
+    fields = { 'kind', 'abbr', 'menu' },
     format = function(entry, vim_item)
-      vim_item.menu = ({
-        [hs_completion.key] = '[Translation]',
-        --other examples may look like
-        --buffer = "[Buffer]",
-        --nvim_lsp = "[LSP]",
-        --luasnip = "[LuaSnip]",
-        --nvim_lua = "[Lua]",
-        --latex_symbols = "[Latex]",
-      })[entry.source.name]
+      local kind = lspkind.cmp_format({ mode = 'symbol_text', maxwidth = 50 })(entry, vim_item)
+      local strings = vim.split(kind.kind, '%s', { trimempty = true })
+      if entry.source.name == hs_completion.key then
+        kind.menu = '  Translation'
+      else
+        kind.menu = '  ' .. (strings[2] or '')
+      end
+      kind.kind = ' ' .. (strings[1] or '') .. ' '
 
-      return vim_item
+      return kind
     end,
   },
   performance = {
@@ -51,7 +65,15 @@ cmp.setup({
       end
     end, { 'i', 's' }),
   }),
-  sources = { { name = 'nvim_lsp' }, { name = hs_completion.key } },
+  sources = {
+    { name = 'path' },
+    { name = 'nvim_lsp' },
+    { name = 'luasnip' },
+    -- { name = 'buffer' },
+    -- { name = 'nvim_lua' },
+    -- { name = 'treesitter' },
+    { name = hs_completion.key },
+  },
 })
 
 hs_completion.setup()

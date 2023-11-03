@@ -6,6 +6,7 @@ local actions = require('telescope.actions')
 local action_state = require('telescope.actions.state')
 local hs_completion = require('hubspot-completion')
 
+local pad = '                                        '
 local ascii_arr = {
   '⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⠻⣿⣿⣿⣿⣿⣿',
   '⣿⣿⣿⣿⣿⣦⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣄⡀⠀⢻⣿⣿⣿⣿⣿',
@@ -23,56 +24,70 @@ local ascii_arr = {
   '⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿',
 }
 
-local loading_message = 'stranslations.are.loading'
+local function is_empty(t)
+  if t == nil then return true end
+  for _ in pairs(t) do
+    return false
+  end
+  return true
+end
 
 local function get_translation_keys()
-  local translations = nil --hs_completion.get_translations()
-  if translations == nil then
-    hs_completion.setup()
-    return {
-      {
-        'Translations are loading, please try again',
-        loading_message,
-      },
-    }
-  end
+  local path = hs_completion.get_app_or_lib_dir()
+  local translations = hs_completion.get_translations()
+  if is_empty(translations) then return {} end
 
   local keys = {}
-  local i = 1
-  for key, value in pairs(translations) do
-    keys[i] = { key, value }
-    i = i + 1
+  if path ~= nil and not is_empty(translations[path]) then
+    for key, value in pairs(translations[path]) do
+      table.insert(keys, { key, value })
+    end
+    return keys
   end
+
+  for _, values in pairs(translations) do
+    for key, value in pairs(values) do
+      table.insert(keys, { key, value })
+    end
+  end
+
   return keys
 end
-local values = get_translation_keys()
 
 local previewer = previewers.new_buffer_previewer({
   define_preview = function(self, entry)
-    if entry.value[2] == loading_message then
+    -- P({ self = self, entry = entry })
+    if self.state.winid ~= -1 then vim.api.nvim_win_set_option(self.state.winid, 'wrap', true) end
+    local lines = 10
+    if entry.value == nil then
       for i, line in ipairs(ascii_arr) do
-        vim.api.nvim_buf_set_lines(self.state.bufnr, i - 1, i, false, { line })
+        vim.api.nvim_buf_set_lines(self.state.bufnr, lines + i - 1, lines + i, false, { line })
       end
-    else
-      vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, { entry.value[2] })
+      return
     end
+
+    vim.api.nvim_buf_set_lines(self.state.bufnr, lines, lines, false, { entry.value[2] })
   end,
 })
 
 -- our picker function
 local find_translation = function(opts)
-  opts = opts or {}
+  local results = get_translation_keys()
+
+  local path = hs_completion.get_app_or_lib_dir()
+  opts = opts or { defaults = { preview = { wrap = true } } }
   pickers
     .new(opts, {
-      prompt_title = 'Translations',
+      defaults = { preview = { wrap = true } },
+      prompt_title = path and 'Translations for ' .. path:match('([^/]+)$') or 'All Translations',
       previewer = previewer,
       sorter = conf.generic_sorter(opts),
-      attach_mappings = function(prompt_bufnr, map)
+      attach_mappings = function(prompt_bufnr, _)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
           local selection = action_state.get_selected_entry()
-          P({ selection = selection })
-          vim.api.nvim_put({ selection.value[2] }, '', false, true)
+          -- P({ selection = selection })
+          vim.api.nvim_put({ selection.value[1] }, '', false, true)
         end)
         return true
       end,
@@ -84,8 +99,15 @@ local find_translation = function(opts)
         --   { 'green', '#00ff00' },
         --   { 'blue', '#0000ff' },
         -- },
-        results = values,
+        results = results,
         entry_maker = function(entry)
+          if entry == nil then
+            return {
+              value = 'No results',
+              display = 'No results',
+              ordinal = 'No results',
+            }
+          end
           return {
             value = entry,
             display = entry[1],
@@ -97,5 +119,6 @@ local find_translation = function(opts)
     :find()
 end
 
--- to execute the function
-find_translation()
+local M = {}
+function M.open() find_translation() end
+return M

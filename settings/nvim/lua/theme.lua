@@ -128,7 +128,7 @@ local palette = {
   fg = '#abb2bf',
   bg = '#1e222a',
 
-  white = '#bbc2cf',
+  white = '#eae5ff',
   darker_black = '#22262e',
   black = '#282c34',
   black2 = '#2e323a',
@@ -420,6 +420,48 @@ local theme = {
     VimwikiHeader4 = { fg = palette.cyan, bg = palette.none, bold = true },
     VimwikiHeader5 = { fg = palette.yellow, bg = palette.none, bold = true },
     VimwikiHeader6 = { fg = palette.purple, bg = palette.none, bold = true },
+  },
+  cmp = {
+    PmenuSel = { bg = '#282C34', fg = 'NONE' },
+    Pmenu = { fg = '#C5CDD9', bg = '#22252A' },
+
+    CmpItemAbbrDeprecated = { fg = '#7E8294', bg = 'NONE', strikethrough = true },
+    CmpItemAbbrMatch = { fg = '#82AAFF', bg = 'NONE', bold = true },
+    CmpItemAbbrMatchFuzzy = { fg = '#82AAFF', bg = 'NONE', bold = true },
+    CmpItemMenu = { fg = '#C792EA', bg = 'NONE', italic = true },
+
+    CmpItemKindField = { fg = palette.white, bg = '#B5585F' },
+    CmpItemKindProperty = { fg = palette.white, bg = '#B5585F' },
+    CmpItemKindEvent = { fg = palette.white, bg = '#B5585F' },
+
+    CmpItemKindText = { fg = palette.white, bg = '#9FBD73' },
+    CmpItemKindEnum = { fg = palette.white, bg = '#9FBD73' },
+    CmpItemKindKeyword = { fg = palette.white, bg = '#9FBD73' },
+
+    CmpItemKindConstant = { fg = palette.white, bg = '#D4BB6C' },
+    CmpItemKindConstructor = { fg = palette.white, bg = '#D4BB6C' },
+    CmpItemKindReference = { fg = palette.white, bg = '#D4BB6C' },
+
+    CmpItemKindFunction = { fg = palette.white, bg = '#A377BF' },
+    CmpItemKindStruct = { fg = palette.white, bg = '#A377BF' },
+    CmpItemKindClass = { fg = palette.white, bg = '#A377BF' },
+    CmpItemKindModule = { fg = palette.white, bg = '#A377BF' },
+    CmpItemKindOperator = { fg = palette.white, bg = '#A377BF' },
+
+    CmpItemKindVariable = { fg = palette.white, bg = '#7E8294' },
+    CmpItemKindFile = { fg = palette.white, bg = '#7E8294' },
+
+    CmpItemKindUnit = { fg = palette.white, bg = '#D4A959' },
+    CmpItemKindSnippet = { fg = palette.white, bg = '#D4A959' },
+    CmpItemKindFolder = { fg = palette.white, bg = '#D4A959' },
+
+    CmpItemKindMethod = { fg = palette.white, bg = '#6C8ED4' },
+    CmpItemKindValue = { fg = palette.white, bg = '#6C8ED4' },
+    CmpItemKindEnumMember = { fg = palette.white, bg = '#6C8ED4' },
+
+    CmpItemKindInterface = { fg = palette.white, bg = '#58B5A8' },
+    CmpItemKindColor = { fg = palette.white, bg = '#58B5A8' },
+    CmpItemKindTypeParameter = { fg = palette.white, bg = '#58B5A8' },
   },
 }
 
