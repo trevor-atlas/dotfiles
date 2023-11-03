@@ -1,3 +1,4 @@
+local utils = require('utils')
 -- https://github.com/famiu/bufdelete.nvim
 -- buffer, split and window cheatsheet https://gist.github.com/Starefossen/5957088
 vim.keymap.set('n', '<C-x>', '<cmd>close<cr>', { desc = 'Close Buffer' })
@@ -19,6 +20,8 @@ vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", {
   expr = true,
   silent = true,
 })
+
+vim.keymap.set('n', '<leader>gnt', function() P(utils.get_text_under_cursor()) end, { desc = 'get the text under the cursor' })
 
 vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move selection down one line' })
 vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move selection up one line' })
@@ -98,6 +101,7 @@ end, { desc = 'Toggle Explorer Focus' })
 -- vim.keymap.set('n', '<leader>q', '<cmd>confirm q<cr>', { desc = 'Quit' })
 -- vim.keymap.set('n', '<leader>n', '<cmd>enew<cr>', { desc = 'New File' })
 vim.keymap.set('n', '<C-s>', '<cmd>w!<cr>', { desc = 'Force write' })
+vim.keymap.set('i', '<C-s>', '<cmd>w!<cr>', { desc = 'Force write' })
 vim.keymap.set('n', '<C-q>', '<cmd>qa!<cr>', { desc = 'Force quit' })
 
 -- Splits
@@ -108,7 +112,7 @@ vim.keymap.set('n', '<C-h>', '<cmd>NavigatorLeft<cr>', { desc = 'jump to left sp
 vim.keymap.set('n', '<C-l>', '<cmd>NavigatorRight<cr>', { desc = 'jump to right split' })
 vim.keymap.set('n', '<C-k>', '<cmd>NavigatorUp<cr>', { desc = 'jump to upper split' })
 vim.keymap.set('n', '<C-j>', '<cmd>NavigatorDown<cr>', { desc = 'jump to lower split' })
-vim.keymap.set('n', '<C-p>', '<cmd>NavigatorPrevious<cr>', { desc = 'jump to prev split' })
+-- vim.keymap.set('n', '<C-p>', '<cmd>NavigatorPrevious<cr>', { desc = 'jump to prev split' })
 
 vim.keymap.set('n', '<S-Up>', '<cmd>resize -2<cr>', { desc = 'Resize split up' })
 vim.keymap.set('n', '<S-Down>', '<cmd>resize +2<cr>', { desc = 'Resize split down' })

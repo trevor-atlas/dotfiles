@@ -1,9 +1,17 @@
-local Job = require('plenary.job')
-
 local M = {}
+
+M.os = vim.loop.os_uname().sysname
+M.is_windows = M.os == 'Windows'
+M.is_wsl = M.os == 'WSL'
+M.is_macos = M.os == 'Darwin'
+M.path_sep = M.is_windows and '\\' or '/'
+M.is_hubspot_machine = vim.loop.fs_stat(vim.env.HOME .. '/.hubspot')
+
+function M.get_text_under_cursor() return vim.treesitter.get_node_text(vim.treesitter.get_node({ bufnr = 0 }), 0) end
 
 ---@param table1 {}
 ---@param table2 {}
+---@return {}
 function M.merge_tables(table1, table2)
   local result = {}
 
@@ -25,24 +33,9 @@ function M.map(mode, from, to, opts)
   vim.keymap.set(mode, from, to, opts)
 end
 
-function M.dir_exists(dirpath)
-  local result = ''
-  Job:new({
-    command = 'ls',
-    args = { dirpath },
-    on_exit = function(_, return_val) result = return_val end,
-  }):sync()
-  vim.system({ 'ls', dirpath }, { text = true }):wait()
-  return result == 0
-end
-
 function M.conditional_func(func, condition, ...)
   if (condition == nil and true or condition) and type(func) == 'function' then return func(...) end
 end
-
-M.path_sep = vim.loop.os_uname().sysname == 'Windows' and '\\' or '/'
-
-local function is_hubspot_machine() return vim.system({ 'ls', vim.env.HOME .. '/.hubspot' }, { text = true }):wait().code == 0 end
 
 function M.path_join(...) return table.concat(vim.tbl_flatten({ ... }), M.path_sep) end
 
@@ -60,7 +53,15 @@ function M.dirname(filepath)
   return result, is_changed
 end
 
-function M.is_available(plugin) return packer_plugins ~= nil and packer_plugins[plugin] ~= nil end
+function M.is_available(plugin)
+  local l = require('lazy').plugins()
+  for _, p in ipairs(l) do
+    -- p[1] is the string plugin name
+    -- {"some-person/plugin.nvim", _ = {...}}
+    if p[1] == plugin then return true end
+  end
+  return false
+end
 
 function M.find_root_git_dir() return M.buffer_find_file_dir(M.buffer(), '.git') end
 
@@ -78,22 +79,5 @@ function M.file_exists(fname)
 end
 
 function M.open_file(file) vim.cmd('e ' .. file) end
-
-function M.get_uname() return vim.loop.os_uname().sysname end
-
-function M.determine_os()
-  local uname = M.get_uname()
-  local osnames = { 'WSL', 'Darwin' }
-  for _, name in ipairs(osnames) do
-    if not not string.find(uname or '', name) then return name end
-  end
-  return 'Unknown'
-end
-
-
-M.is_hubspot_machine = M.dir_exists(vim.env.HOME .. '/.hubspot')
-M.os = M.determine_os()
-M.is_wsl = M.os == 'WSL'
-M.is_macos = M.os == 'Darwin'
 
 return M

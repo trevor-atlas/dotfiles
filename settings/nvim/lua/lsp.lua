@@ -54,7 +54,7 @@ local servers = {
   -- pyright = {},
   rust_analyzer = {},
   html = { filetypes = { 'html' } },
-  yamlls = { filetypes = { 'lyaml' } },
+  yamlls = { filetypes = { 'lyaml', 'yaml' } },
   lua_ls = { Lua = { workspace = { checkThirdParty = false }, telemetry = { enable = false } } },
 }
 

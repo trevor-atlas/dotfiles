@@ -8,7 +8,7 @@ local tsserverpath = getTsServerPathForCurrentFile()
 local settings = {
   separate_diagnostic_server = true,
   publish_diagnostic_on = 'insert_leave',
-  expose_as_code_action = {},
+  expose_as_code_action = 'all',
   tsserver_logs = 'terse',
   -- specify a list of plugins to load by tsserver, e.g., for support `styled-components`
   -- (see ?? `styled-components` support section)
@@ -42,23 +42,10 @@ require('typescript-tools').setup({
   end,
 })
 
-vim.diagnostic.config({ virtual_text = false, underline = true })
+vim.diagnostic.config({ source = true, virtual_text = true, underline = true })
 vim.lsp.handlers['workspace/diagnostic/refresh'] = function(_, _, ctx)
   local ns = vim.lsp.diagnostic.get_namespace(ctx.client_id)
   local bufnr = vim.api.nvim_get_current_buf()
   vim.diagnostic.reset(ns, bufnr)
   return true
 end
-
--- vim.api.nvim_set_keymap("n", "<space>gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { noremap = true, silent = true })
--- vim.api.nvim_set_keymap(
---   "n",
---   "<space>gi",
---   "<cmd>lua vim.lsp.buf.implementation()<CR>",
---   { noremap = true, silent = true }
--- )
--- vim.api.nvim_set_keymap("n", "<space>gr", "<cmd>lua vim.lsp.buf.references()<CR>", { noremap = true, silent = true })
--- vim.api.nvim_set_keymap("n", "<space>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", { noremap = true, silent = true })
--- vim.api.nvim_set_keymap("n", "gh", "<cmd>lua vim.lsp.buf.hover()<CR>", { noremap = false, silent = true })
---
--- vim.api.nvim_set_keymap("n", "<space>ga", "<cmd>lua vim.lsp.buf.code_action()<CR>", { noremap = true, silent = true })

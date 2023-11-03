@@ -4,28 +4,30 @@ local create_command = vim.api.nvim_create_user_command
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
-local highlight_group = augroup('YankHighlight', { clear = true })
-vim.api.nvim_create_autocmd('TextYankPost', {
+local yank_highlight_group = augroup('YankHighlight', { clear = true })
+cmd('TextYankPost', {
   callback = function() vim.highlight.on_yank() end,
-  group = highlight_group,
+  group = yank_highlight_group,
   pattern = '*',
 })
 
 -- treat .lyaml files as .yaml
-vim.cmd([[
-augroup yaml_filetype
-  autocmd!
-  autocmd BufRead,BufNewFile *.lyaml setfiletype yaml
-augroup END
-]])
+local hubspot_translation_group = augroup('HSTranslations', { clear = true })
+cmd({ 'BufRead', 'BufNewFile' }, {
+  desc = 'treat .lyaml files as yaml',
+  group = hubspot_translation_group,
+  pattern = '*.lyaml',
+  callback = function() vim.api.nvim_command('setfiletype yaml') end,
+})
 
 -- treat .jade files as .pug
-vim.cmd([[
-augroup jade_filetype
-  autocmd!
-  autocmd BufRead,BufNewFile *.jade setfiletype pug
-augroup END
-]])
+local remap_legacy_filetypes_group = augroup('LegacyFiletypesGroup', { clear = true })
+cmd({ 'BufRead', 'BufNewFile' }, {
+  desc = 'treat .jade files as .pug',
+  group = remap_legacy_filetypes_group,
+  pattern = '*.jade',
+  callback = function() vim.api.nvim_command('setfiletype pug') end,
+})
 
 local url_matcher =
   '\\v\\c%(%(h?ttps?|ftp|file|ssh|git)://|[a-z]+[@][a-z]+[.][a-z]+:)%([&:#*@~%_\\-=?!+;/0-9a-z]+%(%([.;/?]|[.][.]+)[&:#*@~%_\\-=?!+/0-9a-z]+|:\\d+|,%(%(%(h?ttps?|ftp|file|ssh|git)://|[a-z]+[@][a-z]+[.][a-z]+:)@![0-9a-z]+))*|\\([&:#*@~%_\\-=?!+;/.0-9a-z]*\\)|\\[[&:#*@~%_\\-=?!+;/.0-9a-z]*\\]|\\{%([&:#*@~%_\\-=?!+;/.0-9a-z]*|\\{[&:#*@~%_\\-=?!+;/.0-9a-z]*})\\})+'
@@ -36,23 +38,24 @@ local function delete_url_match()
     if match.group == 'HighlightURL' then vim.fn.matchdelete(match.id) end
   end
 end
+
 local function set_url_match()
   delete_url_match()
-  if vim.g.highlighturl_enabled then vim.fn.matchadd('HighlightURL', url_matcher, 15) end
+  vim.fn.matchadd('HighlightURL', url_matcher, 15)
 end
 
-augroup('highlighturl', { clear = true })
+local highlighturl_group = augroup('highlighturl', { clear = true })
 cmd({ 'VimEnter', 'FileType', 'BufEnter', 'WinEnter' }, {
   desc = 'URL Highlighting',
-  group = 'highlighturl',
+  group = highlighturl_group,
   pattern = '*',
   callback = function() set_url_match() end,
 })
 
-augroup('neotree_start', { clear = true })
+local neotree_start_group = augroup('neotree_start', { clear = true })
 cmd('BufEnter', {
   desc = 'Open Neo-Tree on startup with directory',
-  group = 'neotree_start',
+  group = neotree_start_group,
   callback = function()
     local stats = vim.loop.fs_stat(vim.api.nvim_buf_get_name(0))
     if stats and stats.type == 'directory' then require('neo-tree.setup.netrw').hijack() end
