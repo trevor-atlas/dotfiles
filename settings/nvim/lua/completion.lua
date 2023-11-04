@@ -1,3 +1,4 @@
+local utils = require('utils')
 local cmp = require('cmp')
 local luasnip = require('luasnip')
 require('luasnip.loaders.from_vscode').lazy_load()
@@ -72,7 +73,7 @@ cmp.setup({
     -- { name = 'buffer' },
     -- { name = 'nvim_lua' },
     -- { name = 'treesitter' },
-    { name = hs_completion.key },
+    utils.is_hubspot_machine and { name = hs_completion.key },
   },
 })
 

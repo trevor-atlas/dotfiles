@@ -319,11 +319,6 @@ require('lazy').setup({
       },
     },
   },
-  {
-    'nvim-telescope/telescope-frecency.nvim',
-    dependencies = { 'nvim-telescope/telescope.nvim' },
-    config = function() require('telescope').load_extension('frecency') end,
-  },
   { import = 'custom.plugins' },
   -- setup args explained: https://github.com/folke/lazy.nvim?tab=readme-ov-file#-plugin-spec
 }, {})
