@@ -52,7 +52,11 @@ local servers = {
   -- clangd = {},
   -- gopls = {},
   -- pyright = {},
-  rust_analyzer = {},
+  rust_analyzer = {
+    checkOnSave = {
+      command = 'clippy',
+    },
+  },
   html = { filetypes = { 'html' } },
   yamlls = { filetypes = { 'lyaml', 'yaml' } },
   lua_ls = { Lua = { workspace = { checkThirdParty = false }, telemetry = { enable = false } } },

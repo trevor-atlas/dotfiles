@@ -66,8 +66,8 @@ end
 function M.find_root_git_dir() return M.buffer_find_file_dir(M.buffer(), '.git') end
 
 function M.buffer_find_file(bufnr, filename)
-  local bufname = vim.api.nvim_buf_get_name(bufnr)
-  if vim.fn.filereadable(bufname) == 0 then return nil end
+  local buffer_path = vim.api.nvim_buf_get_name(bufnr or vim.api.nvim_get_current_buf())
+  if vim.fn.filereadable(buffer_path) == 0 then return nil end
   return vim.fn.finddir(filename, vim.fn.expand('%:p:h') .. '.;')
 end
 

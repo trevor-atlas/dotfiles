@@ -14,12 +14,15 @@ if not vim.loop.fs_stat(lazypath) then
     lazypath,
   })
 end
+
 vim.opt.rtp:prepend(lazypath)
 
 require('lazy').setup({
   'nvim-lua/plenary.nvim',
   'nvim-tree/nvim-web-devicons',
   'ggandor/lightspeed.nvim',
+  'simrat39/rust-tools.nvim',
+  { 'folke/neoconf.nvim', config = function() end },
   {
     'brenoprata10/nvim-highlight-colors',
     init = function() require('nvim-highlight-colors').setup({}) end,
@@ -332,6 +335,7 @@ require('globals')
 require('hubspot-bender').setup()
 require('treesitter')
 require('lsp')
+require('rust')
 require('completion')
 require('autocommands')
 require('theme').setup()

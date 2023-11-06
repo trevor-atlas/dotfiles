@@ -23,9 +23,30 @@ local function prettier_config()
   }
 end
 
+local function lsp_or_leptos()
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+  -- true if any line contains "leptos"
+  local probably_leptos_project = vim.iter(lines):any(function(content) return content:match('leptos') end)
+
+  if probably_leptos_project == true then
+    return {
+      exe = 'leptosfmt',
+      args = { vim.api.nvim_buf_get_name(0), '--stdin', '--rustfmt', '--quiet' },
+      stdin = true,
+    }
+  end
+  return {
+    exe = 'rustfmt',
+    args = { vim.api.nvim_buf_get_name(0) },
+    stdin = true,
+  }
+end
+
 require('formatter').setup({
   logging = false,
   filetype = {
+    rust = { lsp_or_leptos },
     javascript = { prettier_config },
     javascriptreact = { prettier_config },
     typescript = { prettier_config },
@@ -42,10 +63,11 @@ require('formatter').setup({
 })
 
 vim.api.nvim_exec(
-[[
+  [[
 au! BufRead,BufNewFile *.mdx setfiletype mdx
 augroup FormatAutogroup
 autocmd!
-autocmd BufWritePost *.js,*.ts,*.tsx,*.lua,*.mdx FormatWrite
-augroup END]], true
+autocmd BufWritePost *.js,*.ts,*.tsx,*.lua,*.mdx,*.rs FormatWrite
+augroup END]],
+  true
 )
