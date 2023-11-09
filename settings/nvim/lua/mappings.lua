@@ -242,3 +242,5 @@ vim.keymap.set('v', '<leader>ev', function()
   P(get_visual_selection())
   -- P(vim.api.nvim_exec2('lua ' .. text, { output = true }))
 end, { desc = 'Run selected lua code and print the result' })
+
+vim.keymap.set('n', '<leader>lf', '<cmd>luafile %<CR>', { desc = 'interpret current file as lua' })

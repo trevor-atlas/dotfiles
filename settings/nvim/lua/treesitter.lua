@@ -18,6 +18,8 @@ require('nvim-treesitter.configs').setup({
     'yaml',
     'xml',
     'pug',
+    'graphql',
+    'css',
   },
   -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
   ignore_install = {},
