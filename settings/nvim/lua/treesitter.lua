@@ -20,6 +20,7 @@ require('nvim-treesitter.configs').setup({
     'pug',
     'graphql',
     'css',
+    'scss',
   },
   -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
   ignore_install = {},

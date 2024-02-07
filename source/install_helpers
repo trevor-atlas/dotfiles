@@ -11,8 +11,10 @@ install_dotfiles_once() {
 
 	# add a .hushlogin to ~ to prevent login messages
 	touch "$HOME/.hushlogin"
-	mkdir -p "$HOME/projects"
+	mkdir -p "$HOME/src"
 	mkdir -p "$HOME/go"
+  npm set fund false
+  npm set audit false
 }
 
 determine_os() {

@@ -30,6 +30,10 @@ alias commit="$ATLAS_ROOT/functions/commit"
 export EDITOR="nvim"
 export VISUAL="code"
 
+# disable NPM advertising
+export DISABLE_OPENCOLLECTIVE=1
+export ADBLOCK=1
+
 install_dotfiles() {
   sh "$ATLAS_ROOT"/install
 }
