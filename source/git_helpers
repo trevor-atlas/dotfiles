@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+
+CODE_DIR="$HOME/src"
+
+my_issues() {
+  local repo="${1:-HubSpot/Billing-Management-Team}"
+  # gh issue list --label 'FE' --assignee '@me' --repo HubSpot/Merchant-Experience-Team
+  local issue_list=$(GH_FORCE_TTY=true gh issue list --repo "$repo" --assignee '@me' | cat)
+
+  if [[ -z $issue_list ]]; then
+    return 1
+  fi
+
+  if [[ ${issue_list} == no* ]]; then
+    return 1
+  fi
+
+  local issue="$(echo "$issue_list" | tail -n +3 | grep -v '^$' | awk -F'\t' -v ID_COLOUR="$ID_COLOUR" -v TEXT_COLOUR="$TEXT_COLOUR" -v STATUS_COLOUR="$STATUS_COLOUR" -v SHELL_COLOUR="$SHELL_COLOUR" \
+    '{print ID_COLOUR $1 SHELL_COLOUR"\t"TEXT_COLOUR $3 SHELL_COLOUR"\t"STATUS_COLOUR $2}' |
+    fzf -d' ' \
+      --ansi \
+      --prompt="my issues in $repo:")"
+
+  local issue_number=$(echo "$issue" | sed -E 's/^#([0-9]+).*/\1/')
+  # xargs -n1 gh issue view -R "$repo" -c
+  # extract issue title
+  local issue_data="$(gh issue view -R HubSpot/Billing-Management-Team "$issue_number" --json=title | cat)"
+  # local issue_number=$(echo "$issue_data" | jq '.["number"]')
+  local issue_title=$(echo "$issue_data" | jq --raw-output '.["title"]')
+  echo "$issue_number"/"$issue_title"
+}
+
+make_branch() {
+  local issue=$(my_issues)
+  local exit_code="$?"
+  if [[ $exit_code -gt 0 ]]; then
+    echoerr "No issues found"
+    return 1
+  fi
+
+  if [[ -z $issue ]]; then
+    echoerr "No issue selected"
+    return 1
+  fi
+  echo "would have made branch for $issue"
+  # gitb "$issue"
+}
+
+gch() {
+ git checkout "$(git branch --all | fzf | tr -d '[:space:]')"
+}
+
+# Get default branch name (branch you should branch from for new work)
+gdefault() {
+  command git branch -rl '*/HEAD' | rev | cut -d/ -f1 | rev
+}
+
+# publish local branch
+gpub() {
+  command git push --set-upstream origin $(git_current_branch)
+}
+
+# Clean up local branches that have been merged
+function gclean() {
+  branch=$1
+  if [[ -z "$branch" ]]; then
+    branch=$(gdefault)
+  fi
+  confirm "Are you on a clean branch?" &&
+  command git checkout "$branch" &&
+  command git branch -d $(command git branch --merged="$branch" | grep -v "$branch") &&
+  command git fetch --prune
+}
+
+# Create a new branch and switch to it
+gitb() {
+  # [          # start of character class
+  # [:space:]  # The POSIX character class for whitespace characters. It's
+               # functionally identical to [ \t\r\n\v\f] which matches a space,
+               # tab, carriage return, newline, vertical tab, or form feed. See
+               # https://en.wikipedia.org/wiki/Regular_expression#POSIX_character_classes
+  # ]          # end of character class
+  # \+         # one or more of the previous item (anything matched in the brackets).
+  local branchname=$(echo $1 | sed 's/-//g' | sed -re 's/[[:blank:]]/-/g')
+   if [[ $branchname = no-issue-found* ]]; then
+    echo "No issues found."
+    return 1
+  fi
+  local datestr=$(date +%F)
+  branchname=$(echo "$USER"/"$datestr"/"$branchname")
+  git checkout -b $branchname
+}
+
+
+# Create a new tag and push it to origin
+tag() {
+  local main_branch=$(gdefault)
+  command git checkout "$main_branch"
+  command git pull origin "$main_branch"
+  command git fetch --tags
+  command git tag -a "$1" -m "Release $1"
+  command git push origin "$1" --tag
+}
+
+is_inside_git_repo() {
+    git rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
+# clone a repo if it doesn't exist
+# @example
+# repo some-repo-name
+repo() {
+  if [ ! -d "$CODE_DIR/$1" ]; then
+    echo "⚠️ Repo missing: \"$1\", cloning into $CODE_DIR/$1"
+    cd $CODE_DIR
+    git clone "git@git.hubteam.com:HubSpot/$1.git" || git clone "git@git.hubteam.com:HubSpotProtected/$1.git" || echo "🚨 uh oh, something went wrong cloning $1" && exit $EXITCODE
+  fi
+  if [ -d "$CODE_DIR/$1" ]; then
+    cd $CODE_DIR/$1
+  fi
+}
+
+
+# Pulls latest changes from remote if there are any
+# does nothing if branch is dirty
+update_repo() {
+  local branch=$(git_current_branch)
+  # if the branch is dirty, don't update
+  if [[ $(git diff --stat) != '' ]]; then
+    echo "⚠️ $(pwd) is dirty, skipping..."
+  else
+  local main_branch=$(gdefault)
+    git checkout "$main_branch" &> /dev/null
+    git pull &> /dev/null
+    git checkout "$branch" &>/dev/null
+    echo "✅ Updated $(pwd)"
+  fi
+}
+
+# Update all repos in $CODE_DIR
+update_repos() {
+  local original_dir=$(pwd)
+  for dir in $CODE_DIR/*; do
+    [[ -d "$dir" ]] || continue
+    {
+      cd "$dir" && is_inside_git_repo && update_repo
+    }
+  done
+  cd "$original_dir"
+}
