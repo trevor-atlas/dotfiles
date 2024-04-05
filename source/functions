@@ -229,6 +229,13 @@ convert_webm() {
   ffmpeg -hide_banner -loglevel error -fflags +genpts -i "$1" -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -r 24 "${1%.*}.mp4"
 }
 
+jpg_to_video() {
+  local source_dir=$1
+  local framerate=$2
+  # name files in directory as 00.jpg 01.jpg 02.jpg etc to order them
+  ffmpeg -hide_banner -loglevel error -y -f image2 -r "$framerate" -i "$source_dir/%02d.jpg" -vcodec libx264 -crf 18 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" "output.mp4"
+}
+# jpg_to_video ~/Desktop/xmas 12
 
 # print a shell color test to determine the level of color support
 colortest() {

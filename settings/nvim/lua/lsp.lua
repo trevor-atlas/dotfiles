@@ -52,6 +52,7 @@ local servers = {
   -- clangd = {},
   -- gopls = {},
   -- pyright = {},
+  prettier = {},
   rust_analyzer = {
     checkOnSave = {
       command = 'clippy',
