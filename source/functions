@@ -297,6 +297,25 @@ flexo() {
     #--UNSUPPORTED_LOCAL_DEV_SETTING bend-webpack.enableFastRefresh\
 }
 
+checkVpn() {
+  NETWORK_LOCATION=$(dig +short +time=1 client-network-location.hubteam.com TXT)
+  if [[ $NETWORK_LOCATION != '"internal"' ]]; then
+    echo "🤠  Howdy! It looks like you're not connected to HubSpot's internal network. This script needs this in order to work.\n"
+    echo "Please ensure you're connected to one of the following before proceeding:"
+    echo "- The wired network in the office"
+    echo "- The HS-Corp wifi network"
+    echo "- The VPN (https://hubspot.service-now.com/sp/?id=kb_article&sys_kb_id=ac92e085dbf2f0103d30ef81ca9619f6)\n"
+    return 1
+  fi
+
+  return 0
+}
+
+# bpmi my-package: installs my-package@1
+bpmi() {
+  command bend bpm install $1@${2:-1} --save-runtime && bend fix-dependencies . --UNSUPPORTED_LOCAL_DEV_SETTING bpm.fix-dependencies
+}
+
 update_maven_cache() {
   local current_dir=$(pwd)
   local NUM_PROC=$(python3  -c 'import multiprocessing; print(multiprocessing.cpu_count())')
