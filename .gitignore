@@ -9,3 +9,4 @@ scripts/complete-icebreakers.json
 settings/nvim/lazy-lock.json
 settings/nvim/undodir
 settings/nvim/backupdir
+node_modules

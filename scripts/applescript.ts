@@ -1,49 +1,56 @@
-import {$} from 'bun';
+import { $ } from 'bun';
+import { mkdir } from 'node:fs/promises';
 
 // https://github.com/johnlindquist/kit/blob/0de31f203dca2f90ce6f518e9292616a810a1a24/src/api/kit.ts#L495
-const app = 'swordfish';
-function getTmpPath(...parts: string[]) {
-  const home = $`echo ~`.text();
-  $`mkdir -p ${home}/${app}`;
-  const tmpdir = $`mktemp -d -p ${home}/${app}${parts.join('/')}`.text();
-
-  return scriptTmpDir
-}
-
-
-
 async function applescript(
   script: string,
-  options = { silent: true }
+  options: { scriptType: 'osascript' | 'JavaScript' } = {
+    scriptType: 'osascript',
+  }
 ) {
-  let applescriptPath = kenvTmpPath("latest.scpt")
-  await writeFile(applescriptPath, script)
-  Bun.write(file, JSON.stringify(pkg, null, 2));
+  const cmd =
+    options.scriptType === 'JavaScript'
+      ? ['/usr/bin/osascript', '-l', 'JavaScript', '-e', script]
+      : ['/usr/bin/osascript', '-e', script];
 
-  let p = new Promise<string>((res, rej) => {
-    let stdout = ``
-    let stderr = ``
-    let child = spawn(
-      `/usr/bin/osascript`,
-      [applescriptPath],
-      options
-    )
-
-    child.stdout.on("data", data => {
-      stdout += data.toString().trim()
-    })
-    child.stderr.on("data", data => {
-      stderr += data.toString().trim()
-    })
-
-    child.on("exit", () => {
-      res(stdout)
-    })
-
-    child.on("error", () => {
-      rej(stderr)
-    })
-  })
-
-  return p
+  return new Promise<string | null>((res, rej) => {
+    Bun.spawn({
+      cmd,
+      windowsHide: true,
+      async onExit(subprocess, exitCode, signalCode, error) {
+        await subprocess.exited;
+        if (error) {
+          rej(error.message);
+        } else if (typeof exitCode === 'number' && exitCode > 0) {
+          rej(subprocess?.stderr?.toString()?.trim() ?? null);
+        } else {
+          res(subprocess?.stdout?.toString()?.trim() ?? null);
+        }
+      },
+    });
+  });
 }
+
+async function terminal(script: string) {
+  const formatted = script.replace(/'|"/g, '\\"');
+  return await applescript(`tell application "Terminal"
+  if not application "Terminal" is running then launch
+  activate
+  do script "${formatted}"
+  end tell
+`);
+}
+
+await applescript(`display dialog "I'm shown!"`);
+await applescript(
+  `
+const app = Application.currentApplication();
+app.includeStandardAdditions = true;
+console.log(':D');
+app.displayDialog(\`The current date and time is \${app.currentDate()}\`);
+`,
+  { scriptType: 'JavaScript' }
+);
+
+await terminal(`echo hello`);
+await terminal(`pwd`);
