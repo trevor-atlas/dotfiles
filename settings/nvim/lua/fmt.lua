@@ -7,12 +7,12 @@ local function prettier_config()
   local bufname = vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
   local config_path = config_pattern(bufname)
 
-  local exe = utils.is_hubspot_machine and '~/.bpm/packages/hs-prettier/channels/default/prettier-config-hubspot/bin/hs-prettier.js'
+  local exe = utils.is_hubspot_machine and 'bpx'
     or config_path .. '/node_modules/prettier/node_modules/.bin/prettier'
 
   return {
     exe = exe,
-    args = { '--stdin-filepath', vim.api.nvim_buf_get_name(0), '--config', config_path .. '/prettier.config.js' },
+    args = {'hs-prettier', '--stdin-filepath', vim.api.nvim_buf_get_name(0), '--config', config_path .. '/prettier.config.js' },
     stdin = true,
   }
 end

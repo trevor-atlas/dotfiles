@@ -87,7 +87,7 @@ vim.keymap.set('n', '<leader>pS', function() require('lazy').sync() end, { desc 
 vim.keymap.set('n', '<leader>pu', function() require('lazy').check() end, { desc = 'Plugins Check Updates' })
 vim.keymap.set('n', '<leader>pU', function() require('lazy').update() end, { desc = 'Plugins Update' })
 
-vim.keymap.set('n', '<leader>e', '<cmd>Neotree toggle<cr>', { desc = 'Toggle Explorer' })
+vim.keymap.set('n', '<leader>e', '<cmd>Neotree reveal_force_cwd toggle<cr>', { desc = 'Toggle Explorer' })
 vim.keymap.set('n', '<leader>o', function()
   if vim.bo.filetype == 'neo-tree' then
     vim.cmd.wincmd('p')
@@ -172,75 +172,19 @@ local function trim(s)
 end
 
 local function get_visual_selection()
-  -- Get the start and end position of the visual selection
-  local start_pos = vim.fn.getpos("'<")
-  local end_pos = vim.fn.getpos("'>")
-
-  -- Calculate the start and end line numbers
-  local start_line = start_pos[2]
-  local end_line = end_pos[2]
-
-  -- Calculate the start and end column numbers
-  local start_col = start_pos[3]
-  local end_col = end_pos[3]
-
-  -- If the end column is the max value, use the end of the line
-  if end_col == 2147483647 then end_col = nil end
-
-  -- Get the text from the buffer
-  local lines = vim.api.nvim_buf_get_text(0, start_line - 1, start_col, end_line, end_col, {})
-  P(lines)
-
-  -- Handle single-line selection
-  if start_line == end_line then
-    lines[1] = string.sub(lines[1], start_col, end_col)
-  else
-    -- Handle multi-line selection
-    lines[1] = string.sub(lines[1], start_col)
-    if end_col then lines[#lines] = string.sub(lines[#lines], 1, end_col) end
-  end
-
-  -- Join the lines to get the selected text
-  return table.concat(lines, '\n')
+    -- Yank current visual selection into the 'v' register
+    -- Note that this makes no effort to preserve this register
+    vim.cmd('noau normal! "vy"')
+    return vim.fn.getreg('v')
 end
 
-local function region_to_text()
-  -- Get the start and end position of the visual selection
-  local start_pos = vim.fn.getpos("'<")
-  local end_pos = vim.fn.getpos("'>")
-
-  -- Calculate the start and end line numbers
-  local start_row = start_pos[2]
-  local end_row = end_pos[2]
-
-  -- Calculate the start and end column numbers
-  local start_col = start_pos[3]
-  local end_col = end_pos[3]
-
-  -- Adjust the end column to include the last character in the selection
-  if end_col == 2147483647 then
-    end_col = start_col
-  else
-    end_col = end_col + 1
-  end
-
-  P({ start_row = start_row, start_col = start_col, end_row = end_row, end_col = end_col })
-
-  -- or use api.nvim_buf_get_lines
-  local lines = vim.api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
-  local text = ''
-  for _, line in pairs(lines) do
-    text = text .. line
-  end
-  text = trim(text)
-  -- local text = trim(lines)
-  return text
-end
-
+-- execute selection as lua
 vim.keymap.set('v', '<leader>ev', function()
-  -- local text = region_to_text()
-  P(get_visual_selection())
-  -- P(vim.api.nvim_exec2('lua ' .. text, { output = true }))
+  local text = get_visual_selection()
+  local res = vim.api.nvim_exec2('lua ' .. trim(text), { output = true })
+  if res and res.output then
+    print(res.output)
+  end
 end, { desc = 'Run selected lua code and print the result' })
 
 vim.keymap.set('n', '<leader>lf', '<cmd>luafile %<CR>', { desc = 'interpret current file as lua' })
