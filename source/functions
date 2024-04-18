@@ -260,6 +260,38 @@ rename_files() {
   find . -name "*.$old" -exec bash -c 'mv "$1" "${1%.$old}".$new' - '{}' +
 }
 
+determine_os() {
+  case $(uname | tr '[:upper:]' '[:lower:]') in
+    linux*) echo "linux" ;;
+    darwin*) echo "mac" ;;
+    msys*) echo "windows" ;;
+    *) echo "notset" ;;
+  esac
+}
+
+timestamp_ms() {
+  # brew install coreutils for gdate
+  echo $(($(gdate +%s%N)/1000))
+}
+
+trash() {
+  local os=$(determine_os)
+  local file
+  if [[ "$os" = "mac" ]]; then
+    for file in "$@"; do
+      local name = "${file}-$(timestamp_ms)"
+      mv "${file}" "$HOME/.Trash/${name}" && echo "${file}: Moved to ~/.Trash/${name}"
+    done
+  elif [[ "$os" = "linux" ]]; then
+    for file in "$@"; do
+      local name = "${file}-$(timestamp_ms)"
+      mv "${file}" "~/.local/share/Trash/${name}" && echo "${file}: Moved to ~/.local/share/Trash/${name}"
+    done
+  else
+    echo "could not determine the system OS. halting."
+  fi
+}
+
 confirm() {
   # call with a prompt string or use a default
   read -r -p "${1:-Are you sure? [y/N]} " response
