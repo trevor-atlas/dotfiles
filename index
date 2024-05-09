@@ -29,7 +29,7 @@ source "$ATLAS_ROOT/source/git_helpers"
 alias commit="$ATLAS_ROOT/functions/commit"
 
 export EDITOR="nvim"
-export VISUAL="code"
+# export VISUAL="code"
 
 # disable NPM advertising
 export DISABLE_OPENCOLLECTIVE=1

@@ -21,10 +21,14 @@ async function applescript(
         await subprocess.exited;
         if (error) {
           rej(error.message);
-        } else if (typeof exitCode === 'number' && exitCode > 0) {
-          rej(subprocess?.stderr?.toString()?.trim() ?? null);
+        } else if (exitCode) {
+          const text = await new Response(subprocess?.stderr).text();
+          rej(`${text}` ?? null);
+        } else if (signalCode) {
+          res(`Execution halted by signal ${signalCode}`);
         } else {
-          res(subprocess?.stdout?.toString()?.trim() ?? null);
+          const text = await new Response(subprocess?.stdout).text();
+          res(text ?? null);
         }
       },
     });
@@ -33,24 +37,32 @@ async function applescript(
 
 async function terminal(script: string) {
   const formatted = script.replace(/'|"/g, '\\"');
-  return await applescript(`tell application "Terminal"
-  if not application "Terminal" is running then launch
-  activate
-  do script "${formatted}"
+
+    // if not application "Terminal" is running then launch
+  return await applescript(`
+  tell application "Terminal"
+    if not (exists window 1) then reopen
+    if busy of window 1 then
+        tell application "System Events" to keystroke "t" using command down
+    end if
+    do script "${formatted}"
   end tell
 `);
 }
 
-await applescript(`display dialog "I'm shown!"`);
-await applescript(
-  `
-const app = Application.currentApplication();
-app.includeStandardAdditions = true;
-console.log(':D');
-app.displayDialog(\`The current date and time is \${app.currentDate()}\`);
+// await applescript(`display dialog "I'm shown!"`);
+await applescript(`
+  const app = Application.currentApplication();
+  app.includeStandardAdditions = true;
+  console.log(':D');
+  app.displayDialog(\`The current date and time is \${app.currentDate()}\`);
 `,
   { scriptType: 'JavaScript' }
 );
 
+// const a = await applescript(`
+// tell application "Terminal" to get {properties, properties of tab 1} of window 1
+// `)
+// console.log(a);
 await terminal(`echo hello`);
-await terminal(`pwd`);
+// await terminal(`pwd`);

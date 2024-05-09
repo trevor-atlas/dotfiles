@@ -336,6 +336,15 @@ flexo() {
     #--UNSUPPORTED_LOCAL_DEV_SETTING bend-webpack.enableFastRefresh\
 }
 
+hs_build() {
+  if [[ -z "$1" ]]; then
+    cd "$CODE_DIR" &&\
+    NODE_OPTIONS="--max_old_space_size=8192"\
+    return bend reactor build all --update "$1"
+  fi
+  return bend reactor build all --update .
+}
+
 checkVpn() {
   NETWORK_LOCATION=$(dig +short +time=1 client-network-location.hubteam.com TXT)
   if [[ $NETWORK_LOCATION != '"internal"' ]]; then

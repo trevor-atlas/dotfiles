@@ -1,9 +1,9 @@
-import { parse, stringify } from 'yaml';
-import { readdir, stat } from 'node:fs/promises';
+import { parse } from 'yaml';
+import { readdir, writeFile, readFile } from 'node:fs/promises';
 
 type Events = Record<string, Event>;
 
-type Event = {
+interface Event {
   name: string;
   namespace?: string;
   meta: {
@@ -11,16 +11,24 @@ type Event = {
   };
   class: 'interaction' | 'usage';
   properties: Record<string, EventProperty>;
-};
+}
 
-type ObjectEventProperty = {
+interface ObjectEventProperty {
   type: string | string[];
   isOptional?: boolean;
   description?: string;
-};
+}
 
 type EventProperty = string | string[] | ObjectEventProperty;
-const suffix = '[🔎]';
+
+const PREFIX = '[🔎]';
+const HAS_FILE_EXT = /.*\.\w+$/i;
+const EXCLUDED_FILENAMES = new Set<string>([
+  'node_modules',
+  'hubspot.deploy',
+  'target',
+  'schemas',
+]);
 
 const isString = (anything: any): anything is string =>
   typeof anything === 'string';
@@ -67,60 +75,62 @@ function getPropertyType(propertyName: string, property: EventProperty) {
   const description = getPropertyDescription(property);
   const value = parseProperty(property);
   const optional = isPropertyOptional(property) ? '?' : '';
-  return `${description}  ${propertyName}${optional}: ${value};`;
+  return `
+${description}  ${propertyName}${optional}: ${value};`;
 }
 
-const parseEventsToTypescriptTypes = (events: Events) =>
-  Object.entries(events).map(
-    ([key, values]) =>
-      `export type ${key.charAt(0).toUpperCase() + key.slice(1)} = {
+function pascalCase(str: string) {
+  return `${str.charAt(0).toUpperCase()}${str.slice(1)}`;
+}
+
+function parseEventsToTypescriptTypes(events: Events) {
+  const types = Object.entries(events).map(
+    ([key, values]) => `export interface ${pascalCase(key)} {
 ${Object.entries(values.properties)
   .map(([name, property]) => getPropertyType(name, property))
   .join('\n')}
-};
-
-`
+}\n\n`
   );
 
-const has_file_extension = /\.\w+$/gim;
-const [_, __, target_file] = Bun.argv;
-const excluded_filenames = new Set<string>([
-  'node_modules',
-  '.vscode',
-  'hubspot.deploy',
-  'target',
-]);
+  return types.join('\n');
+}
 
 async function main() {
-  const files: string[] = await readdir('./').then((list) =>
-    list.filter(
-      (file) => !(has_file_extension.test(file) || excluded_filenames.has(file))
-    )
-  );
-
-  if (!(files.includes('static_conf.json') && files.includes('.blazar.yaml'))) {
-    console.error(`${suffix} 🚨 Invalid project directory, exiting...`);
-    process.exit(1);
-  }
-
-  for (const file_name of files) {
-    const st = await stat(file_name);
-    if (!st.isDirectory()) {
-      continue;
+  const files: string[] = await readdir('./');
+  const project_directories = files.filter((file) => {
+    if (HAS_FILE_EXT.test(file)) {
+      return false;
     }
+    if (EXCLUDED_FILENAMES.has(file)) {
+      return false;
+    }
+    if (file.startsWith('.')) {
+      return false;
+    }
+    return true;
+  });
+
+  for (const file_name of project_directories) {
     try {
-      const fcontent = Bun.file(`./${file_name}/static/events.yaml`);
-      const txt = await fcontent.text();
-      const types = parseEventsToTypescriptTypes(parse(txt));
-      Bun.write(`./${file_name}/static/js/event-types.ts`, types);
-      console.log(`${suffix} ✅ Wrote ${file_name}/static/js/event-types.ts`);
+      const fileContent = await readFile(
+        `${file_name}/static/events.yaml`,
+        'utf8'
+      );
+      const events: Events = parse(fileContent);
+      const eventTypesFileContent = parseEventsToTypescriptTypes(events);
+      await writeFile(
+        `${file_name}/static/js/event-types.ts`,
+        eventTypesFileContent
+      );
+      console.log(`${PREFIX} ✅ Wrote ${file_name}/static/js/event-types.ts`);
     } catch (_) {
-      console.warn(`${suffix} ⚠️  Skipping ${file_name}, no events.yaml file`);
+      console.warn(`${PREFIX} ⚠️ Skipping ${file_name}, no events.yaml file`);
       continue;
     }
   }
-  console.log(`${suffix} Done.`);
   process.exit(0);
 }
 
-main();
+main().catch((e) => {
+  console.error(PREFIX, 'ERROR:', JSON.stringify(e));
+});
