@@ -21,6 +21,13 @@ require('lazy').setup({
   'nvim-lua/plenary.nvim',
   'nvim-tree/nvim-web-devicons',
   'ggandor/lightspeed.nvim',
+    {
+      'MeanderingProgrammer/render-markdown.nvim',
+      opts = {
+        file_types = { "markdown", "Avante" },
+      },
+      ft = { "markdown", "Avante" },
+    },
   -- "simrat39/rust-tools.nvim",
   { 'folke/neoconf.nvim', config = function() end },
   {

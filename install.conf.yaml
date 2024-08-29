@@ -22,8 +22,9 @@
     ~/.inputrc: settings/.inputrc
 
 - create:
-    - ~/repos
+    - ~/src
     - ~/.hushlogin
 
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
+    - [git config --unset-all core.ignorecase && git config --system core.ignorecase false]
