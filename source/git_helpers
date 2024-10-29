@@ -62,12 +62,12 @@ gpub() {
 }
 
 # Clean up local branches that have been merged
-function gclean() {
+git_clean() {
   branch=$1
   if [[ -z "$branch" ]]; then
     branch=$(gdefault)
   fi
-  confirm "Are you on a clean branch?" &&
+  gum confirm "Are you on a clean branch?" &&
   command git checkout "$branch" &&
   command git branch -d $(command git branch --merged="$branch" | grep -v "$branch") &&
   command git fetch --prune
