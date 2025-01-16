@@ -169,9 +169,6 @@ local function toggle_term_cmd(term_details)
     term_details = {
       cmd = term_details,
       hidden = true,
-      -- on_open = function(term)
-      --   vim.api.nvim_buf_del_keymap(term.bufnr, "t", "jk")
-      -- end,
     }
   end
   -- use the command as the key for the table
