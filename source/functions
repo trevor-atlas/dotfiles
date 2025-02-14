@@ -4,50 +4,8 @@ ID_COLOUR="\033[36m"
 TEXT_COLOUR="\033[34m"
 STATUS_COLOUR="\033[33m"
 SHELL_COLOUR="\033[0m"
-
-
-my_issues() {
-  local repo="${1:-HubSpot/Billing-Management-Team}"
-  # gh issue list --label 'FE' --assignee '@me' --repo HubSpot/Merchant-Experience-Team
-  local issue_list=$(GH_FORCE_TTY=true gh issue list --label 'FE' --repo "$repo" --assignee '@me')
-
-  if [[ -z $issue_list ]]; then
-    return 1
-  fi
-
-  if [[ ${issue_list} == no* ]]; then
-    return 1
-  fi
-
-  local issue="$(echo "$issue_list" | awk -F'\t' -v ID_COLOUR="$ID_COLOUR" -v TEXT_COLOUR="$TEXT_COLOUR" -v STATUS_COLOUR="$STATUS_COLOUR" -v SHELL_COLOUR="$SHELL_COLOUR" \
-    '{print ID_COLOUR $1 SHELL_COLOUR"\t"TEXT_COLOUR $3 SHELL_COLOUR"\t"STATUS_COLOUR $2}' |
-    fzf -d' ' \
-      --ansi \
-      --prompt="my issues in $repo:")"
-
-  echo "$issue" | cut -f-2
-  #xargs -n1 gh issue view -R "$repo" -c
-}
-
-make_branch() {
-  local issue=$(my_issues)
-  local exit_code="$?"
-  if [[ $exit_code -gt 0 ]]; then
-    echoerr "No issues found"
-    return 1
-  fi
-
-  if [[ -z $issue ]]; then
-    echoerr "No issue selected"
-    return 1
-  fi
-  echo "would have made branch for $issue"
-  # gitb "$issue"
-}
-
-gch() {
- git checkout "$(git branch --all | fzf | tr -d '[:space:]')"
-}
+# Set to the directory you typically clone your git repos
+CODE_DIR="$HOME/src"
 
 # make a note in the notes directory
 nn() {
@@ -92,7 +50,7 @@ alias rgf='rg --files | rg'
 
 # search repos
 rs() {
-  local files="$(rg --files ~/repos | fzf --delimiter / --with-nth -1 --preview 'bat --color=always {}')"
+  local files="$(rg --files "$CODE_DIR" | fzf --delimiter / --with-nth -1 --preview 'bat --color=always {}')"
   if [[ -n $files ]]; then
     v $files
   fi
@@ -100,7 +58,7 @@ rs() {
 }
 
 cs() {
-  local DIR="~/repos"
+  local DIR="$CODE_DIR"
   local RG_PREFIX="rg --files $DIR | rg --column --line-number --no-heading --color=always --smart-case -g '!*test.*' -g '!static/test/*' "
   local INITIAL_QUERY="${*:-}"
   : | fzf --ansi --disabled --query "$INITIAL_QUERY" \
@@ -130,7 +88,7 @@ fs() {
   fi;
 }
 
-# Create a data URL from a file
+# Create a data URL from a file (urlencoded string)
 dataurl() {
   local mimeType=$(file -b --mime-type "$1");
   if [[ $mimeType == text/* ]]; then
@@ -139,8 +97,8 @@ dataurl() {
   echo "data:${mimeType};base64,$(openssl base64 -in "$1" | tr -d '\n')";
 }
 
-# `v` with no arguments opens the current directory in Neovim, otherwise opens the
-# given location
+# `v` with no arguments opens the current directory in $EDITOR (neovim)
+# otherwise opens the given location
 v() {
   if [ $# -eq 0 ]; then
     $EDITOR;
@@ -193,14 +151,11 @@ banner() {
   figlet -f banner "$1" | sed -e "s/#/:${2}:/g" | sed -e 's/ /:blank:/g' | pbcopy
 }
 
-##########
-# TMUX
-##########
-
 unbool() {
   tmux kill-server
 }
 
+# Launch or reconnect main tmux session
 bool() {
   local SESSION_NAME="Bool"
   tmux has-session -t $SESSION_NAME 2>/dev/null
@@ -210,37 +165,34 @@ bool() {
     tmux new-session -t "$SESSION_NAME" -d
 
     # Name first Window and start zsh
-    tmux rename-window -t 1 '🌀'
+    tmux rename-window -t 1 '🏡'
 
+    local cmd="cd $CODE_DIR && clear"
     # Create and setup panes
-    local two='🌮'
+    local two='🌮 misc'
     tmux new-window -t "$SESSION_NAME":2 -n "$two"
-    tmux send-keys -t "$two" "cd ~/repos && clear" C-m
+    tmux send-keys -t "$two" "$cmd" C-m
 
-    local three='💣'
+    local three='💣 scratch'
     tmux new-window -t "$SESSION_NAME":3 -n "$three"
-    tmux send-keys -t "$three" "cd ~/repos && clear" C-m
+    tmux send-keys -t "$three" "$cmd" C-m
 
-    local four='💎'
+    local four='💎 p1'
     tmux new-window -t "$SESSION_NAME":4 -n "$four"
-    tmux send-keys -t "$four" "cd ~/repos && clear" C-m
+    tmux send-keys -t "$four" "$cmd" C-m
 
-    local five='🪝'
+    local five='🪝 p2'
     tmux new-window -t "$SESSION_NAME":5 -n "$five"
-    tmux send-keys -t "$five" "cd ~/repos && clear" C-m
+    tmux send-keys -t "$five" "$cmd" C-m
 
-    local six='🧩'
+    local six='🧩 p3'
     tmux new-window -t "$SESSION_NAME":6 -n "$six"
-    tmux send-keys -t "$six" "cd ~/repos && clear" C-m
+    tmux send-keys -t "$six" "$cmd" C-m
   fi
 
   # Attach Session, on the Main window
   tmux a -t "$SESSION_NAME"
 }
-
-##########
-# FFMPEG
-##########
 
 convert_aiffs() {
   for i in *.aiff;
@@ -248,6 +200,7 @@ convert_aiffs() {
   done
 }
 
+# Convert .aiff files to .ogg
 convert_aiff() {
   ffmpeg -hide_banner -loglevel error -y -i "$1" -c:a libvorbis -q:a 4 "_$1.ogg";
 }
@@ -258,6 +211,7 @@ convert_gifs() {
   done
 }
 
+# Convert .gif files to .mp4
 convert_gif() {
   ffmpeg -hide_banner -loglevel error -y -f gif -i "$1" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4";
 }
@@ -268,17 +222,22 @@ convert_webms() {
   done
 }
 
+# Convert .webm video to .mp4
 convert_webm() {
   echo "Converting $1"
   # ffmpeg -fflags +genpts -i "$1" -r 24 "scale=trunc(iw/2)*2:trunc(ih/2)*2" "_${1.*}.mp4"
   ffmpeg -hide_banner -loglevel error -fflags +genpts -i "$1" -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -r 24 "${1%.*}.mp4"
 }
 
+jpg_to_video() {
+  local source_dir=$1
+  local framerate=$2
+  # name files in directory as 00.jpg 01.jpg 02.jpg etc to order them
+  ffmpeg -hide_banner -loglevel error -y -f image2 -r "$framerate" -i "$source_dir/%02d.jpg" -vcodec libx264 -crf 18 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" "output.mp4"
+}
+# jpg_to_video ~/Desktop/xmas 12
 
-##########
-# Utilities
-##########
-
+# print a shell color test to determine the level of color support
 colortest() {
   awk 'BEGIN{
     s="/\\/\\/\\/\\/\\"; s=s s s s s s s s s s s s s s s s s s s s s s s;
@@ -301,6 +260,38 @@ rename_files() {
   find . -name "*.$old" -exec bash -c 'mv "$1" "${1%.$old}".$new' - '{}' +
 }
 
+determine_os() {
+  case $(uname | tr '[:upper:]' '[:lower:]') in
+    linux*) echo "linux" ;;
+    darwin*) echo "mac" ;;
+    msys*) echo "windows" ;;
+    *) echo "notset" ;;
+  esac
+}
+
+timestamp_ms() {
+  # brew install coreutils for gdate
+  echo $(($(gdate +%s%N)/1000))
+}
+
+trash() {
+  local os=$(determine_os)
+  local file
+  if [[ "$os" = "mac" ]]; then
+    for file in "$@"; do
+      local name = "${file}-$(timestamp_ms)"
+      mv "${file}" "$HOME/.Trash/${name}" && echo "${file}: Moved to ~/.Trash/${name}"
+    done
+  elif [[ "$os" = "linux" ]]; then
+    for file in "$@"; do
+      local name = "${file}-$(timestamp_ms)"
+      mv "${file}" "~/.local/share/Trash/${name}" && echo "${file}: Moved to ~/.local/share/Trash/${name}"
+    done
+  else
+    echo "could not determine the system OS. halting."
+  fi
+}
+
 confirm() {
   # call with a prompt string or use a default
   read -r -p "${1:-Are you sure? [y/N]} " response
@@ -314,70 +305,6 @@ confirm() {
   esac
 }
 
-##########
-# Git
-##########
-
-# get default branch name (branch you should branch from for new work)
-gdefault() {
-  command git branch -rl '*/HEAD' | rev | cut -d/ -f1 | rev
-}
-
-# publish local branch
-gpub() {
-  command git push --set-upstream origin $(git_current_branch)
-}
-
-gcr() {
-  command git checkout -t origin/"${@}"
-}
-
-# Clean up local branches that have been merged
-function gclean() {
-  branch=$1
-  if [[ -z "$branch" ]]; then
-    branch=$(gdefault)
-  fi
-  confirm "Are you on a clean branch?" &&
-  command git checkout "$branch" &&
-  command git branch -d $(command git branch --merged="$branch" | grep -v "$branch") &&
-  command git fetch --prune
-}
-
-# Create a new branch and switch to it
-gitb() {
-  # [          # start of character class
-  # [:space:]  # The POSIX character class for whitespace characters. It's
-               # functionally identical to [ \t\r\n\v\f] which matches a space,
-               # tab, carriage return, newline, vertical tab, or form feed. See
-               # https://en.wikipedia.org/wiki/Regular_expression#POSIX_character_classes
-  # ]          # end of character class
-  # \+         # one or more of the previous item (anything matched in the brackets).
-  local branchname=$(echo $1 | sed 's/-//g' | sed -re 's/[[:blank:]]/-/g')
-   if [[ $branchname = no-issue-found* ]]; then
-    echo "No issues found."
-    return 1
-  fi
-  # local datestr=$(date +%F)
-  branchname=$(echo "$USER"/"$branchname")
-  git checkout -b $branchname
-}
-
-
-# Create a new tag and push it to origin
-tag() {
-  command git checkout master
-  command git pull origin master
-  command git fetch --tags
-  command git tag -a "$1" -m "Release $1"
-  command git push origin "$1" --tag
-}
-
-# print a random icebreaker question
-icebreaker() {
-  node "$ATLAS_ROOT/scripts/icebreaker.js"
-}
-
 # open the neovim log file
 nvim_logs() {
   nvim ~/.cache/nvim
@@ -386,62 +313,6 @@ nvim_logs() {
 ####################################################
 # HUBSPOT
 ####################################################
-# Set to the directory you typically clone your git repos
-HUBSPOT_CODE_DIR="$HOME/repos"
-
-# Completion for repo
-# _repo_comp() {
-#   reply=(`ls $HUBSPOT_CODE_DIR`);
-# }
-
-is_inside_git_repo() {
-    git rev-parse --is-inside-work-tree >/dev/null 2>&1
-}
-
-# clone a repo if it doesn't exist
-# @example
-# repo some-repo-name
-repo() {
-  if [ ! -d "$HUBSPOT_CODE_DIR/$1" ]; then
-    echo "⚠️ Repo missing: \"$1\", cloning into $HUBSPOT_CODE_DIR/$1"
-    cd $HUBSPOT_CODE_DIR
-    git clone "git@git.hubteam.com:HubSpot/$1.git" || git clone "git@git.hubteam.com:HubSpotProtected/$1.git" || echo "🚨 uh oh, something went wrong cloning $1" && exit $EXITCODE
-  fi
-  if [ -d "$HUBSPOT_CODE_DIR/$1" ]; then
-    cd $HUBSPOT_CODE_DIR/$1
-  fi
-}
-
-# add completion for repos in $HUBSPOT_CODE_DIR
-# https://zsh.sourceforge.io/Doc/Release/Completion-Using-compctl.html
-# compctl -M 'm:{a-z}={A-Z}' -K _repo_comp repo
-
-# pulls latest changes from remote if there are any
-# stores the current branch name and then switches to the master branch
-# switches to the branch name after updating from master
-# does nothing if branch is dirty
-update_repo() {
-  local branch=$(git_current_branch)
-  local isrepo=$(git status 2>/dev/null; echo $?)
-  # if the branch is dirty, don't update
-  if [[ $(git diff --stat) != '' ]]; then
-    echo "⚠️ '$(pwd)' is dirty, skipping..."
-  else
-    git checkout master &> /dev/null
-    git pull &> /dev/null
-    git checkout "$branch" &>/dev/null
-  fi
-}
-
-# update all repos in $HUBSPOT_CODE_DIR
-update_repos() {
-  for dir in $HUBSPOT_CODE_DIR/*; do
-    [[ -d "$dir" ]] || continue
-    {
-      cd "$dir" && is_inside_git_repo && update_repo
-    }
-  done
-}
 
 # tail the asset bender log file
 tail_bend_logs() {
@@ -455,5 +326,71 @@ pretty() {
 
 # run hs projects with my preferred settings
 flexo() {
-  cd "$HUBSPOT_CODE_DIR" && NODE_OPTIONS="--max_old_space_size=8192" bend reactor serve --UNSUPPORTED_LOCAL_DEV_SETTING bend-webpack.enableFastRefresh "$@" --update --ts-watch
+  cd "$CODE_DIR" &&\
+  NODE_OPTIONS="--max_old_space_size=8192"\
+  bend reactor serve "$@"\
+    --update\
+    --ts-watch
+
+    #--UNSUPPORTED_LOCAL_DEV_SETTING bend-webpack.useWebpack5
+    #--UNSUPPORTED_LOCAL_DEV_SETTING bend-webpack.enableFastRefresh\
+}
+
+hs_build() {
+  if [[ -z "$1" ]]; then
+    cd "$CODE_DIR" &&\
+    NODE_OPTIONS="--max_old_space_size=8192"\
+    return bend reactor build all --update "$1"
+  fi
+  return bend reactor build all --update .
+}
+
+checkVpn() {
+  NETWORK_LOCATION=$(dig +short +time=1 client-network-location.hubteam.com TXT)
+  if [[ $NETWORK_LOCATION != '"internal"' ]]; then
+    echo "🤠  Howdy! It looks like you're not connected to HubSpot's internal network. This script needs this in order to work.\n"
+    echo "Please ensure you're connected to one of the following before proceeding:"
+    echo "- The wired network in the office"
+    echo "- The HS-Corp wifi network"
+    echo "- The VPN (https://hubspot.service-now.com/sp/?id=kb_article&sys_kb_id=ac92e085dbf2f0103d30ef81ca9619f6)\n"
+    return 1
+  fi
+
+  return 0
+}
+
+# bpmi my-package: installs my-package@1
+bpmi() {
+  command bend bpm install $1@${2:-1} --save-runtime && bend fix-dependencies . --UNSUPPORTED_LOCAL_DEV_SETTING bpm.fix-dependencies
+}
+
+update_maven_cache() {
+  local current_dir=$(pwd)
+  local NUM_PROC=$(python3  -c 'import multiprocessing; print(multiprocessing.cpu_count())')
+
+  if [[ -z $1 ]]; then
+    cd $CODE_DIR
+    find . -maxdepth 2 -type d -name '.git' | xargs -n 1 stat -f "%m %N" | sort -nr | awk '{print $2}' | xargs -n1 dirname | xargs -P$NUM_PROC -n1 $0
+    #find . -maxdepth 2 -type d -name '.git' -printf "%T@ %p\n" | sort -nr | awk '{print $2}' | xargs -n1 dirname | xargs -P$NUM_PROC -n1 $0
+    #find . -maxdepth 1 -type d -print0 | xargs -P$NUM_PROC -n1 -0 $0
+    rm -f /tmp/*.mvn.log
+    cd "$current_dir"
+    exit 0
+  fi
+
+  echo "Pulling deps for $1"
+
+  cd "$1"
+
+  if [[ -e ".git" ]]; then
+    if [[ -e "pom.xml" ]]; then
+      mvn -U dependency:go-offline &> /tmp/$$.mvn.log
+      if [[ $? -ne 0 ]]; then
+        echo "Failed "$(basename $(pwd))
+      else
+        echo "Done with "$(basename $(pwd))
+      fi
+    fi
+  fi
+  cd "$current_dir"
 }

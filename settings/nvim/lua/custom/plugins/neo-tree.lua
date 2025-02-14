@@ -99,7 +99,6 @@ return {
 
           local options = vim.tbl_filter(function(val) return vals[val] ~= '' end, vim.tbl_keys(vals))
           if vim.tbl_isempty(options) then
-            -- utils.notify("No values to copy", vim.log.levels.WARN)
             return
           end
           table.sort(options)
@@ -109,7 +108,6 @@ return {
           }, function(choice)
             local result = vals[choice]
             if result then
-              -- utils.notify(("Copied: `%s`"):format(result))
               vim.fn.setreg('+', result)
             end
           end)
@@ -129,7 +127,7 @@ return {
           ['<space>'] = false, -- disable space until we figure out which-key disabling
           ['[b'] = 'prev_source',
           [']b'] = 'next_source',
-          ['/'] = 'fuzzy_sorter',
+          ['/'] = 'fuzzy_finder',
           F = 'find_in_dir',
           O = 'system_open',
           Y = 'copy_selector',

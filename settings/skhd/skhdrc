@@ -68,5 +68,3 @@ shift + alt - 7 : yabai -m window --space 9;
 
 # stop/start/restart yabai
 ctrl + alt - q : yabai --stop-service && yabai --start-service && skhd --stop-service && skhd --start-service
-
-

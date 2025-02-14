@@ -53,9 +53,9 @@ function M.get_app_or_lib_dir(bufnr)
   return get_lib_dir(buffer_path)
 end
 
-local function split_string(s, delimiter)
+local function split_string(str, delimiter)
   local result = {}
-  for match in (s .. delimiter):gmatch('(.-)' .. delimiter) do
+  for match in (str .. delimiter):gmatch('(.-)' .. delimiter) do
     table.insert(result, match)
   end
   return result

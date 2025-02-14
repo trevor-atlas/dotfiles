@@ -1,0 +1,8 @@
+# Define the directory to clone the repository
+DIR=~/src/raycast-hubspotdev-tools
+if [ ! -d "$DIR" ]; then
+  git clone --recursive git@git.hubteam.com:HubSpot/raycast-hubspotdev-tools.git "$DIR"
+fi
+
+# https://git.hubteam.com/HubSpot/raycast-hubspotdev-tools/blob/master/scripts/install-or-update.sh
+cd "$DIR" && git stash && git pull && bash ./scripts/install-or-update.sh

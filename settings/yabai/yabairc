@@ -12,24 +12,26 @@ yabai -m config right_padding 12
 yabai -m config window_gap 12
 
 # mouse
-yabai -m config mouse_follows_focus on
+yabai -m config mouse_follows_focus off
 
-yabai -m config mouse_modifier alt
+yabai -m config mouse_modifier fn
 
 # left click + drag
-yabai -m config mouse_action1 move
+# yabai -m config mouse_action1 move
 
 # right click + drag
-yabai -m config mouse_action2 resize
+yabai -m config mouse_action1 resize
 
 yabai -m mouse_drop_action swap
 
+yabai -m config window_opacity on
+yabai -m config normal_window_opacity 0.9
 
 # Disable some apps
 yabai -m rule --add app="^zoom.us$" manage=off
 yabai -m rule --add app="^System Settings$" manage=off
 yabai -m rule --add app="^Calculator$" manage=off
-yabai -m rule --add app="^Karabinder-Elements$" manage=off
+yabai -m rule --add app="^Karabiner-Elements$" manage=off
 
 
 

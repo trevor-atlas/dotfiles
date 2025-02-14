@@ -24,11 +24,16 @@ export LANG=en_US.UTF-8
 source "$ATLAS_ROOT/source/install_helpers"
 source "$ATLAS_ROOT/source/alias"
 source "$ATLAS_ROOT/source/functions"
+source "$ATLAS_ROOT/source/git_helpers"
 
 alias commit="$ATLAS_ROOT/functions/commit"
 
 export EDITOR="nvim"
-export VISUAL="code"
+# export VISUAL="code"
+
+# disable NPM advertising
+export DISABLE_OPENCOLLECTIVE=1
+export ADBLOCK=1
 
 install_dotfiles() {
   sh "$ATLAS_ROOT"/install
