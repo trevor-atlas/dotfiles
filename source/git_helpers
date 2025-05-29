@@ -111,14 +111,27 @@ is_inside_git_repo() {
 # @example
 # repo some-repo-name
 repo() {
-  if [ ! -d "$CODE_DIR/$1" ]; then
+  if [[ -d "$CODE_DIR/$1" ]]; then
+    cd $CODE_DIR/$1
+  elif [[ -d "$CODE_DIR/CRM/$1" ]]; then
+    cd $CDE_DIR/CRM/$1
+  else
     echo "⚠️ Repo missing: \"$1\", cloning into $CODE_DIR/$1"
     cd $CODE_DIR
-    git clone "git@git.hubteam.com:HubSpot/$1.git" || git clone "git@git.hubteam.com:HubSpotProtected/$1.git" || echo "🚨 uh oh, something went wrong cloning $1" && exit $EXITCODE
-  fi
-  if [ -d "$CODE_DIR/$1" ]; then
+    git clone "git@git.hubteam.com:HubSpot/$1.git" || git clone "git@git.hubteam.com:HubSpotProtected/$1.git"
+    echo "✅ cloned $1 to $CODE_DIR/$1"
     cd $CODE_DIR/$1
   fi
+}
+
+ghrepo() {
+  if [[ -d ".git" ]]; then
+    open $(get_git_origin_browser_url)
+    exit 0
+  fi
+  repo $1
+  open $(get_git_origin_browser_url)
+  cd -
 }
 
 
@@ -149,3 +162,11 @@ update_repos() {
   done
   cd "$original_dir"
 }
+
+# fetch master and merge it into your current branch
+gupdate() {
+  local main_branch=$(gdefault)
+  git fetch origin "$main_branch:$main_branch"
+  git merge "$main_branch"
+}
+

@@ -19,7 +19,9 @@ export FZF_DEFAULT_OPTS=" \
 --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
 --color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8"
 
-alias help="tldr"
+if [[ "$(command -v tldr)" ]]; then
+  alias help="tldr"
+fi
 
 if [[ "$(command -v exa)" ]]; then
   unalias -m 'll'
@@ -50,9 +52,10 @@ alias pumpitup="osascript -e 'set volume output volume 100'"
 
 # nice ding sound if a script succeeds, error sound if it returns a non-zero exit code
 # nice for long running stuff :)
-# mvn clean verify && ding
+# thing && ding
 alias -g ding="osascript -e 'display notification \"Done!\" sound name \"glass\"' || osascript -e 'display notification \"Error!\" sound name \"basso\"'"
 
 alias p=pnpm
 
 alias restartproxy="brew services restart bender-proxy"
+alias mvn-verify="mvn clean verify && ding"

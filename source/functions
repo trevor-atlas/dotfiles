@@ -330,10 +330,10 @@ flexo() {
   NODE_OPTIONS="--max_old_space_size=8192"\
   bend reactor serve "$@"\
     --update\
-    --ts-watch
-
-    #--UNSUPPORTED_LOCAL_DEV_SETTING bend-webpack.useWebpack5
-    #--UNSUPPORTED_LOCAL_DEV_SETTING bend-webpack.enableFastRefresh\
+    --ts-watch\
+    --run-tests\
+    --enable-tools\
+    --UNSUPPORTED_LOCAL_DEV_SETTING rspack=true
 }
 
 hs_build() {
@@ -348,11 +348,13 @@ hs_build() {
 checkVpn() {
   NETWORK_LOCATION=$(dig +short +time=1 client-network-location.hubteam.com TXT)
   if [[ $NETWORK_LOCATION != '"internal"' ]]; then
-    echo "🤠  Howdy! It looks like you're not connected to HubSpot's internal network. This script needs this in order to work.\n"
-    echo "Please ensure you're connected to one of the following before proceeding:"
-    echo "- The wired network in the office"
-    echo "- The HS-Corp wifi network"
-    echo "- The VPN (https://hubspot.service-now.com/sp/?id=kb_article&sys_kb_id=ac92e085dbf2f0103d30ef81ca9619f6)\n"
+    echo <<EOF
+    🤠  Howdy! It looks like you're not connected to HubSpot's internal network. This script needs this in order to work.
+    Please ensure you're connected to one of the following before proceeding:
+    - The wired network in the office
+    - The HS-Corp wifi network
+    - The VPN (https://hubspot.service-now.com/sp?id=kb_article_view&sys_kb_id=dcea4f963b67c2505da4f547f4e45a47)
+EOF
     return 1
   fi
 
@@ -369,10 +371,10 @@ update_maven_cache() {
   local NUM_PROC=$(python3  -c 'import multiprocessing; print(multiprocessing.cpu_count())')
 
   if [[ -z $1 ]]; then
-    cd $CODE_DIR
-    find . -maxdepth 2 -type d -name '.git' | xargs -n 1 stat -f "%m %N" | sort -nr | awk '{print $2}' | xargs -n1 dirname | xargs -P$NUM_PROC -n1 $0
+    cd "$CODE_DIR"
+    # find . -maxdepth 2 -type d -name '.git' | xargs -n 1 stat -f "%m %N" | sort -nr | awk '{print $2}' | xargs -n1 dirname | xargs -P$NUM_PROC -n1 $0
     #find . -maxdepth 2 -type d -name '.git' -printf "%T@ %p\n" | sort -nr | awk '{print $2}' | xargs -n1 dirname | xargs -P$NUM_PROC -n1 $0
-    #find . -maxdepth 1 -type d -print0 | xargs -P$NUM_PROC -n1 -0 $0
+    find . -maxdepth 1 -type d -print0 | xargs -P$NUM_PROC -n1 -0 $0
     rm -f /tmp/*.mvn.log
     cd "$current_dir"
     exit 0
@@ -394,3 +396,8 @@ update_maven_cache() {
   fi
   cd "$current_dir"
 }
+
+alias mvnfast="mvn clean test-compile -Pskip-validation -DskipTests  -Dhs-swagger.skip=true"
+
+alias mvndfast="mvnd clean test-compile -Pskip-validation -DskipTests  -Dhs-swagger.skip=true"
+
