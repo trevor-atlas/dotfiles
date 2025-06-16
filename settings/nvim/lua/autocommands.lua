@@ -61,3 +61,40 @@ cmd('BufEnter', {
     if stats and stats.type == 'directory' then require('neo-tree.setup.netrw').hijack() end
   end,
 })
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "LazyDone",
+  once = true,
+  callback = function()
+    print("Lazy.nvim has finished loading all plugins!")
+    require("globals")
+    require("hubspot-bender").setup()
+    require("treesitter")
+    require("lsp")
+    -- require("rust")
+    require("completion")
+    require("autocommands")
+    require("theme").setup()
+    require("mappings")
+  end,
+})
+-- -- LazyDone event handler
+-- local lazy_done_group = augroup('LazyDone', { clear = true })
+-- cmd('User', {
+--   desc = 'Handle LazyDone event',
+--   group = lazy_done_group,
+--   pattern = 'LazyDone',
+--   callback = function()
+--     -- Add your custom function call here
+--     print("Lazy.nvim has finished loading all plugins!")
+--     require("globals")
+--     require("hubspot-bender").setup()
+--     require("treesitter")
+--     require("lsp")
+--     -- require("rust")
+--     require("completion")
+--     require("autocommands")
+--     require("theme").setup()
+--     require("mappings")
+--   end,
+-- })

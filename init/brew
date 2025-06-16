@@ -74,17 +74,12 @@ brew install --cask quicklookase
 brew install --cask webpquicklook
 
 # Applications
-brew install --cask slack
-brew install --cask rectangle
 brew install --cask spotify
 brew install --cask suspicious-package
 brew install --cask visual-studio-code
 brew install --cask zoomus
 brew install --cask google-chrome
-brew install --cask iterm2
-brew install --cask alacritty
-brew install --cask ngrok
-brew install --cask postman
+brew install --cask kitty
 
 # post install steps
 $(brew --prefix)/opt/fzf/install # To install useful key bindings and fuzzy completion:

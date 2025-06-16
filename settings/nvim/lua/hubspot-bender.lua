@@ -2,8 +2,8 @@ local M = {}
 local log = require("vim.lsp.log")
 local util = require("lspconfig.util")
 
-local find_node_modules_ancestor = require("lspconfig").util.find_node_modules_ancestor
-local path_join = require("lspconfig").util.path.join
+local find_node_modules_ancestor = util.find_node_modules_ancestor
+local path_join = util.path.join
 
 vim.lsp.set_log_level("OFF")
 

@@ -6,7 +6,7 @@ luasnip.config.setup({})
 local hs_completion = require('hubspot-completion')
 local lspkind = require('lspkind')
 local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
+-- capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
 
 cmp.setup({
   snippet = {

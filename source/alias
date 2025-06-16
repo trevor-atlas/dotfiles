@@ -3,7 +3,6 @@
 alias zshconfig="code $HOME/.zshrc"
 alias editconfig="code $ATLAS_ROOT"
 alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222"
-alias ngrok3000='ngrok start tatlas'
 
 # git
 # eval "$(hub alias -s)"
@@ -20,16 +19,15 @@ export FZF_DEFAULT_OPTS=" \
 --color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8"
 
 if [[ "$(command -v tldr)" ]]; then
-  alias help="tldr"
-fi
+  fi
 
-if [[ "$(command -v exa)" ]]; then
+if [[ "$(command -v eza)" ]]; then
   unalias -m 'll'
   unalias -m 'l'
   unalias -m 'la'
   unalias -m 'ls'
-  alias ls='exa -G --color auto --icons -a -s type'
-  alias ll='exa -l --color always --icons -a -s type'
+  alias ls='eza -G --color auto --icons -a -s type'
+  alias ll='eza -l --color always --icons -a -s type'
 fi
 
 if [[ "$(command -v bat)" ]]; then

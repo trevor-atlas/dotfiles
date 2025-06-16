@@ -56,12 +56,12 @@ require('formatter').setup({
   },
 })
 
-vim.api.nvim_exec(
+vim.api.nvim_exec2(
   [[
 au! BufRead,BufNewFile *.mdx setfiletype mdx
 augroup FormatAutogroup
 autocmd!
 autocmd BufWritePost *.js,*.ts,*.tsx,*.lua,*.mdx,*.rs FormatWrite
 augroup END]],
-  true
+  { output = true }
 )
