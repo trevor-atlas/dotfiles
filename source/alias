@@ -57,3 +57,6 @@ alias p=pnpm
 
 alias restartproxy="brew services restart bender-proxy"
 alias mvn-verify="mvn clean verify && ding"
+
+alias my_prs="gh search prs --author=@me --created="$(date -v-7d '+%Y-%m-%d')..$(date '+%Y-%m-%d')" --json title,url,state,createdAt,repository --limit 50"
+

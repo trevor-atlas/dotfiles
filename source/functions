@@ -331,7 +331,6 @@ flexo() {
   bend reactor serve "$@"\
     --update\
     --ts-watch\
-    --run-tests\
     --enable-tools\
     --UNSUPPORTED_LOCAL_DEV_SETTING rspack=true
 }
