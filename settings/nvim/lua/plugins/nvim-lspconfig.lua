@@ -1,27 +1,24 @@
 return {
-    -- LSP Configuration & Plugins
-    'neovim/nvim-lspconfig',
+  "mason-org/mason.nvim",
+  opts = {},
+  {
+    "mason-org/mason-lspconfig.nvim",
+    opts = {},
     dependencies = {
-      {
-        'williamboman/mason.nvim',
-        config = function()
-          require('mason-lspconfig').setup_handlers({
-            ['rust_analyzer'] = function() end,
-          })
-        end,
-      },
-      'williamboman/mason-lspconfig.nvim', -- Useful status updates for LSP
-      -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-      {
-        'neovim/nvim-lspconfig',
-        opts = {
-          setup = {
-            rust_analyzer = function() return true end,
-          },
-        },
-      },
-      { 'j-hui/fidget.nvim', tag = 'legacy', opts = {} }, -- Additional lua configuration, makes nvim stuff amazing!
-      'folke/neodev.nvim',
+      { "mason-org/mason.nvim", opts = {} },
+      "neovim/nvim-lspconfig",
     },
-    config = function() require('lspconfig').eslint.setup({}) end,
-  }
+  },
+  {
+    "folke/lazydev.nvim",
+    ft = "lua", -- only load on lua files
+    opts = {
+      library = {
+        -- See the configuration section for more details
+        -- Load luvit types when the `vim.uv` word is found
+        { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+      },
+    },
+  },
+  { 'j-hui/fidget.nvim', tag = 'legacy', opts = {} }
+}

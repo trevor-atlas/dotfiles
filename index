@@ -21,6 +21,32 @@ export TZ="America/New_York"
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
+trim() {
+  awk '{$1=$1};1'
+}
+
+history_command() {
+  history | sed 's/^[ ]*[0-9]*[ ]*//' | trim
+}
+
+export FZF_CTRL_R_OPTS="\
+  --height 60% \
+  --border sharp \
+  --prompt '∷ ' \
+  --pointer ▶ \
+  --marker ⇒ \
+  --preview-window up:3:hidden:wrap\
+  --header 'Press CTRL-Y to copy command into clipboard'\
+  --history-size=10000\
+  --color header:italic\
+  --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'\
+  --bind 'ctrl-/:toggle-preview'\
+  --history=history_command"
+
+
+# EXTENDED_HISTORY changes the format of .zsh_history to record when (in seconds from the Unix epoch) a command was executed
+setopt EXTENDED_HISTORY
+
 source "$ATLAS_ROOT/source/install_helpers"
 source "$ATLAS_ROOT/source/alias"
 source "$ATLAS_ROOT/source/functions"

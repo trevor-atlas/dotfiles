@@ -47,12 +47,6 @@ local on_attach = function(_, bufnr)
   --vim.api.nvim_buf_create_user_command(bufnr, 'Format', vim.lsp.buf.format, { desc = 'Format current buffer with LSP' })
 end
 
--- Enable the following language servers
---  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
---
---  Add any additional override configuration in the following tables. They will be passed to
---  the `settings` field of the server config. You must look up that documentation yourself.
---
 --  If you want to override the default filetypes that your language server will attach to you can
 --  define the property 'filetypes' to the map in question.
 local servers = {
@@ -76,9 +70,6 @@ local servers = {
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 
 -- Ensure the servers above are installed
-local mason_lspconfig = require("mason-lspconfig")
-
-mason_lspconfig.setup({ ensure_installed = vim.tbl_keys(servers) })
 
 for _, server_name in ipairs(vim.tbl_keys(servers)) do
   lspconfig[server_name].setup({
@@ -88,5 +79,3 @@ for _, server_name in ipairs(vim.tbl_keys(servers)) do
     filetypes = (servers[server_name] or {}).filetypes,
   })
 end
-
-require("typescript")

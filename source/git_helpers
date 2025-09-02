@@ -4,7 +4,7 @@
 CODE_DIR="$HOME/src"
 
 my_issues() {
-  local repo="${1:-HubSpot/Billing-Management-Team}"
+  local repo="${1:-HubSpot/Commerce-Revenue-Management-Issues}"
   # gh issue list --label 'FE' --assignee '@me' --repo HubSpot/Merchant-Experience-Team
   local issue_list=$(GH_FORCE_TTY=true gh issue list --repo "$repo" --assignee '@me' | cat)
 
