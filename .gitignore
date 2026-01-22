@@ -10,3 +10,4 @@ settings/nvim/undodir
 settings/nvim/backupdir
 node_modules
 lazy-lock.json
+pai/.current-session
