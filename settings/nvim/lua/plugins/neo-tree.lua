@@ -11,6 +11,7 @@ return {
     'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
     'MunifTanjim/nui.nvim',
   },
+  lazy = false,
   config = function()
     vim.fn.sign_define('DiagnosticSignError', { text = ' ', texthl = 'DiagnosticSignError' })
     vim.fn.sign_define('DiagnosticSignWarn', { text = ' ', texthl = 'DiagnosticSignWarn' })
@@ -26,9 +27,9 @@ return {
         winbar = true,
         content_layout = 'center',
         sources = {
-          { source = 'filesystem', display_name = icons.FolderClosed .. ' Files' },
-          { source = 'buffers', display_name = icons.DefaultFile .. ' Buffers' },
-          { source = 'git_status', display_name = icons.Git .. ' Git Status' },
+          { source = 'filesystem',  display_name = icons.FolderClosed .. ' Files' },
+          { source = 'buffers',     display_name = icons.DefaultFile .. ' Buffers' },
+          { source = 'git_status',  display_name = icons.Git .. ' Git Status' },
           { source = 'diagnostics', display_name = icons.Diagnostic .. ' Diagnostic' },
         },
       },
@@ -74,7 +75,7 @@ return {
           if node.type == 'directory' or node:has_children() then
             if not node:is_expanded() then -- if unexpanded, expand
               state.commands.toggle_node(state)
-            else -- if expanded and has children, seleect the next child
+            else                           -- if expanded and has children, seleect the next child
               require('neo-tree.ui.renderer').focus_node(state, node:get_child_ids()[1])
             end
           else -- if not a directory just open it
@@ -153,7 +154,7 @@ return {
       },
       buffers = {
         follow_current_file = {
-          enabled = true, -- This will find and focus the file in the active buffer every time
+          enabled = true,         -- This will find and focus the file in the active buffer every time
           --              -- the current file is changed while the tree is open.
           leave_dirs_open = true, -- `false` closes auto expanded dirs, such as with `:Neotree reveal`
         },

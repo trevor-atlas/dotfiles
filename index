@@ -21,6 +21,8 @@ export TZ="America/New_York"
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
+export MANPAGER='nvim +Man!'
+
 trim() {
   awk '{$1=$1};1'
 }
@@ -40,8 +42,7 @@ export FZF_CTRL_R_OPTS="\
   --history-size=10000\
   --color header:italic\
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'\
-  --bind 'ctrl-/:toggle-preview'\
-  --history=history_command"
+  --bind 'ctrl-/:toggle-preview'"
 
 
 # EXTENDED_HISTORY changes the format of .zsh_history to record when (in seconds from the Unix epoch) a command was executed
@@ -50,7 +51,9 @@ setopt EXTENDED_HISTORY
 source "$ATLAS_ROOT/source/install_helpers"
 source "$ATLAS_ROOT/source/alias"
 source "$ATLAS_ROOT/source/functions"
+source "$ATLAS_ROOT/source/hs_zed"
 source "$ATLAS_ROOT/source/git_helpers"
+source "$ATLAS_ROOT/functions/zwt.zsh"
 
 alias commit="$ATLAS_ROOT/functions/commit"
 
@@ -68,3 +71,6 @@ install_dotfiles() {
 # Above sources are order dependent at the moment so we don't use a loop.
 # for f in "$ATLAS_ROOT/source*"; do source $f; done;
 set -o vi
+
+# PAI (Personal AI Infrastructure)
+[ -f "$ATLAS_ROOT/pai.sh" ] && source "$ATLAS_ROOT/pai.sh"

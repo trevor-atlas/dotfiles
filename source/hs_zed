@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+zed_bend() {
+  local project_root=$(realpath "$1")
+
+  if [[ -f "$project_root/static_conf.json" ]]; then
+    # frontend hubspot project
+    # local session_path=$(node "$ATLAS_ROOT/scripts/bend-zed.ts" get-session-path "$project_root" "$instance_id")
+    local session_path="$HOME/.hubspot/bend-sessions/zed-$1.json"
+    # local bend_dirs_raw=$(node "$ATLAS_ROOT/scripts/bend-zed.ts" get-bend-command "$project_root" "$project_root")
+    # local bend_dirs=($bend_dirs_raw)
+      BEND_SESSION_PATH="$session_path" bend reactor host --update --session-path "$session_path" "$project_root"
+  else
+    echo "zed_bend can only be used with frontend HubSpot projects."
+  fi
+}
+
+z() {
+  local project_root=$(realpath "$1")
+  # local instance_id=$(uuidgen)
+
+  if [[ -f "$project_root/static_conf.json" ]]; then
+    # frontend hubspot project
+    # local session_path=$(node "$ATLAS_ROOT/scripts/bend-zed.ts" get-session-path "$project_root" "$project_root")
+    # local bend_dirs_raw=$(node "$ATLAS_ROOT/scripts/bend-zed.ts" get-bend-command "$project_root" "$project_root")
+    # local bend_dirs=($bend_dirs_raw)
+    local session_path="$HOME/.hubspot/bend-sessions/zed-$1.json"
+    if [[ $# -eq 0 ]]; then
+      BEND_SESSION_PATH="$session_path" zed "$project_root"
+    else
+      BEND_SESSION_PATH="$session_path" zed "$@"
+    fi;
+  elif [[ -f "$project_root/.prettier-java-enabled" ]]; then
+    # backend hubspot project
+    if [[ $# -eq 0 ]]; then
+      zed
+    else
+      zed "$@";
+    fi;
+  else
+    # non-hubspot project
+    if [[ $# -eq 0 ]]; then
+      zed
+    else
+      zed "$@";
+    fi;
+  fi
+}
