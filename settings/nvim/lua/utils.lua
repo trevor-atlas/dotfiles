@@ -80,4 +80,15 @@ end
 
 function M.open_file(file) vim.cmd('e ' .. file) end
 
+function M.onUpdate(packageName, command)
+  vim.api.nvim_create_autocmd('PackChanged', { callback = function(ev)
+    local name, kind = ev.data.spec.name, ev.data.kind
+    if name == packageName and kind == 'update' then
+      if not ev.data.active then vim.cmd.packadd(packageName) end
+      command()
+    end
+  end })
+end
+
 return M
+

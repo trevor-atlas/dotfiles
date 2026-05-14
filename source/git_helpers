@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 
+# fast git completions
+fpath=("$ATLAS_ROOT/source/git-completion.zsh" $fpath)
 
 CODE_DIR="$HOME/src"
 
+alias githistory='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
+alias gl='git pull'
+alias gp='git push'
+alias gss='git status --short'
+alias gco='git checkout'
+alias g='git'
+alias ga='git add'
+alias gc='git commit'
+alias gca='git commit'
+
 my_issues() {
-  local repo="${1:-HubSpot/Commerce-Revenue-Management-Issues}"
+  local repo="${1:-HubSpotEngineering/Commerce-Revenue-Management-Issues}"
   # gh issue list --label 'FE' --assignee '@me' --repo HubSpot/Merchant-Experience-Team
   local issue_list=$(GH_FORCE_TTY=true gh issue list --repo "$repo" --assignee '@me' | cat)
 
@@ -45,6 +57,21 @@ make_branch() {
   fi
   echo "would have made branch for $issue"
   # gitb "$issue"
+}
+
+function __git_prompt_git() {
+  GIT_OPTIONAL_LOCKS=0 command git "$@"
+}
+
+function git_current_branch() {
+  local ref
+  ref=$(__git_prompt_git symbolic-ref --quiet HEAD 2> /dev/null)
+  local ret=$?
+  if [[ $ret != 0 ]]; then
+    [[ $ret == 128 ]] && return  # no git repo.
+    ref=$(__git_prompt_git rev-parse --short HEAD 2> /dev/null) || return
+  fi
+  echo ${ref#refs/heads/}
 }
 
 gch() {
@@ -112,13 +139,12 @@ is_inside_git_repo() {
 # repo some-repo-name
 repo() {
   if [[ -d "$CODE_DIR/$1" ]]; then
+    echo "⚠️ Repo already exists, changing directory to $CODE_DIR/$1"
     cd $CODE_DIR/$1
-  elif [[ -d "$CODE_DIR/CRM/$1" ]]; then
-    cd $CDE_DIR/CRM/$1
   else
     echo "⚠️ Repo missing: \"$1\", cloning into $CODE_DIR/$1"
     cd $CODE_DIR
-    git clone "git@git.hubteam.com:HubSpot/$1.git" || git clone "git@git.hubteam.com:HubSpotProtected/$1.git"
+    git clone "git@github.com:HubSpotEngineering/$1.git"
     echo "✅ cloned $1 to $CODE_DIR/$1"
     cd $CODE_DIR/$1
   fi

@@ -57,18 +57,6 @@ rs() {
 
 }
 
-cs() {
-  local DIR="$CODE_DIR"
-  local RG_PREFIX="rg --files $DIR | rg --column --line-number --no-heading --color=always --smart-case -g '!*test.*' -g '!static/test/*' "
-  local INITIAL_QUERY="${*:-}"
-  : | fzf --ansi --disabled --query "$INITIAL_QUERY" \
-    --bind "start:reload:$RG_PREFIX {q} $DIR" \
-    --bind "change:reload:sleep 0.1; $RG_PREFIX {q} $DIR || true" \
-    --delimiter : \
-    --preview 'bat --color=always {1} --highlight-line {2}' \
-    --bind 'enter:become(code {1} +{2})'
-}
-
 # Create a new directory and enter it
 mkd() {
   mkdir -p "$@" && cd "$_";
@@ -140,7 +128,7 @@ else
 fi
 }
 
-# download a file from $1 and save it in a file $2
+# download a file from url $1 and save it in a file $2
 dl() {
   curl "$1" --output "~/Downloads/$2"
 }
@@ -405,3 +393,17 @@ update_maven_cache() {
 alias mvnfast="mvn clean test-compile -Pskip-validation -DskipTests  -Dhs-swagger.skip=true"
 
 alias mvndfast="mvnd clean test-compile -Pskip-validation -DskipTests  -Dhs-swagger.skip=true"
+
+archive() {
+  local name="$1"
+  if [[ -z "$name" ]]; then
+    name="archive_$(date +%Y%m%d_%H%M%S).tar.gz"
+  fi
+  local file="$2"
+  if [[ -z "$file" ]]; then
+    #error
+    echo "You must provide a file or directory to archive"
+    return 1
+  fi
+  curl -X POST "http://192.168.50.84:2357?name=$name" --data-binary "@$file"
+}

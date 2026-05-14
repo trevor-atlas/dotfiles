@@ -52,15 +52,23 @@ cmd({ 'VimEnter', 'FileType', 'BufEnter', 'WinEnter' }, {
   callback = function() set_url_match() end,
 })
 
+safely('later', function()
 local neotree_start_group = augroup('neotree_start', { clear = true })
 cmd('BufEnter', {
   desc = 'Open Neo-Tree on startup with directory',
   group = neotree_start_group,
   callback = function()
-    local stats = vim.loop.fs_stat(vim.api.nvim_buf_get_name(0))
-    if stats and stats.type == 'directory' then require('neo-tree.setup.netrw').hijack() end
+    if package.loaded["neo-tree"] then
+        return
+      else
+        local stats = vim.uv.fs_stat(vim.fn.argv(0))
+        if stats and stats.type == "directory" then
+          require("neo-tree")
+        end
+    end
   end,
 })
+end)
 
 vim.api.nvim_create_autocmd("User", {
   pattern = "LazyDone",

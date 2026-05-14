@@ -47,12 +47,18 @@ export FZF_CTRL_R_OPTS="\
 
 # EXTENDED_HISTORY changes the format of .zsh_history to record when (in seconds from the Unix epoch) a command was executed
 setopt EXTENDED_HISTORY
+export HISTSIZE=10000
+set history=10000
 
+# dotfile install helper scripts
 source "$ATLAS_ROOT/source/install_helpers"
 source "$ATLAS_ROOT/source/alias"
+# general functions
 source "$ATLAS_ROOT/source/functions"
-source "$ATLAS_ROOT/source/hs_zed"
+
+# git aliases and helper functions
 source "$ATLAS_ROOT/source/git_helpers"
+# worktree helper functions
 source "$ATLAS_ROOT/functions/zwt.zsh"
 
 alias commit="$ATLAS_ROOT/functions/commit"
@@ -63,6 +69,8 @@ export EDITOR="nvim"
 # disable NPM advertising
 export DISABLE_OPENCOLLECTIVE=1
 export ADBLOCK=1
+
+export HOMEBREW_NO_ENV_HINTS=1
 
 install_dotfiles() {
   sh "$ATLAS_ROOT"/install

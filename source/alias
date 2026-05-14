@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-alias zshconfig="code $HOME/.zshrc"
-alias editconfig="code $ATLAS_ROOT"
+alias zshconfig="$EDITOR $HOME/.zshrc"
+alias editconfig="$EDITOR $ATLAS_ROOT"
+alias dotfiles="$EDITOR $ATLAS_ROOT"
 alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222"
-
-# git
-# eval "$(hub alias -s)"
-alias githistory='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
 
 alias nodescripts="jq '.scripts' package.json"
 alias preview="fzf --preview 'bat --color \"always\" {}'"
@@ -59,4 +56,6 @@ alias restartproxy="brew services restart bender-proxy"
 alias mvn-verify="mvn clean verify && ding"
 
 alias my_prs="gh search prs --author=@me --created="$(date -v-7d '+%Y-%m-%d')..$(date '+%Y-%m-%d')" --json title,url,state,createdAt,repository --limit 50"
+
+alias mvn="mvn -q --no-transfer-progress"
 
