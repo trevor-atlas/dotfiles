@@ -126,13 +126,15 @@ Labels in the popup show the unique suffix (with one parent segment for context)
 
 ## Commands
 
+All commands are subcommands of `:HsI18n` with tab completion:
+
 | Command | Description |
 |---------|-------------|
-| `:HsI18nRefresh` | Re-parse all lyaml translation files |
-| `:HsI18nReset` | Clear all caches and re-parse from scratch |
-| `:HsI18nScan` | Run diagnostic scan on the current buffer immediately |
-| `:HsI18nDebug` | Print cache state for the current buffer |
-| `:HsI18nDebugParse [file]` | Dump treesitter tree and parsed keys for a lyaml file (defaults to current buffer) |
+| `:HsI18n refresh` | Re-parse all lyaml translation files |
+| `:HsI18n reset` | Clear all caches and re-parse from scratch |
+| `:HsI18n scan` | Run diagnostic scan on the current buffer immediately |
+| `:HsI18n debug` | Print cache state for the current buffer |
+| `:HsI18n debug-parse [file]` | Dump treesitter tree and parsed keys for a lyaml file (defaults to current buffer) |
 
 ## Public API
 

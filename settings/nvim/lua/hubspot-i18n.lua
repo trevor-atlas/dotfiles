@@ -186,7 +186,7 @@ local function parse_lyaml_flat(file_path)
   if not f then return {} end
   local content = f:read('*a')
   f:close()
-  return parse_lyaml_content(content)
+  return parse_lyaml_content(content, file_path)
 end
 
 local function parse_file_cached(file_path)
@@ -598,11 +598,34 @@ function M.setup(opts)
     },
   }, opts or {})
 
-  vim.api.nvim_create_user_command('HsI18nRefresh',    function() M.parse_and_cache_translations() end, { desc = 'Re-parse all lyaml translation files' })
-  vim.api.nvim_create_user_command('HsI18nReset',      function() M.reset(); M.parse_and_cache_translations() end, { desc = 'Clear caches and re-parse' })
-  vim.api.nvim_create_user_command('HsI18nScan',       function() M.scan() end,  { desc = 'Run diagnostic scan on current buffer' })
-  vim.api.nvim_create_user_command('HsI18nDebug',      function() M.debug() end, { desc = 'Print cache state for current buffer' })
-  vim.api.nvim_create_user_command('HsI18nDebugParse', function(cmd) M.debug_parse(cmd.args ~= '' and cmd.args or nil) end, { nargs = '?', complete = 'file', desc = 'Dump treesitter tree and parsed keys for a lyaml file' })
+  local subcmds = {
+    refresh     = function(_)    M.parse_and_cache_translations() end,
+    reset       = function(_)    M.reset(); M.parse_and_cache_translations() end,
+    scan        = function(_)    M.scan() end,
+    debug       = function(_)    M.debug() end,
+    ['debug-parse'] = function(cmd) M.debug_parse(cmd.fargs[2] ~= '' and cmd.fargs[2] or nil) end,
+  }
+
+  vim.api.nvim_create_user_command('HsI18n', function(cmd)
+    local sub = cmd.fargs[1]
+    if subcmds[sub] then
+      subcmds[sub](cmd)
+    else
+      vim.notify('HsI18n: unknown subcommand "' .. tostring(sub) .. '". Valid: ' .. table.concat(vim.tbl_keys(subcmds), ', '), vim.log.levels.ERROR)
+    end
+  end, {
+    nargs    = '+',
+    complete = function(arglead, cmdline, _)
+      local args = vim.split(cmdline, '%s+', { trimempty = true })
+      if #args <= 1 or (#args == 2 and not cmdline:match('%s$')) then
+        return vim.tbl_filter(function(s) return vim.startswith(s, arglead) end, vim.tbl_keys(subcmds))
+      elseif args[2] == 'debug-parse' then
+        return vim.fn.getcompletion(arglead, 'file')
+      end
+      return {}
+    end,
+    desc = 'HubSpot i18n commands: refresh, reset, scan, debug, debug-parse [file]',
+  })
 
   _run_parse()
 
