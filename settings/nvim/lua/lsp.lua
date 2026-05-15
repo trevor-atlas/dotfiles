@@ -41,26 +41,12 @@ local on_attach = function(_, bufnr)
   --vim.api.nvim_buf_create_user_command(bufnr, 'Format', vim.lsp.buf.format, { desc = 'Format current buffer with LSP' })
 end
 
--- nvim-cmp supports additional completion capabilities, so broadcast that to servers
--- local capabilities = vim.lsp.protocol.make_client_capabilities()
-local luasnip = require('luasnip')
-require('luasnip.loaders.from_vscode').lazy_load({ paths = { '~/.config/nvim/snippets/' } })
-local lspkind = require('lspkind')
-local cmp = require('cmp')
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local capabilities = require('blink.cmp').get_lsp_capabilities()
 local isHubspot, bend = pcall(require, 'bend')
 
 --  If you want to override the default filetypes that your language server will attach to you can
 --  define the property 'filetypes' to the map in question.
 local servers = {
-  -- clangd = {},
-  -- gopls = {},
-  -- pyright = {},
-  -- rust_analyzer = {
-  --   checkOnSave = {
-  --     command = "clippy",
-  --   },
-  -- },
   lua_ls = {
     settings = {
       Lua = {
@@ -125,103 +111,5 @@ vim.lsp.enable('pyright')
 vim.lsp.enable('nixd')
 vim.lsp.enable('templ')
 vim.lsp.enable('clangd')
-
--- vim.api.nvim_create_autocmd("LspAttach", {
--- 	desc = "LSP actions",
--- 	callback = function(event)
--- 		local function opts(desc)
--- 			return {
--- 				desc = "LSP: " .. desc,
--- 				buffer = event.buf,
--- 				noremap = true,
--- 				silent = true,
--- 				nowait = true,
--- 			}
--- 		end
-
--- 		vim.keymap.set("n", "gd", function()
--- 			vim.lsp.buf.definition()
--- 		end, opts("Go to Definition"))
-
--- 		vim.keymap.set("n", "K", function()
--- 			vim.lsp.buf.hover({ border = "rounded" })
--- 		end, opts("Hover"))
-
--- 		vim.keymap.set("n", "<leader>ls", function()
--- 			vim.lsp.buf.document_symbol()
--- 		end, opts("View Document Symbols"))
-
--- 		vim.keymap.set("n", "<leader>lF", function()
--- 			local loc_list = vim.fn.getloclist(0)
--- 			local pattern = vim.fn.input("Filter pattern: ")
--- 			local new_list = vim.tbl_filter(function(item)
--- 				return item.text:match(pattern)
--- 			end, loc_list)
--- 			vim.fn.setloclist(0, new_list, "r")
--- 			print("Filtered location list with pattern: " .. pattern)
--- 		end, { noremap = true, silent = true, desc = "Filter Location List" })
-
--- 		vim.keymap.set("n", "<leader>la", function()
--- 			vim.lsp.buf.code_action()
--- 		end, opts("Actions"))
-
--- 		vim.keymap.set("n", "<leader>lf", function()
--- 			vim.lsp.buf.references()
--- 		end, opts("Find References"))
-
--- 		vim.keymap.set("n", "<leader>lr", function()
--- 			vim.lsp.buf.rename()
--- 		end, opts("Rename"))
-
--- 		vim.keymap.set("i", "<C-h>", function()
--- 			vim.lsp.buf.signature_help()
--- 		end, opts("Signature Help"))
--- 	end,
--- })
-
-local myborder = cmp.config.window.bordered()
-cmp.setup({
-  sources = {
-    { name = 'nvim_lsp' },
-    { name = 'luasnip' },
-    { name = 'codeium' },
-    { name = 'copilot' },
-  },
-  formatting = {
-    format = lspkind.cmp_format({
-      mode = 'symbol',
-      maxwidth = 50,
-      ellipsis_char = '...',
-      symbol_map = { Codeium = '', Copilot = '' },
-    }),
-  },
-  mapping = {
-    ['<C-y>'] = cmp.mapping.confirm({ select = true }),
-    ['<C-c>'] = cmp.mapping.abort(),
-    ['<C-n>'] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif luasnip.locally_jumpable(1) then
-        luasnip.jump(1)
-      else
-        cmp.complete()
-      end
-    end, { 'i', 's' }),
-    ['<C-p>'] = cmp.mapping(function()
-      if cmp.visible() then
-        cmp.select_prev_item()
-      elseif luasnip.locally_jumpable(-1) then
-        luasnip.jump(-1)
-      end
-    end, { 'i', 's' }),
-  },
-  snippet = {
-    expand = function(args) require('luasnip').lsp_expand(args.body) end,
-  },
-  window = {
-    completion = myborder,
-    documentation = myborder,
-  },
-})
 
 require('hubspot-i18n').setup()

@@ -8,7 +8,6 @@ vim.pack.add({
   'https://github.com/MagicDuck/grug-far.nvim',
   'https://github.com/NickvanDyke/opencode.nvim',
   'https://github.com/ThePrimeagen/refactoring.nvim',
-  'https://github.com/folke/lazydev.nvim',
   'https://github.com/folke/snacks.nvim',
   'https://github.com/igorlfs/nvim-dap-view',
   'https://github.com/jbyuki/one-small-step-for-vimkind',
@@ -24,24 +23,14 @@ vim.pack.add({
   'https://github.com/nvim-tree/nvim-web-devicons',
   'https://github.com/neovim/nvim-lspconfig',
   -- 'https://github.com/pmizio/typescript-tools.nvim',
-  'https://github.com/hrsh7th/cmp-nvim-lsp',
-  'https://github.com/hrsh7th/cmp-buffer',
-  'https://github.com/hrsh7th/cmp-path',
-  'https://github.com/hrsh7th/cmp-cmdline',
-  'https://github.com/hrsh7th/nvim-cmp',
+  { src = 'https://github.com/saghen/blink.cmp', version = vim.version.range('1.x') },
   'https://github.com/neovim/nvim-lspconfig',
-  'https://github.com/onsails/lspkind.nvim',
-  'https://github.com/hrsh7th/nvim-cmp',
   'https://github.com/MunifTanjim/nui.nvim',
   {
     src = 'git@github.com:HubSpotEngineering/bend.nvim.git',
   },
 
-  -- Snippet Engine & its associated nvim-cmp source
   { src = 'https://github.com/L3MON4D3/LuaSnip', version = vim.version.range('2.x') },
-  'https://github.com/saadparwaiz1/cmp_luasnip',
-
-  -- Adds a number of user-friendly snippets
   'https://github.com/rafamadriz/friendly-snippets',
   {
     src = 'git@github.com:HubSpotEngineering/bend.nvim.git',
@@ -53,6 +42,7 @@ vim.pack.add({
   'https://github.com/nvim-lua/plenary.nvim',
   'https://github.com/MunifTanjim/nui.nvim',
   'https://github.com/rmagatti/auto-session',
+  'https://github.com/giuxtaposition/blink-cmp-copilot',
 
   { src = 'https://github.com/nvim-treesitter/nvim-treesitter', version = 'main', name = 'ts' },
   { src = 'https://github.com/nvim-treesitter/nvim-treesitter-textobjects', version = 'main' },

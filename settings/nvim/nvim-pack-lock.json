@@ -25,6 +25,15 @@
       "rev": "19a38aab94961016430905ebec30d272a01e9742",
       "src": "https://github.com/max397574/better-escape.nvim"
     },
+    "blink-cmp-copilot": {
+      "rev": "439cff78780c033aa23cf061d7315314b347e3c1",
+      "src": "https://github.com/giuxtaposition/blink-cmp-copilot"
+    },
+    "blink.cmp": {
+      "rev": "78336bc89ee5365633bcf754d93df01678b5c08f",
+      "src": "https://github.com/saghen/blink.cmp",
+      "version": "1.0.0 - 2.0.0"
+    },
     "bufdelete.nvim": {
       "rev": "f6bcea78afb3060b198125256f897040538bcb81",
       "src": "https://github.com/famiu/bufdelete.nvim"
