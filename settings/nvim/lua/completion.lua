@@ -3,18 +3,6 @@ local utils = require('utils')
 require('luasnip.loaders.from_vscode').lazy_load()
 require('luasnip.loaders.from_vscode').lazy_load({ paths = { '~/.config/nvim/snippets/' } })
 
-local sources_default = { 'lsp', 'path', 'snippets', 'buffer' }
-
-local hs_filetypes = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact' }
-local hs_sources = { 'hs_translations', 'lsp', 'path', 'snippets', 'buffer' }
-
-local per_filetype = {}
-if utils.is_hubspot_machine then
-  for _, ft in ipairs(hs_filetypes) do
-    per_filetype[ft] = hs_sources
-  end
-end
-
 local sources = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer', 'copilot' }
 
 local providers = {
@@ -45,8 +33,7 @@ require('blink.cmp').setup({
   snippets = { preset = 'luasnip' },
 
   sources = {
-    default = sources_default,
-    per_filetype = per_filetype,
+    default = sources,
     providers = providers,
   },
 

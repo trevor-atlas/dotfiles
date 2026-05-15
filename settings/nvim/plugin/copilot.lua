@@ -1,40 +1,20 @@
 vim.pack.add({
-  {
-    src = 'https://github.com/zbirenbaum/copilot.lua',
-    cmd = "Copilot",
-    event = "InsertEnter",
-  },
-  'https://github.com/copilotlsp-nvim/copilot-lsp'
+  'https://github.com/zbirenbaum/copilot.lua',
+  'https://github.com/copilotlsp-nvim/copilot-lsp',
+  'https://github.com/giuxtaposition/blink-cmp-copilot',
 })
 
-
-require("copilot").setup({
-  panel = {
-    enabled = true,
-    auto_refresh = true,
-    keymap = {
-      jump_prev = "[[",
-      jump_next = "]]",
-      accept = "<CR>",
-      refresh = "gr",
-      open = "<M-CR>"
-    },
-    layout = {
-      position = "bottom", -- | top | left | right
-      ratio = 0.4
-    },
-  },
-  suggestion = {
-    enabled = true,
+vim.g.copilot_nes_debounce = 500
+require('copilot').setup({
+  suggestion = { enabled = false, keymap = { accept = false } },
+  panel = { enabled = false },
+  nes = {
+    enabled = true, -- requires copilot-lsp as a dependency
     auto_trigger = true,
-    debounce = 75,
     keymap = {
-      accept = "<M-l>",
-      accept_word = false,
-      accept_line = false,
-      next = "<M-]>",
-      prev = "<M-[>",
-      dismiss = "<C-]>",
+      accept_and_goto = '<M-l>',
+      accept = false,
+      dismiss = '<Esc>',
     },
   },
   filetypes = {
@@ -46,8 +26,12 @@ require("copilot").setup({
     hgcommit = false,
     svn = false,
     cvs = false,
-    ["."] = false,
+    ['.'] = false,
   },
-  copilot_node_command = 'node', -- Node.js version must be > 18.x
-  server_opts_overrides = {},
 })
+
+vim.keymap.set('i', '<M-l>', function()
+  local nes = require('copilot-lsp.nes')
+  nes.apply_pending_nes()
+  nes.walk_cursor_end_edit()
+end, { desc = 'Accept NES suggestion (insert mode)' })
