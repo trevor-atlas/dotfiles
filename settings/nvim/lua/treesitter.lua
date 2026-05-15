@@ -2,6 +2,12 @@
 local treesitter = require('nvim-treesitter')
 treesitter.setup()
 
+vim.api.nvim_create_autocmd('FileType', {
+  callback = function(ev)
+    pcall(vim.treesitter.start, ev.buf)
+  end,
+})
+
 local ensure_installed = {
   'c',
   'cpp',

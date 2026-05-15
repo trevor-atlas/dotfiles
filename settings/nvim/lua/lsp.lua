@@ -80,7 +80,7 @@ local servers = {
       },
     },
   },
-  yamlls = { filetypes = { 'lyaml', 'yaml' } },
+  yamlls = {},
 }
 
 for _, server_name in ipairs(vim.tbl_keys(servers)) do
@@ -223,3 +223,5 @@ cmp.setup({
     documentation = myborder,
   },
 })
+
+require('hubspot-i18n').setup()
