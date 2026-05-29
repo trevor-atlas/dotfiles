@@ -5,15 +5,15 @@ Neovim tooling for HubSpot i18n translation files. Parses `.lyaml` translation f
 ## Features
 
 - **Hover** (`K`) — press over any translation key string to see its English value
-- **Go to definition** (`gd`) — jump to the key's definition in the source `.lyaml` file
+- **Go to definition** (`gd`) — jump to the key's definition in the source `.lyaml` file; works for both local and imported package keys
 - **Diagnostics** — warnings on unknown translation keys in `I18n.text()`, `unescapedText()`, `<FormattedMessage>`, and other i18n call sites
-- **Completions** — nvim-cmp source that completes translation keys with prefix filtering
+- **Completions** — blink.cmp source that completes translation keys with prefix filtering
 
 ## Requirements
 
 - Neovim 0.10+
 - [`nvim-treesitter`](https://github.com/nvim-treesitter/nvim-treesitter) with the `yaml` and `tsx`/`typescript` parsers installed
-- [`nvim-cmp`](https://github.com/hrsh7th/nvim-cmp)
+- [`blink.cmp`](https://github.com/saghen/blink.cmp)
 - [`nvim-lspconfig`](https://github.com/neovim/nvim-lspconfig)
 - [`ripgrep`](https://github.com/BurntSushi/ripgrep) (`rg`) on `$PATH`
 - A `~/.hubspot` directory (the plugin is a no-op on non-HubSpot machines)
@@ -23,7 +23,7 @@ Neovim tooling for HubSpot i18n translation files. Parses `.lyaml` translation f
 The plugin is split into two files:
 
 - **`hubspot-i18n.lua`** — owns the translation cache, parsing, hover, diagnostics, and go-to-definition
-- **`hubspot-completion.lua`** — thin nvim-cmp adapter that consumes the cache
+- **`hubspot-completion.lua`** — thin blink.cmp source that consumes the cache
 
 ### treesitter
 
@@ -75,16 +75,15 @@ require('hubspot-i18n').setup({
   },
 })
 
--- In your nvim-cmp config:
-local hs = require('hubspot-completion')
-hs.setup()
-
-cmp.setup({
-  sources = {
-    -- other sources ...
-    { name = hs.key },
+-- In your blink.cmp sources config:
+sources = {
+  providers = {
+    hs_translations = {
+      name   = 'HubSpot Translations',
+      module = 'hubspot-completion',
+    },
   },
-})
+}
 ```
 
 ## How it works
@@ -98,10 +97,10 @@ On `setup()`, the plugin:
 3. Resolves required packages from monorepo siblings or `~/.hubspot/static-archive/<pkg>/`
 4. Parses all `.lyaml` files via the treesitter YAML parser (no external tools required)
 5. Merges imported keys into each package's translation map
-6. Refreshes every 5 minutes in the background, and immediately on `BufWritePost` of any `.lyaml` file within the project
 
-Base project files are re-checked on every refresh using SHA-256 content hashing.
-Imported package files (static archive) are parsed once per session and never re-read — they are versioned and immutable.
+Subsequent refreshes (every 5 minutes, and on `BufWritePost` of any `.lyaml` file) only re-parse base project files. Imported package data is resolved once at startup and reused — unless the base file's content changes (detected via SHA-256 hash), in which case `require_lang` directives are re-evaluated to pick up any newly added imports. When a lyaml file is saved, all open TypeScript/JavaScript buffers are re-scanned so diagnostics stay current immediately.
+
+Imported package files from the static archive are opened read-only when navigating to them via go-to-definition.
 
 ### Diagnostics
 
@@ -120,9 +119,11 @@ setDocumentTitle('some.key')
 
 ### Completions
 
-The nvim-cmp source triggers on `"` and `'`.
-It only returns results when the cursor is inside a non-empty string that is a prefix of at least one translation key.
-Labels in the popup show the unique suffix (with one parent segment for context) rather than the full repeated prefix, keeping the menu readable for deeply nested keys.
+The blink.cmp source triggers on `"`, `'`, and `.`. It only returns results when the cursor is inside a non-empty string that is a prefix of at least one translation key. Labels in the popup show the last two dot-segments rather than the full key, keeping the menu readable for deeply nested keys.
+
+### lyaml filetype
+
+`setup()` calls `vim.filetype.add({ extension = { lyaml = 'yaml' } })` so `.lyaml` files are treated as `yaml` by all tools — LSP, treesitter, and formatters — without any additional configuration.
 
 ## Commands
 

@@ -118,9 +118,10 @@ vim.keymap.set('n', '<leader>dl', vim.diagnostic.setloclist, { desc = 'Open diag
 vim.keymap.set('n', '<leader>lx', '<cmd>Inspect<cr>', { desc = 'describe token under cursor' })
 
 -- LSP keymaps
-vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', 'gd', function() require('snacks.picker').lsp_definitions() end, { noremap = true, silent = true, desc = 'Go to definition' })
+vim.keymap.set('n', 'gi', function() require('snacks.picker').lsp_implementations() end, { noremap = true, silent = true, desc = 'Go to implementation' })
+vim.keymap.set('n', 'gI', function() require('snacks.picker').lsp_implementations() end, { noremap = true, silent = true, desc = 'Go to implementation' })
+vim.keymap.set('n', 'gr', function() require('snacks.picker').lsp_references() end, { noremap = true, silent = true, desc = 'Go to references' })
 vim.keymap.set('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<space>ga', '<cmd>lua vim.lsp.buf.code_action()<CR>', { noremap = true, silent = true })

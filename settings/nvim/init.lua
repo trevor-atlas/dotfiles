@@ -1,3 +1,4 @@
+vim.opt.rtp:prepend(vim.env.HOME .. '/src/hubspot-i18n-nvim')
 -- local nix_path = vim.fs.joinpath(vim.fn.stdpath("data"), "nix")
 -- local dev_path = require("helpers").get_subdirectories(vim.fs.joinpath(vim.env.HOME, "Projects", "vim-plugins"))
 -- local paths = vim.iter({ nix_path, dev_path }):flatten():totable()
