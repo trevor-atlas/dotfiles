@@ -7,7 +7,6 @@ vim.opt.rtp:prepend(vim.env.HOME .. '/src/hubspot-i18n-nvim')
 
 vim.pack.add({
   'https://github.com/MagicDuck/grug-far.nvim',
-  'https://github.com/NickvanDyke/opencode.nvim',
   'https://github.com/ThePrimeagen/refactoring.nvim',
   'https://github.com/folke/snacks.nvim',
   'https://github.com/igorlfs/nvim-dap-view',
