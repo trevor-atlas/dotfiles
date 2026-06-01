@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+preview_window() {
+  local window_id="$1"
+  tmux display-message -p -t "$window_id" '#[bold]#S:#{window_index} #{window_name}#[default] • #{window_panes} pane(s) • #{pane_current_command} • #{pane_current_path}'
+  printf '\n'
+  tmux capture-pane -p -t "$window_id" -S -80
+}
+
+if [[ "${1:-}" == "--preview" ]]; then
+  preview_window "$2"
+  exit 0
+fi
+
+SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/$(basename -- "${BASH_SOURCE[0]}")"
+SEP='::TMUX::'
+
+windows="$({
+  tmux list-windows -F "#{window_id}${SEP}#{window_index}${SEP}#{?window_active,*, }${SEP}#{window_name}${SEP}#{window_panes}${SEP}#{pane_current_command}${SEP}#{pane_current_path}" |
+    awk -F "$SEP" 'BEGIN { OFS="\t" } { print $1, $4, $6 }'
+} | fzf \
+  --delimiter=$'\t' \
+  --with-nth=2.. \
+  --layout=reverse \
+  --border \
+  --prompt='window > ' \
+  --header=$'enter jump • esc cancel' \
+  --preview-window='right,60%,border-left' \
+  --preview "$SCRIPT_PATH --preview {1}")"
+
+[[ -n "$windows" ]] || exit 0
+window_id="${windows%%$'\t'*}"
+tmux select-window -t "$window_id"
