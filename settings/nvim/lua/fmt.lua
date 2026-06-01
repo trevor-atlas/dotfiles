@@ -1,7 +1,6 @@
 local utils = require('utils')
-local util = require('lspconfig.util')
 
-local config_pattern = util.root_pattern('prettier.config.js', '.prettierrc')
+local config_pattern = utils.root_pattern('prettier.config.js', '.prettierrc')
 
 local function prettier_config()
   local bufname = vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())

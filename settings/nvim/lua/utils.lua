@@ -6,6 +6,21 @@ M.is_wsl = M.os == 'WSL'
 M.is_macos = M.os == 'Darwin'
 M.path_sep = M.is_windows and '\\' or '/'
 M.is_hubspot_machine = vim.loop.fs_stat(vim.env.HOME .. '/.hubspot')
+M.root_markers = {
+  git = { '.git' },
+  package_manager = {
+    'package-lock.json',
+    'yarn.lock',
+    'pnpm-lock.yaml',
+    'bun.lockb',
+    'bun.lock',
+    '.git',
+  },
+  deno = { 'deno.json', 'deno.jsonc' },
+  deno_lock = { 'deno.lock' },
+  deno_with_lock = { 'deno.json', 'deno.jsonc', 'deno.lock' },
+  go = { 'go.work', 'go.mod', '.git' },
+}
 
 function M.get_text_under_cursor() return vim.treesitter.get_node_text(vim.treesitter.get_node({ bufnr = 0 }), 0) end
 
@@ -38,6 +53,42 @@ function M.conditional_func(func, condition, ...)
 end
 
 function M.path_join(...) return table.concat(vim.tbl_flatten({ ... }), M.path_sep) end
+
+function M.root_pattern(...)
+  local markers = { ... }
+
+  return function(path)
+    if type(path) == 'number' then path = vim.api.nvim_buf_get_name(path) end
+    if not path or path == '' then return nil end
+
+    local stat = vim.uv.fs_stat(path)
+    local start_path = stat and stat.type == 'directory' and path or vim.fs.dirname(path)
+    local found = vim.fs.find(markers, { path = start_path, upward = true, limit = 1 })[1]
+
+    return found and vim.fs.dirname(found) or nil
+  end
+end
+
+function M.buf_root(bufnr, markers) return vim.fs.root(bufnr, markers) end
+
+function M.is_deno_project(bufnr, project_root)
+  local deno_root = M.buf_root(bufnr, M.root_markers.deno)
+  local deno_lock_root = M.buf_root(bufnr, M.root_markers.deno_lock)
+
+  if deno_lock_root and (not project_root or #deno_lock_root > #project_root) then return true end
+  if deno_root and (not project_root or #deno_root >= #project_root) then return true end
+
+  return false
+end
+
+function M.find_node_root(bufnr, opts)
+  opts = opts or {}
+
+  local project_root = M.buf_root(bufnr, M.root_markers.package_manager)
+  if M.is_deno_project(bufnr, project_root) then return nil end
+
+  return project_root or (opts.fallback_to_cwd and vim.fn.getcwd() or nil)
+end
 
 function M.is_dir(filename)
   local stat = vim.loop.fs_stat(filename)

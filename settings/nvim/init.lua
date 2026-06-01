@@ -25,7 +25,6 @@ vim.pack.add({
   'https://github.com/neovim/nvim-lspconfig',
   -- 'https://github.com/pmizio/typescript-tools.nvim',
   { src = 'https://github.com/saghen/blink.cmp', version = vim.version.range('1.x') },
-  'https://github.com/neovim/nvim-lspconfig',
   'https://github.com/MunifTanjim/nui.nvim',
   {
     src = 'git@github.com:HubSpotEngineering/bend.nvim.git',
@@ -70,6 +69,7 @@ require('options')
 require('autocommands')
 require('treesitter')
 require('lsp')
+require('hs_eslint').setup()
 -- require("rust")
 require('completion')
 require('theme').setup()

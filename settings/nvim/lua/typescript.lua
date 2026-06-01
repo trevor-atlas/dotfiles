@@ -1,5 +1,4 @@
 local utils = require('utils')
-local util = require('lspconfig.util')
 local bend = require("bend")
 
 if utils.is_hubspot_machine then
@@ -7,7 +6,7 @@ if utils.is_hubspot_machine then
 end
 
 require("typescript-tools").setup({
-  root_dir = util.root_pattern('.git', 'yarn.lock', 'package.json'),
+  root_dir = utils.root_pattern('.git', 'yarn.lock', 'package.json'),
   settings = {
     separate_diagnostic_server = true,
     publish_diagnostic_on = 'insert_leave',

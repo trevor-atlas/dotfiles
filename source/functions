@@ -337,7 +337,7 @@ EOF
 # run hs projects with my preferred settings
 flexo() {
   cd "$CODE_DIR" &&\
-  NODE_OPTIONS="--max_old_space_size=8192"\
+  #NODE_OPTIONS="--max_old_space_size=8192"\
   bendr reactor serve "$@"\
     --update\
     --ts-watch\

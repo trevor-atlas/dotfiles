@@ -7,10 +7,9 @@ local float = {
 -- vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, float)
 -- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, float)
 
--- local lspconfig = require('lspconfig')
 -- [[ Configure LSP ]]
 --  This function gets run when an LSP connects to a particular buffer.
-local on_attach = function(_, bufnr)
+local function common_on_attach(_, bufnr)
   local picker = require('snacks.picker')
   local nmap = function(keys, func, desc)
     if desc then desc = 'LSP: ' .. desc end
@@ -29,27 +28,117 @@ local on_attach = function(_, bufnr)
   nmap('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
   vim.keymap.set('n', 'gh', function() vim.diagnostic.open_float({ bufnr = 0 }) end, { remap = true, silent = true })
 
-  -- See `:help K` for why this keymap
   nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
-  --nmap('<C-k>', vim.lsp.buf.signature_help, 'Signature Documentation')
-
-  -- Lesser used LSP functionality
-  --nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-  --nmap('<leader>wa', vim.lsp.buf.add_workspace_folder, '[W]orkspace [A]dd Folder')
-  --nmap('<leader>wr', vim.lsp.buf.remove_workspace_folder, '[W]orkspace [R]emove Folder')
   nmap('<leader>wl', function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, '[W]orkspace [L]ist Folders')
-
-  -- Create a command `:Format` local to the LSP buffer
-  --vim.api.nvim_buf_create_user_command(bufnr, 'Format', vim.lsp.buf.format, { desc = 'Format current buffer with LSP' })
 end
 
-local capabilities = require('blink.cmp').get_lsp_capabilities()
-local isHubspot, bend = pcall(require, 'bend')
+local client_on_attach = {
+  ts_ls = function(client, bufnr)
+    vim.api.nvim_buf_create_user_command(bufnr, 'LspTypescriptSourceAction', function()
+      local code_action_provider = client.server_capabilities.codeActionProvider
+      local action_kinds = type(code_action_provider) == 'table' and code_action_provider.codeActionKinds or {}
+      local source_actions = vim.tbl_filter(function(action)
+        return vim.startswith(action, 'source.')
+      end, action_kinds)
 
---  If you want to override the default filetypes that your language server will attach to you can
---  define the property 'filetypes' to the map in question.
+      vim.lsp.buf.code_action({
+        context = {
+          only = source_actions,
+          diagnostics = {},
+        },
+      })
+    end, {})
+
+    vim.api.nvim_buf_create_user_command(bufnr, 'LspTypescriptGoToSourceDefinition', function()
+      local win = vim.api.nvim_get_current_win()
+      local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
+
+      client:exec_cmd({
+        command = '_typescript.goToSourceDefinition',
+        title = 'Go to source definition',
+        arguments = { params.textDocument.uri, params.position },
+      }, { bufnr = bufnr }, function(err, result)
+        if err then
+          vim.notify('Go to source definition failed: ' .. err.message, vim.log.levels.ERROR)
+          return
+        end
+        if not result or vim.tbl_isempty(result) then
+          vim.notify('No source definition found', vim.log.levels.INFO)
+          return
+        end
+
+        vim.lsp.util.show_document(result[1], client.offset_encoding, { focus = true })
+      end)
+    end, { desc = 'Go to source definition' })
+  end,
+}
+
+local capabilities = require('blink.cmp').get_lsp_capabilities()
+local is_hubspot, bend = pcall(require, 'bend')
+local utils = require('utils')
+
+local function warn_eslint(message)
+  if utils.is_hubspot_machine then return {} end
+
+  vim.notify(message, vim.log.levels.WARN)
+  return {}
+end
+
+local function combined_on_attach(...)
+  local callbacks = vim.tbl_filter(function(callback)
+    return type(callback) == 'function'
+  end, { ... })
+
+  return function(client, bufnr)
+    common_on_attach(client, bufnr)
+
+    for _, callback in ipairs(callbacks) do
+      callback(client, bufnr)
+    end
+
+    local callback = client_on_attach[client.name]
+    if callback then callback(client, bufnr) end
+  end
+end
+
+local function with_common_config(config, ...)
+  return vim.tbl_deep_extend('force', {
+    capabilities = capabilities,
+    on_attach = combined_on_attach(...),
+  }, config or {})
+end
+
+local function ts_ls_config()
+  local config = {}
+
+  if is_hubspot then
+    bend.setup({ v2 = true, auto_add_dirs = true })
+    config = {
+      filetypes = {
+        'javascript',
+        'javascriptreact',
+        'javascript.jsx',
+        'typescript',
+        'typescriptreact',
+        'typescript.tsx',
+      },
+      root_markers = { '.git', 'build-info.json' },
+      cmd = { 'typescript-language-server', '--stdio' },
+      init_options = {
+        hostInfo = 'neovim',
+        tsserver = {
+          path = bend.getTsServerPathForCurrentFile(),
+        },
+      },
+    }
+  end
+
+  return with_common_config(config)
+end
+
+local upstream_eslint = vim.lsp.config.eslint or {}
 local servers = {
-  lua_ls = {
+  lua_ls = with_common_config({
     settings = {
       Lua = {
         telemetry = { enable = false },
@@ -67,51 +156,42 @@ local servers = {
         },
       },
     },
-  },
-  yamlls = {},
+  }),
+  yamlls = with_common_config(),
+  eslint = with_common_config({
+    handlers = {
+      ['eslint/probeFailed'] = function()
+        return warn_eslint('[eslint] probe failed.')
+      end,
+      ['eslint/noLibrary'] = function()
+        return warn_eslint('[eslint] Unable to find ESLint library.')
+      end,
+    },
+  }, upstream_eslint.on_attach),
+  ts_ls = ts_ls_config,
 }
 
-for _, server_name in ipairs(vim.tbl_keys(servers)) do
-  vim.lsp.config(server_name, {
-    capabilities = capabilities,
-    on_attach = on_attach,
-    settings = servers[server_name],
-    filetypes = (servers[server_name] or {}).filetypes,
-  })
+for server_name, server_config in pairs(servers) do
+  if type(server_config) == 'function' then
+    server_config = server_config()
+  end
+
+  vim.lsp.config(server_name, server_config)
+end
+
+for _, server_name in ipairs({
+  'lua_ls',
+  'yamlls',
+  'eslint',
+  'ts_ls',
+  'jdtls',
+  'gopls',
+  'pyright',
+  'nixd',
+  'templ',
+  'clangd',
+}) do
   vim.lsp.enable(server_name)
 end
-
-if isHubspot then
-  bend.setup({ v2 = true, auto_add_dirs = true })
-  vim.lsp.config('ts_ls', {
-    filetypes = {
-      'javascript',
-      'javascriptreact',
-      'javascript.jsx',
-      'typescript',
-      'typescriptreact',
-      'typescript.tsx',
-    },
-    capabilities = capabilities,
-    root_markers = { '.git', 'build-info.json' },
-    on_attach = on_attach,
-    cmd = { 'typescript-language-server', '--stdio' },
-    init_options = {
-      hostInfo = 'neovim',
-      tsserver = {
-        path = bend.getTsServerPathForCurrentFile(),
-      },
-    },
-  })
-end
-vim.lsp.enable('ts_ls')
-
--- Enable language servers with default configs
-vim.lsp.enable('jdtls')
-vim.lsp.enable('gopls')
-vim.lsp.enable('pyright')
-vim.lsp.enable('nixd')
-vim.lsp.enable('templ')
-vim.lsp.enable('clangd')
 
 require('hubspot-i18n').setup()
