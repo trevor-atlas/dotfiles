@@ -11,14 +11,10 @@ vim.pack.add({
   'https://github.com/ThePrimeagen/refactoring.nvim',
   'https://github.com/folke/snacks.nvim',
   'https://github.com/igorlfs/nvim-dap-view',
-  'https://github.com/jbyuki/one-small-step-for-vimkind',
   'https://github.com/kevinhwang91/nvim-bqf',
   'https://github.com/mfussenegger/nvim-dap',
-  'https://github.com/mfussenegger/nvim-lint',
-  'https://github.com/mistweaverco/kulala.nvim',
   'https://github.com/nvim-mini/mini.nvim',
   'https://github.com/stevearc/conform.nvim',
-  'https://github.com/stevearc/quicker.nvim',
   'https://github.com/tadmccorkle/markdown.nvim',
   'https://github.com/nvim-lua/plenary.nvim',
   'https://github.com/nvim-tree/nvim-web-devicons',
@@ -66,7 +62,6 @@ require('autocommands')
 require('treesitter')
 require('lsp')
 require('hs_eslint').setup()
--- require("rust")
 require('completion')
 require('theme').setup()
 require('mappings')
