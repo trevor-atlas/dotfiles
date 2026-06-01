@@ -153,7 +153,9 @@ local servers = {
       },
     },
   }),
-  yamlls = with_common_config(),
+  yamlls = with_common_config({
+    filetypes = { 'yaml' },
+  }),
   eslint = with_common_config({
     handlers = {
       ['eslint/probeFailed'] = function()
@@ -180,8 +182,6 @@ for _, server_name in ipairs({
   'yamlls',
   'eslint',
   'ts_ls',
-  'jdtls',
-  'clangd',
 }) do
   vim.lsp.enable(server_name)
 end
@@ -190,6 +190,14 @@ local optional_servers = {
   gopls = {
     executable = 'gopls',
     filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
+  },
+  jdtls = {
+    executable = 'jdtls',
+    filetypes = { 'java' },
+  },
+  clangd = {
+    executable = 'clangd',
+    filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
   },
   pyright = {
     executable = 'pyright-langserver',
