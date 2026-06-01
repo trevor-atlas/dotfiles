@@ -66,4 +66,33 @@ function M.builtin(name, opts)
   end
 end
 
+function M.diagnostics(opts)
+  opts = opts or {}
+  M.setup()
+
+  local bufnr = opts.bufnr
+  if bufnr == 0 then bufnr = vim.api.nvim_get_current_buf() end
+
+  if vim.tbl_isempty(vim.diagnostic.get(bufnr)) then
+    local pickers = require('telescope.pickers')
+    local finders = require('telescope.finders')
+    local conf = require('telescope.config').values
+
+    pickers
+      .new(opts, {
+        prompt_title = bufnr == nil and 'Workspace Diagnostics' or 'Document Diagnostics',
+        finder = finders.new_table({ results = {} }),
+        previewer = false,
+        sorter = conf.generic_sorter(opts),
+      })
+      :find()
+
+    return
+  end
+
+  return M.run(function(builtin)
+    return builtin.diagnostics(opts)
+  end)
+end
+
 return M

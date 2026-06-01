@@ -15,7 +15,7 @@ vim.keymap.set('n', '<leader>ff', telescope.builtin('find_files'), { desc = '[F]
 vim.keymap.set('n', '<leader>sh', telescope.builtin('help_tags'), { desc = '[S]earch [H]elp' })
 vim.keymap.set('n', '<leader>sw', telescope.builtin('grep_string'), { desc = '[S]earch current [W]ord' })
 vim.keymap.set('n', '<leader>sg', telescope.builtin('live_grep'), { desc = '[S]earch by [G]rep' })
-vim.keymap.set('n', '<leader>sd', telescope.builtin('diagnostics'), { desc = '[S]earch [D]iagnostics' })
+vim.keymap.set('n', '<leader>sd', function() telescope.diagnostics() end, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', telescope.builtin('resume'), { desc = '[S]earch [R]resume' })
 vim.keymap.set('n', '<C-p>', telescope.builtin('find_files'), { desc = 'Find files' })
 vim.keymap.set('n', '<leader>st', function()

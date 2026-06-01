@@ -41,6 +41,17 @@ cmd({ 'VimEnter', 'FileType', 'BufEnter', 'WinEnter' }, {
   callback = function() set_url_match() end,
 })
 
+local transient_window_group = augroup('TransientWindowKeymaps', { clear = true })
+cmd('FileType', {
+  desc = 'Close transient windows with q',
+  group = transient_window_group,
+  pattern = { 'checkhealth', 'help', 'lspinfo', 'man', 'qf', 'trouble' },
+  callback = function(args)
+    vim.bo[args.buf].buflisted = false
+    vim.keymap.set('n', 'q', '<cmd>close<cr>', { buffer = args.buf, silent = true, nowait = true, desc = 'Close window' })
+  end,
+})
+
 safely('later', function()
 local neotree_start_group = augroup('neotree_start', { clear = true })
 cmd('BufEnter', {

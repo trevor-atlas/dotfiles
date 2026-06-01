@@ -4,32 +4,12 @@ local float = {
   border = 'rounded',
 }
 
+local lsp_attach = require('lsp_attach')
+
 -- vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, float)
 -- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, float)
 
 -- [[ Configure LSP ]]
---  This function gets run when an LSP connects to a particular buffer.
-local function common_on_attach(_, bufnr)
-  local picker = require('snacks.picker')
-  local telescope = require('loaders.telescope')
-  local nmap = function(keys, func, desc)
-    if desc then desc = 'LSP: ' .. desc end
-    vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
-  end
-
-  nmap('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
-  nmap('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
-
-  nmap('gd', picker.lsp_definitions, '[G]oto [D]efinition')
-  nmap('gr', picker.lsp_references, '[G]oto [R]eferences')
-  nmap('gi', picker.lsp_implementations, '[G]oto [I]mplementation')
-  nmap('gI', picker.lsp_implementations, '[G]oto [I]mplementation')
-  nmap('<leader><S-d>', vim.lsp.buf.type_definition, 'Type [D]efinition')
-  nmap('<leader>ds', telescope.builtin('lsp_document_symbols'), '[D]ocument [S]ymbols')
-  nmap('<leader>ws', telescope.builtin('lsp_dynamic_workspace_symbols'), '[W]orkspace [S]ymbols')
-  nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
-  nmap('<leader>wl', function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, '[W]orkspace [L]ist Folders')
-end
 
 local client_on_attach = {
   ts_ls = function(client, bufnr)
@@ -89,7 +69,7 @@ local function combined_on_attach(...)
   end, { ... })
 
   return function(client, bufnr)
-    common_on_attach(client, bufnr)
+    lsp_attach.common_on_attach(client, bufnr)
 
     for _, callback in ipairs(callbacks) do
       callback(client, bufnr)
@@ -191,10 +171,6 @@ local optional_servers = {
   gopls = {
     executable = 'gopls',
     filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
-  },
-  jdtls = {
-    executable = 'jdtls',
-    filetypes = { 'java' },
   },
   clangd = {
     executable = 'clangd',

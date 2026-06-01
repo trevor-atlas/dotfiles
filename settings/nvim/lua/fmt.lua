@@ -57,3 +57,53 @@ require('conform').setup({
     },
   },
 })
+
+local java_spotless_group = vim.api.nvim_create_augroup('JavaSpotlessFormat', { clear = true })
+local running_modules = {}
+
+vim.api.nvim_create_autocmd('BufWritePost', {
+  group = java_spotless_group,
+  pattern = '*.java',
+  callback = function(args)
+    if vim.bo[args.buf].buftype ~= '' then return end
+    if not repo.is_hubspot_repo(args.buf) or not repo.is_mill_repo(args.buf) then return end
+
+    local module_name = repo.find_mill_module_name(args.buf)
+    local root = repo.find_mill_root(args.buf)
+    if not module_name or not root or vim.fn.executable('mill') ~= 1 then return end
+
+    local key = root .. '::' .. module_name
+    if running_modules[key] then return end
+    running_modules[key] = true
+
+    local filename = vim.api.nvim_buf_get_name(args.buf)
+    local before = table.concat(vim.api.nvim_buf_get_lines(args.buf, 0, -1, false), '\n')
+
+    vim.system({ 'mill', module_name .. '.spotless' }, {
+      cwd = root,
+      env = { MILL_NO_SEPARATE_BSP_OUTPUT_DIR = '1' },
+    }, function(result)
+      running_modules[key] = nil
+
+      vim.schedule(function()
+        if result.code ~= 0 then
+          vim.notify('Spotless failed for ' .. module_name, vim.log.levels.ERROR)
+          return
+        end
+
+        local after = table.concat(vim.fn.readfile(filename), '\n')
+        local changed = after ~= before
+
+        if vim.api.nvim_buf_is_valid(args.buf) and vim.api.nvim_buf_get_name(args.buf) == filename and not vim.bo[args.buf].modified then
+          vim.api.nvim_buf_call(args.buf, function()
+            vim.cmd('checktime')
+          end)
+        end
+
+        if changed then
+          vim.notify('Spotless formatted ' .. vim.fs.basename(filename), vim.log.levels.INFO)
+        end
+      end)
+    end)
+  end,
+})

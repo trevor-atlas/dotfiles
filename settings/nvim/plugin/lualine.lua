@@ -24,6 +24,12 @@ local theme = {
   },
 }
 
+local function metals_status()
+  local status = vim.g.metals_status
+  if type(status) ~= 'string' or status == '' then return '' end
+  return status
+end
+
 require('lualine').setup({
   theme,
   component_separators = '|',
@@ -34,7 +40,7 @@ require('lualine').setup({
     },
     lualine_b = { 'filename', 'branch', 'diff' },
     lualine_c = { 'diagnostics', 'encoding' },
-    lualine_x = {},
+    lualine_x = { metals_status },
     lualine_y = { 'filetype', 'searchcount' },
     lualine_z = {
       { 'location', separator = { right = '' }, left_padding = 2 },
