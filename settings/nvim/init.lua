@@ -23,7 +23,6 @@ vim.pack.add({
   'https://github.com/nvim-lua/plenary.nvim',
   'https://github.com/nvim-tree/nvim-web-devicons',
   'https://github.com/neovim/nvim-lspconfig',
-  -- 'https://github.com/pmizio/typescript-tools.nvim',
   { src = 'https://github.com/saghen/blink.cmp', version = vim.version.range('1.x') },
   'https://github.com/MunifTanjim/nui.nvim',
   {

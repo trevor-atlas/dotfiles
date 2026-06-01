@@ -1,25 +1,12 @@
 local utils = require('utils')
--- https://github.com/famiu/bufdelete.nvim
 -- buffer, split and window cheatsheet https://gist.github.com/Starefossen/5957088
 vim.keymap.set('n', '<C-x>', '<cmd>close<cr>', { desc = 'Close Buffer' })
-vim.keymap.set('n', '<C-w>', '<cmd>Bdelete<cr>', { desc = 'Close Buffer' })
+vim.keymap.set('n', '<C-w>', function() MiniBufremove.delete(0, false) end, { desc = 'Close Buffer' })
 vim.keymap.set('n', '<C-t>', '<cmd>tabnew<cr>', { desc = 'Create Buffer' })
 vim.keymap.set('n', '<leader>pb', '<cmd>BufferLinePick<CR>', { desc = 'Jump to a specific buffer' })
 
 vim.keymap.set('n', 'n', 'nzzzv', { desc = "centered 'next' when searching" })
 vim.keymap.set('n', 'N', 'Nzzzv', { desc = "centered 'prev' when searching" })
-
--- Remap for dealing with word wrap
-vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", {
-  desc = 'Remap for dealing with word wrap',
-  expr = true,
-  silent = true,
-})
-vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", {
-  desc = 'Remap for dealing with word wrap',
-  expr = true,
-  silent = true,
-})
 
 vim.keymap.set('n', '<leader>gnt', function() P(utils.get_text_under_cursor()) end, { desc = 'get the text under the cursor' })
 
@@ -117,14 +104,6 @@ vim.keymap.set('n', '<leader>dl', vim.diagnostic.setloclist, { desc = 'Open diag
 
 vim.keymap.set('n', '<leader>lx', '<cmd>Inspect<cr>', { desc = 'describe token under cursor' })
 
--- LSP keymaps
-vim.keymap.set('n', 'gd', function() require('snacks.picker').lsp_definitions() end, { noremap = true, silent = true, desc = 'Go to definition' })
-vim.keymap.set('n', 'gi', function() require('snacks.picker').lsp_implementations() end, { noremap = true, silent = true, desc = 'Go to implementation' })
-vim.keymap.set('n', 'gI', function() require('snacks.picker').lsp_implementations() end, { noremap = true, silent = true, desc = 'Go to implementation' })
-vim.keymap.set('n', 'gr', function() require('snacks.picker').lsp_references() end, { noremap = true, silent = true, desc = 'Go to references' })
-vim.keymap.set('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<space>ga', '<cmd>lua vim.lsp.buf.code_action()<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', 'gh', function() vim.diagnostic.open_float({ bufnr = 0 }) end, { remap = true, silent = true })
 
 local user_terminals = {}
@@ -139,8 +118,7 @@ local function toggle_term_cmd(name, cmd, count)
       close_on_exit = false,
       on_open = function(term)
         vim.cmd('startinsert!')
-        vim.api.nvim_buf_set_keymap(term.bufnr, 't', '<C-\\>', '<cmd>close<CR>', { noremap = true, silent = true })
-        --
+        vim.keymap.set('t', '<C-\\>', '<cmd>close<CR>', { buffer = term.bufnr, silent = true })
       end,
       -- on_close = function() user_terminals[key] = nil end,
     })

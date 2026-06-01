@@ -14,6 +14,7 @@ vim.filetype.add({
   extension = {
     jade = 'pug',
     lyaml = 'yaml',
+    mdx = 'mdx',
   },
 })
 

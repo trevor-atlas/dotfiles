@@ -1,5 +1,4 @@
   vim.pack.add({
-    'https://github.com/famiu/bufdelete.nvim',
     'https://github.com/akinsho/bufferline.nvim',
     'https://github.com/nvim-tree/nvim-web-devicons'
   })
@@ -24,7 +23,7 @@
                 priority = 2,
                 icon = '',
                 matcher = function(buf)
-                  local fname = vim.api.nvim_buf_get_name(0)
+                  local fname = vim.api.nvim_buf_get_name(buf.id)
                   return fname:match('%.test') or fname:match('%-test') or fname:match('%.spec') or fname:match('%-spec')
                 end,
               },
@@ -33,7 +32,7 @@
                 highlight = { undercurl = true, sp = 'green' },
                 auto_close = false,
                 matcher = function(buf)
-                  local fname = vim.api.nvim_buf_get_name(0)
+                  local fname = vim.api.nvim_buf_get_name(buf.id)
                   return fname:match('%.md') or fname:match('%.txt')
                 end,
                 separator = {
@@ -45,7 +44,7 @@
                 highlight = { undercurl = true, sp = 'orange' },
                 auto_close = false,
                 matcher = function(buf)
-                  local fname = vim.api.nvim_buf_get_name(0)
+                  local fname = vim.api.nvim_buf_get_name(buf.id)
                   return fname:match('%.lyaml')
                 end,
                 separator = {
@@ -57,7 +56,7 @@
                 highlight = { undercurl = true, sp = 'orange' },
                 auto_close = false,
                 matcher = function(buf)
-                  local fname = vim.api.nvim_buf_get_name(0)
+                  local fname = vim.api.nvim_buf_get_name(buf.id)
                   return fname:match('%.yaml') or fname:match('%.toml') or fname:match('%.json')
                 end,
                 separator = {

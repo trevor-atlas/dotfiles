@@ -1,44 +1,59 @@
-local utils = require('utils')
+local repo = require('repo')
 
-local config_pattern = utils.root_pattern('prettier.config.js', '.prettierrc')
+local prettier_filetypes = {
+  javascript = true,
+  javascriptreact = true,
+  typescript = true,
+  typescriptreact = true,
+  mdx = true,
+}
 
-local function prettier_config()
-  local bufname = vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
-  local config_path = config_pattern(bufname)
+local function format_on_save(bufnr)
+  if vim.bo[bufnr].buftype ~= '' then return nil end
 
-  local exe = utils.is_hubspot_machine and 'bpx' or config_path .. '/node_modules/prettier/node_modules/.bin/prettier'
+  local filetype = vim.bo[bufnr].filetype
+  if filetype == 'lua' or prettier_filetypes[filetype] then
+    return {
+      timeout_ms = 1000,
+      lsp_format = 'never',
+      quiet = true,
+    }
+  end
 
-  return {
-    exe = exe,
-    args = { 'hs-prettier', '--stdin-filepath', vim.api.nvim_buf_get_name(0), '--config', config_path .. '/prettier.config.js' },
-    stdin = true,
-  }
+  return nil
 end
 
-require('formatter').setup({
-  logging = false,
-  filetype = {
-    javascript = { prettier_config },
-    javascriptreact = { prettier_config },
-    typescript = { prettier_config },
-    typescriptreact = { prettier_config },
-    mdx = {},
-    lua = {
-      function()
-        return {
-          exe = 'stylua',
-        }
+require('conform').setup({
+  notify_no_formatters = false,
+  format_on_save = format_on_save,
+  formatters_by_ft = {
+    javascript = { 'hs_prettier', 'project_prettier', stop_after_first = true },
+    javascriptreact = { 'hs_prettier', 'project_prettier', stop_after_first = true },
+    typescript = { 'hs_prettier', 'project_prettier', stop_after_first = true },
+    typescriptreact = { 'hs_prettier', 'project_prettier', stop_after_first = true },
+    mdx = { 'hs_prettier', 'project_prettier', stop_after_first = true },
+    lua = { 'stylua' },
+  },
+  formatters = {
+    hs_prettier = {
+      inherit = false,
+      command = 'bpx',
+      args = { 'hs-prettier', '--stdin-filepath', '$FILENAME' },
+      stdin = true,
+      condition = function(_, ctx)
+        return vim.fn.executable('bpx') == 1 and repo.is_hubspot_repo(ctx.filename)
       end,
     },
+    project_prettier = function(bufnr)
+      local prettier = repo.find_local_prettier(bufnr)
+      if not prettier or repo.is_hubspot_repo(bufnr) then return nil end
+
+      return {
+        inherit = false,
+        command = prettier,
+        args = { '--stdin-filepath', '$FILENAME' },
+        stdin = true,
+      }
+    end,
   },
 })
-
-vim.api.nvim_exec2(
-  [[
-au! BufRead,BufNewFile *.mdx setfiletype mdx
-augroup FormatAutogroup
-autocmd!
-autocmd BufWritePost *.js,*.ts,*.tsx,*.lua,*.mdx,*.rs FormatWrite
-augroup END]],
-  { output = true }
-)
