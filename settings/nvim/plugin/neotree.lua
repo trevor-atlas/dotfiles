@@ -44,8 +44,7 @@ require('neo-tree').setup({
   },
   commands = {
     system_open = function(state)
-      -- TODO: just use vim.ui.open when dropping support for Neovim <0.10
-      (vim.ui.open)(state.tree:get_node():get_id())
+      vim.ui.open(state.tree:get_node():get_id())
     end,
     parent_or_close = function(state)
       local node = state.tree:get_node()

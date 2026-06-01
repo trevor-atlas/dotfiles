@@ -4,5 +4,3 @@ require('snacks').setup({
     ui_select = true,
   },
 })
-
-require('snacks.picker').setup()
