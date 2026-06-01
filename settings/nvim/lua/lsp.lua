@@ -181,13 +181,41 @@ for _, server_name in ipairs({
   'eslint',
   'ts_ls',
   'jdtls',
-  'gopls',
-  'pyright',
-  'nixd',
-  'templ',
   'clangd',
 }) do
   vim.lsp.enable(server_name)
+end
+
+local optional_servers = {
+  gopls = {
+    executable = 'gopls',
+    filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
+  },
+  pyright = {
+    executable = 'pyright-langserver',
+    filetypes = { 'python' },
+  },
+  nixd = {
+    executable = 'nixd',
+    filetypes = { 'nix' },
+  },
+  templ = {
+    executable = 'templ',
+    filetypes = { 'templ' },
+  },
+}
+
+local optional_servers_group = vim.api.nvim_create_augroup('OptionalLspEnable', { clear = true })
+for server_name, server_config in pairs(optional_servers) do
+  vim.api.nvim_create_autocmd('FileType', {
+    group = optional_servers_group,
+    pattern = server_config.filetypes,
+    callback = function()
+      if utils.is_executable(server_config.executable) and not vim.lsp.is_enabled(server_name) then
+        vim.lsp.enable(server_name)
+      end
+    end,
+  })
 end
 
 require('hubspot-i18n').setup()

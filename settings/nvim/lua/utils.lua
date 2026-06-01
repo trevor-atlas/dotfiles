@@ -119,6 +119,10 @@ function M.file_exists(fname)
   return (stat and stat.type) or false
 end
 
+function M.is_executable(cmd)
+  return vim.fn.executable(cmd) == 1
+end
+
 function M.open_file(file) vim.cmd('e ' .. file) end
 
 function M.onUpdate(packageName, command)
