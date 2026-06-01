@@ -1,4 +1,4 @@
-local telescope = require('telescope_loader')
+local telescope = require('loaders.telescope')
 
 vim.keymap.set('n', '<leader>?', telescope.builtin('oldfiles'), { desc = '[?] Find recently opened files' })
 vim.keymap.set('n', '<leader><space>', telescope.builtin('buffers'), { desc = '[ ] Find existing buffers' })

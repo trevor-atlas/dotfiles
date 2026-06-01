@@ -100,7 +100,7 @@ require('neo-tree').setup({
     find_in_dir = function(state)
       local node = state.tree:get_node()
       local path = node:get_id()
-      require('telescope_loader').run(function(builtin)
+      require('loaders.telescope').run(function(builtin)
         builtin.find_files({
           cwd = node.type == 'directory' and path or vim.fn.fnamemodify(path, ':h'),
         })

@@ -19,6 +19,12 @@ vim.pack.add({
   'https://github.com/nvim-tree/nvim-web-devicons',
   'https://github.com/neovim/nvim-lspconfig',
   { src = 'https://github.com/saghen/blink.cmp', version = vim.version.range('1.x') },
+  'https://github.com/nvim-telescope/telescope.nvim',
+  'https://github.com/mason-org/mason.nvim',
+  'https://github.com/mason-org/mason-lspconfig.nvim',
+  'https://github.com/zbirenbaum/copilot.lua',
+  'https://github.com/copilotlsp-nvim/copilot-lsp',
+  'https://github.com/giuxtaposition/blink-cmp-copilot',
   'https://github.com/MunifTanjim/nui.nvim',
   {
     src = 'git@github.com:HubSpotEngineering/bend.nvim.git',
