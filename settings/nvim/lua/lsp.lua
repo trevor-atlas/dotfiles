@@ -117,10 +117,8 @@ local function ts_ls_config()
       filetypes = {
         'javascript',
         'javascriptreact',
-        'javascript.jsx',
         'typescript',
         'typescriptreact',
-        'typescript.tsx',
       },
       root_markers = { '.git', 'build-info.json' },
       cmd = { 'typescript-language-server', '--stdio' },

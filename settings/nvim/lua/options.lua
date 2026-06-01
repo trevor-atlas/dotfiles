@@ -46,15 +46,9 @@ vim.g.neovide_background_color = "#4f425f" .. alpha()
 vim.g.neovide_window_blurred = true
 
 -- Remap space as leader key
-vim.api.nvim_set_keymap('', ' ', '<Nop>', { noremap = true, silent = true })
+vim.keymap.set({ 'n', 'v' }, ' ', '<Nop>', { silent = true })
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
-
--- Map blankline
-vim.g.indent_blankline_char = '┊'
-vim.g.indent_blankline_filetype_exclude = { 'help', 'packer' }
-vim.g.indent_blankline_buftype_exclude = { 'terminal', 'nofile' }
-vim.g.indent_blankline_show_trailing_blankline_indent = false
 
 vim.opt.mouse = 'a'               -- enable mouse support
 vim.opt.clipboard = 'unnamedplus' -- copy/paste to system clipboard
@@ -107,10 +101,23 @@ vim.o.undofile = true
 -- Keep signcolumn on by default
 vim.wo.signcolumn = 'yes'
 
+vim.diagnostic.config({
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = ' ',
+      [vim.diagnostic.severity.WARN] = ' ',
+      [vim.diagnostic.severity.INFO] = ' ',
+      [vim.diagnostic.severity.HINT] = '󰌵',
+    },
+  },
+})
+
 -- Set completeopt to have a better completion experience
 --vim.o.completeopt = 'menuone,noselect'
 
 -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
-vim.o.sessionoptions="blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+vim.o.winborder = 'rounded'
+vim.o.pumborder = 'rounded'
+vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
 

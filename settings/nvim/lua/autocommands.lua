@@ -1,6 +1,5 @@
 local cmd = vim.api.nvim_create_autocmd
 local augroup = vim.api.nvim_create_augroup
-local create_command = vim.api.nvim_create_user_command
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
@@ -11,22 +10,11 @@ cmd('TextYankPost', {
   pattern = '*',
 })
 
--- treat .lyaml files as .yaml
-local hubspot_translation_group = augroup('HSTranslations', { clear = true })
-cmd({ 'BufRead', 'BufNewFile' }, {
-  desc = 'treat .lyaml files as yaml',
-  group = hubspot_translation_group,
-  pattern = '*.lyaml',
-  callback = function() vim.api.nvim_command('setfiletype yaml') end,
-})
-
--- treat .jade files as .pug
-local remap_legacy_filetypes_group = augroup('LegacyFiletypesGroup', { clear = true })
-cmd({ 'BufRead', 'BufNewFile' }, {
-  desc = 'treat .jade files as .pug',
-  group = remap_legacy_filetypes_group,
-  pattern = '*.jade',
-  callback = function() vim.api.nvim_command('setfiletype pug') end,
+vim.filetype.add({
+  extension = {
+    jade = 'pug',
+    lyaml = 'yaml',
+  },
 })
 
 local url_matcher =
@@ -70,39 +58,3 @@ cmd('BufEnter', {
 })
 end)
 
-vim.api.nvim_create_autocmd("User", {
-  pattern = "LazyDone",
-  once = true,
-  callback = function()
-    print("Lazy.nvim has finished loading all plugins!")
-    require("globals")
-    require("hubspot-bender").setup()
-    require("treesitter")
-    require("lsp")
-    -- require("rust")
-    require("completion")
-    require("autocommands")
-    require("theme").setup()
-    require("mappings")
-  end,
-})
--- -- LazyDone event handler
--- local lazy_done_group = augroup('LazyDone', { clear = true })
--- cmd('User', {
---   desc = 'Handle LazyDone event',
---   group = lazy_done_group,
---   pattern = 'LazyDone',
---   callback = function()
---     -- Add your custom function call here
---     print("Lazy.nvim has finished loading all plugins!")
---     require("globals")
---     require("hubspot-bender").setup()
---     require("treesitter")
---     require("lsp")
---     -- require("rust")
---     require("completion")
---     require("autocommands")
---     require("theme").setup()
---     require("mappings")
---   end,
--- })

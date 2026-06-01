@@ -83,5 +83,5 @@ vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch curren
 vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
 vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]resume' })
-vim.keymap.set('n', '<C-p>', '<cmd>Telescope frecency<CR>', { desc = 'Search files by frequency of access' })
+vim.keymap.set('n', '<C-p>', builtin.find_files, { desc = 'Find files' })
 vim.keymap.set('n', '<leader>st', function() require('picker').open() end, { desc = 'pick translations' })

@@ -5,10 +5,8 @@ local utils = require('utils')
 local supported_filetypes = {
   javascript = true,
   javascriptreact = true,
-  ['javascript.jsx'] = true,
   typescript = true,
   typescriptreact = true,
-  ['typescript.tsx'] = true,
 }
 
 local severities = {

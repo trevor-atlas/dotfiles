@@ -1,11 +1,11 @@
 local M = {}
 
-M.os = vim.loop.os_uname().sysname
+M.os = vim.uv.os_uname().sysname
 M.is_windows = M.os == 'Windows'
 M.is_wsl = M.os == 'WSL'
 M.is_macos = M.os == 'Darwin'
 M.path_sep = M.is_windows and '\\' or '/'
-M.is_hubspot_machine = vim.loop.fs_stat(vim.env.HOME .. '/.hubspot')
+M.is_hubspot_machine = vim.uv.fs_stat(vim.env.HOME .. '/.hubspot')
 M.root_markers = {
   git = { '.git' },
   package_manager = {
@@ -91,7 +91,7 @@ function M.find_node_root(bufnr, opts)
 end
 
 function M.is_dir(filename)
-  local stat = vim.loop.fs_stat(filename)
+  local stat = vim.uv.fs_stat(filename)
   return stat and stat.type == 'directory' or false
 end
 
@@ -102,16 +102,6 @@ function M.dirname(filepath)
     return ''
   end)
   return result, is_changed
-end
-
-function M.is_available(plugin)
-  local l = require('lazy').plugins()
-  for _, p in ipairs(l) do
-    -- p[1] is the string plugin name
-    -- {"some-person/plugin.nvim", _ = {...}}
-    if p[1] == plugin then return true end
-  end
-  return false
 end
 
 function M.find_root_git_dir() return M.buffer_find_file_dir(M.buffer(), '.git') end
@@ -125,7 +115,7 @@ end
 function M.buffer_find_file_dir(bufnr, filename) M.buffer_find_file(bufnr, filename .. '/..') end
 
 function M.file_exists(fname)
-  local stat = vim.loop.fs_stat(fname)
+  local stat = vim.uv.fs_stat(fname)
   return (stat and stat.type) or false
 end
 
