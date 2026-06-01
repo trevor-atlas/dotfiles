@@ -1,5 +1,3 @@
-vim.pack.add({ 'https://github.com/nvim-lualine/lualine.nvim' })
-
 local colors = {
   blue = '#80a0ff',
   cyan = '#79dac8',
