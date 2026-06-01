@@ -44,16 +44,16 @@ require('conform').setup({
         return vim.fn.executable('bpx') == 1 and repo.is_hubspot_repo(ctx.filename)
       end,
     },
-    project_prettier = function(bufnr)
-      local prettier = repo.find_local_prettier(bufnr)
-      if not prettier or repo.is_hubspot_repo(bufnr) then return nil end
-
-      return {
-        inherit = false,
-        command = prettier,
-        args = { '--stdin-filepath', '$FILENAME' },
-        stdin = true,
-      }
-    end,
+    project_prettier = {
+      inherit = false,
+      command = function(_, ctx)
+        return repo.find_local_prettier(ctx.filename) or vim.v.progpath
+      end,
+      args = { '--stdin-filepath', '$FILENAME' },
+      stdin = true,
+      condition = function(_, ctx)
+        return not repo.is_hubspot_repo(ctx.filename) and repo.find_local_prettier(ctx.filename) ~= nil
+      end,
+    },
   },
 })
