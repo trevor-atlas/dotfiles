@@ -29,18 +29,16 @@ vim.pack.add({
     src = 'git@github.com:HubSpotEngineering/bend.nvim.git',
   },
 
-  { src = 'https://github.com/L3MON4D3/LuaSnip', version = vim.version.range('2.x') },
-  'https://github.com/rafamadriz/friendly-snippets',
   {
-    src = 'git@github.com:HubSpotEngineering/bend.nvim.git',
+    src = 'https://github.com/L3MON4D3/LuaSnip',
+    version = vim.version.range('2.x'),
+    build = 'make install_jsregexp',
   },
+  'https://github.com/rafamadriz/friendly-snippets',
   {
     src = 'https://github.com/nvim-neo-tree/neo-tree.nvim',
     version = 'v3.x',
   },
-  'https://github.com/nvim-lua/plenary.nvim',
-  'https://github.com/MunifTanjim/nui.nvim',
-  'https://github.com/rmagatti/auto-session',
 
   { src = 'https://github.com/nvim-treesitter/nvim-treesitter', version = 'main', name = 'ts' },
   { src = 'https://github.com/nvim-treesitter/nvim-treesitter-textobjects', version = 'main' },
@@ -54,7 +52,6 @@ vim.api.nvim_create_autocmd('PackChanged', {
       if not ev.data.active then vim.cmd.packadd('ts') end
       vim.cmd('TSUpdate')
     end
-    if name == 'LuaSnip' and (kind == 'update' or kind == 'install') then vim.cmd('make install_jsregexp') end
   end,
 })
 
