@@ -11,6 +11,7 @@ local float = {
 --  This function gets run when an LSP connects to a particular buffer.
 local function common_on_attach(_, bufnr)
   local picker = require('snacks.picker')
+  local telescope = require('telescope_loader')
   local nmap = function(keys, func, desc)
     if desc then desc = 'LSP: ' .. desc end
     vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
@@ -24,8 +25,8 @@ local function common_on_attach(_, bufnr)
   nmap('gi', picker.lsp_implementations, '[G]oto [I]mplementation')
   nmap('gI', picker.lsp_implementations, '[G]oto [I]mplementation')
   nmap('<leader><S-d>', vim.lsp.buf.type_definition, 'Type [D]efinition')
-  nmap('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
-  nmap('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+  nmap('<leader>ds', telescope.builtin('lsp_document_symbols'), '[D]ocument [S]ymbols')
+  nmap('<leader>ws', telescope.builtin('lsp_dynamic_workspace_symbols'), '[W]orkspace [S]ymbols')
   nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
   nmap('<leader>wl', function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, '[W]orkspace [L]ist Folders')
 end
