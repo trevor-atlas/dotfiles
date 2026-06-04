@@ -334,15 +334,10 @@ EOF
   fi
 }
 
-# run hs projects with my preferred settings
+# run hs frontend projects with my preferred settings
 flexo() {
   cd "$CODE_DIR" &&\
-  #NODE_OPTIONS="--max_old_space_size=8192"\
-  bendr reactor serve "$@"\
-    --update\
-    --ts-watch\
-    --enable-tools\
-    --UNSUPPORTED_LOCAL_DEV_SETTING rspack=true
+  bendr dev "$@" --update
 }
 
 hs_build() {
