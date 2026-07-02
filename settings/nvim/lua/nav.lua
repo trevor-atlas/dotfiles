@@ -216,13 +216,193 @@ local function open_generated_java_source(simple_name)
   return false
 end
 
+local function definition_locations(result)
+  if not result or vim.tbl_isempty(result) then return {} end
+  return vim.islist(result) and result or { result }
+end
+
+local function location_target(location)
+  local uri = location.uri or location.targetUri
+  local range = location.range or location.targetSelectionRange or location.targetRange
+  return uri, range
+end
+
+local function compare_lsp_positions(left, right)
+  if left.line ~= right.line then return left.line - right.line end
+  return left.character - right.character
+end
+
+local function position_in_lsp_range(position, range)
+  return compare_lsp_positions(range.start, position) <= 0 and compare_lsp_positions(position, range['end']) < 0
+end
+
+local function location_contains_position(location, uri, position)
+  local target_uri, range = location_target(location)
+  if target_uri ~= uri or not range then return false end
+
+  -- Some servers, notably TypeScript, can return a zero-width definition
+  -- location at the start of the symbol. If the cursor is on another
+  -- character in the same defining identifier, a strict range check treats
+  -- that same definition as a different target and `gd` appears to do
+  -- nothing. Same file + same line is good enough for deciding that `gd`
+  -- is already sitting on the definition and should show usages instead.
+  return range.start.line == position.line or position_in_lsp_range(position, range)
+end
+
+local function definition_locations_excluding_current(result, params)
+  local non_current_locations = {}
+
+  for _, location in ipairs(definition_locations(result)) do
+    if not location_contains_position(location, params.textDocument.uri, params.position) then
+      table.insert(non_current_locations, location)
+    end
+  end
+
+  return non_current_locations
+end
+
+local function show_symbol_references()
+  return require('loaders.telescope').run(function(builtin)
+    return builtin.lsp_references({ include_declaration = false, jump_type = 'never' })
+  end)
+end
+
+local function symbol_definition_range(symbol)
+  if symbol.selectionRange then return symbol.selectionRange end
+  if symbol.location then return symbol.location.range end
+  return symbol.range
+end
+
+local function symbols_contain_position(symbols, position)
+  for _, symbol in ipairs(symbols or {}) do
+    local range = symbol_definition_range(symbol)
+    if range and position_in_lsp_range(position, range) then return true end
+    if symbol.children and symbols_contain_position(symbol.children, position) then return true end
+  end
+
+  return false
+end
+
+local function cursor_is_on_document_symbol_definition(bufnr, params, callback)
+  local method = vim.lsp.protocol.Methods.textDocument_documentSymbol
+  if #vim.lsp.get_clients({ bufnr = bufnr, method = method }) == 0 then
+    callback(false)
+    return
+  end
+
+  vim.lsp.buf_request_all(bufnr, method, { textDocument = params.textDocument }, function(results)
+    vim.schedule(function()
+      for _, response in pairs(results) do
+        if response.err == nil and symbols_contain_position(response.result, params.position) then
+          callback(true)
+          return
+        end
+      end
+
+      callback(false)
+    end)
+  end)
+end
+
+local declaration_node_types = {
+  class_declaration = true,
+  enum_declaration = true,
+  formal_parameter = true,
+  function_declaration = true,
+  generator_function_declaration = true,
+  interface_declaration = true,
+  lexical_declaration = true,
+  method_definition = true,
+  method_signature = true,
+  optional_parameter = true,
+  property_signature = true,
+  public_field_definition = true,
+  required_parameter = true,
+  type_alias_declaration = true,
+  variable_declarator = true,
+}
+
+local identifier_node_types = {
+  identifier = true,
+  property_identifier = true,
+  shorthand_property_identifier = true,
+  type_identifier = true,
+}
+
+local function treesitter_node_contains_position(node, cursor)
+  local start_row, start_col, end_row, end_col = node:range()
+  local position = { line = cursor[1] - 1, character = cursor[2] }
+  local range = {
+    start = { line = start_row, character = start_col },
+    ['end'] = { line = end_row, character = end_col },
+  }
+
+  return position_in_lsp_range(position, range)
+end
+
+local function get_treesitter_node(bufnr)
+  local ok, node = pcall(vim.treesitter.get_node, { bufnr = bufnr })
+  if not ok then return nil end
+  return node
+end
+
+local function cursor_is_on_treesitter_definition(bufnr)
+  local node = get_treesitter_node(bufnr)
+  if not node or not identifier_node_types[node:type()] then return false end
+
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local current = node:parent()
+  while current do
+    if declaration_node_types[current:type()] then
+      for _, name_node in ipairs(current:field('name') or {}) do
+        if treesitter_node_contains_position(name_node, cursor) then return true end
+      end
+    end
+
+    current = current:parent()
+  end
+
+  return false
+end
+
+local i18n_filetypes = {
+  javascript = true,
+  javascriptreact = true,
+  typescript = true,
+  typescriptreact = true,
+}
+
+local string_node_types = {
+  string = true,
+  string_fragment = true,
+  template_string = true,
+}
+
+local function cursor_is_in_string_literal(bufnr)
+  local node = get_treesitter_node(bufnr)
+  while node do
+    if string_node_types[node:type()] then return true end
+    node = node:parent()
+  end
+
+  return false
+end
+
+local function goto_i18n_definition_if_applicable(bufnr)
+  if not i18n_filetypes[vim.bo[bufnr].filetype] or not cursor_is_in_string_literal(bufnr) then return false end
+
+  local mapping = vim.fn.maparg('<Plug>(hubspot-i18n-goto-definition)', 'n', false, true)
+  if type(mapping) ~= 'table' or type(mapping.callback) ~= 'function' then return false end
+
+  mapping.callback()
+  return true
+end
+
 local function jump_to_definition_result(result)
-  local locations = vim.islist(result) and result or { result }
+  local locations = definition_locations(result)
   if #locations == 0 then return false end
 
-  local target = locations[1]
-  local uri = target.uri or target.targetUri
-  local range = target.range or target.targetSelectionRange or target.targetRange
+  local uri, range = location_target(locations[1])
   if not uri or not range then return false end
 
   vim.lsp.util.show_document({ uri = uri, range = range }, 'utf-8', { focus = true })
@@ -232,18 +412,48 @@ local function jump_to_definition_result(result)
   return true
 end
 
-function M.goto_definition()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local params = vim.lsp.util.make_position_params(0, 'utf-8')
+local function goto_definition_or_show_references(bufnr, params)
   local qualifier = vim.bo[bufnr].filetype == 'java' and infer_java_qualifier() or nil
 
   if qualifier and open_generated_java_source(qualifier) then return end
 
   vim.lsp.buf_request(bufnr, 'textDocument/definition', params, function(err, result)
     vim.schedule(function()
-      if err == nil and result and not vim.tbl_isempty(result) and jump_to_definition_result(result) then return end
+      if err ~= nil then
+        vim.notify('No results found for lsp_definitions', vim.log.levels.WARN)
+        return
+      end
+
+      local non_current_locations = definition_locations_excluding_current(result, params)
+      if #non_current_locations == 0 then
+        show_symbol_references()
+        return
+      end
+
+      if jump_to_definition_result(non_current_locations) then return end
       vim.notify('No results found for lsp_definitions', vim.log.levels.WARN)
     end)
+  end)
+end
+
+function M.goto_definition()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local params = vim.lsp.util.make_position_params(0, 'utf-8')
+
+  if goto_i18n_definition_if_applicable(bufnr) then return end
+
+  if cursor_is_on_treesitter_definition(bufnr) then
+    show_symbol_references()
+    return
+  end
+
+  cursor_is_on_document_symbol_definition(bufnr, params, function(is_definition)
+    if is_definition then
+      show_symbol_references()
+      return
+    end
+
+    goto_definition_or_show_references(bufnr, params)
   end)
 end
 

@@ -1,5 +1,6 @@
 local M = {}
 
+local keymaps = require('keymaps')
 local repo = require('repo')
 local lsp_attach = require('lsp_attach')
 
@@ -17,21 +18,19 @@ end
 
 local function on_attach(client, bufnr)
   local metals = require('metals')
-  local nmap = function(keys, func, desc)
-    vim.keymap.set('n', keys, func, { buffer = bufnr, desc = 'Metals: ' .. desc })
-  end
 
   lsp_attach.common_on_attach(client, bufnr)
   metals.setup_dap()
-
-  nmap('<leader>mg', M.install_mill_bsp, 'Install Mill [G]SP config')
-  nmap('<leader>mc', metals.connect_build, '[C]onnect build')
-  nmap('<leader>mi', metals.import_build, '[I]mport build')
-  nmap('<leader>mo', metals.organize_imports, '[O]rganize imports')
-  nmap('<leader>mb', metals.restart_build_server, 'Restart [B]uild server')
-  nmap('<leader>md', metals.run_doctor, '[D]octor')
-  nmap('<leader>mr', metals.restart_metals, '[R]estart server')
-  nmap('<leader>mR', M.clean_mill_cache, 'Clean Mill cache and restart')
+  keymaps.apply_buffer(bufnr, require('keymaps.metals').for_buffer({
+    install_mill_bsp = M.install_mill_bsp,
+    connect_build = metals.connect_build,
+    import_build = metals.import_build,
+    organize_imports = metals.organize_imports,
+    restart_build_server = metals.restart_build_server,
+    run_doctor = metals.run_doctor,
+    restart_metals = metals.restart_metals,
+    clean_mill_cache = M.clean_mill_cache,
+  }))
 end
 
 local function build_config(bufnr)

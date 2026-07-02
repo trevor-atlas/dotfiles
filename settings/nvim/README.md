@@ -44,6 +44,10 @@ The config now uses a consistent layout:
 - `lua/loaders/*.lua`
   - deferred plugin lifecycle for plugins that load on first use
   - current examples: Telescope, Mason, Copilot
+- `lua/keymaps/*.lua`
+  - keymap specs and buffer-local keymap factories
+  - `plugin/keymaps.lua` collects global specs
+  - `plugin/which-key.lua` applies them after which-key setup
 - `lua/*.lua`
   - reusable modules and local config logic
 
@@ -61,7 +65,6 @@ The config keeps both picker systems on purpose:
   - git pickers
   - help
   - diagnostics search
-  - translation picker
 - **Snacks** = jump / navigation
   - LSP definitions
   - references
@@ -136,8 +139,9 @@ When adding or changing behavior:
 1. add or remove plugins in `init.lua`
 2. keep eager startup behavior in `plugin/*.lua`
 3. put real deferred lifecycle code in `lua/loaders/*.lua`
-4. keep reusable logic in `lua/*.lua`
-5. prefer readable structure over shaving tiny startup costs
+4. put reusable keymap specs in `lua/keymaps/*.lua`
+5. keep reusable logic in `lua/*.lua`
+6. prefer readable structure over shaving tiny startup costs
 
 A rough rule from this cleanup pass:
 performance work is only worth the churn if it produces a clearly meaningful win or fixes an actual UX problem.

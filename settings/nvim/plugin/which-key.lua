@@ -4,5 +4,7 @@ wk.setup({
   disable = { filetypes = { 'TelescopePrompt' } },
 })
 
+require('keymaps').apply()
+
 vim.o.timeout = true
 vim.o.timeoutlen = 300

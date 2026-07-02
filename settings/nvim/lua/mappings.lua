@@ -1,161 +1,75 @@
-local utils = require('utils')
+local diagnostic_floats = require('diagnostic_floats')
+local map = vim.keymap.set
 -- buffer, split and window cheatsheet https://gist.github.com/Starefossen/5957088
-vim.keymap.set('n', '<C-x>', '<cmd>close<cr>', { desc = 'Close Buffer' })
-vim.keymap.set('n', '<C-w>', function() MiniBufremove.delete(0, false) end, { desc = 'Close Buffer' })
-vim.keymap.set('n', '<C-t>', '<cmd>tabnew<cr>', { desc = 'Create Buffer' })
-vim.keymap.set('n', '<leader>pb', '<cmd>BufferLinePick<CR>', { desc = 'Jump to a specific buffer' })
+map('n', '<C-x>', '<cmd>close<cr>', { desc = 'Close Buffer' })
+map('n', '<C-w>', function() MiniBufremove.delete(0, false) end, { desc = 'Close Buffer' })
+map('n', '<C-t>', '<cmd>tabnew<cr>', { desc = 'Create Buffer' })
 
-vim.keymap.set('n', 'n', 'nzzzv', { desc = "centered 'next' when searching" })
-vim.keymap.set('n', 'N', 'Nzzzv', { desc = "centered 'prev' when searching" })
+map('n', 'n', 'nzzzv', { desc = "centered 'next' when searching" })
+map('n', 'N', 'Nzzzv', { desc = "centered 'prev' when searching" })
 
-vim.keymap.set('n', '<leader>gnt', function() P(utils.get_text_under_cursor()) end, { desc = 'get the text under the cursor' })
+map('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move selection down one line' })
+map('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move selection up one line' })
 
-vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move selection down one line' })
-vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move selection up one line' })
+map('i', '<C-c>', '<Esc>', { desc = 'ctrl+c applies vertical edits' })
 
-vim.keymap.set('x', '<leader>p', '"_dP', { desc = 'paste over selection without losing paste buffer' })
-
-vim.keymap.set('n', '<leader>d', '"_d', { desc = 'Delete without copying' })
-vim.keymap.set('v', '<leader>d', '"_d', { desc = 'Delete without copying' })
-
-vim.keymap.set('i', '<C-c>', '<Esc>', { desc = 'ctrl+c applies vertical edits' })
-
-vim.keymap.set('n', 'Q', '<nop>', { desc = 'Q does nothing' })
+map('n', 'Q', '<nop>', { desc = 'Q does nothing' })
 
 -- Keep the cursor in the same position when wrapping lines with J
-vim.keymap.set('n', 'J', 'mzJ`z', { desc = 'Maintain cursor position when wrapping lines with J' })
-
--- source current buffer
-vim.keymap.set('n', '<Leader>rr', '<cmd>so<CR>', { desc = 'source the current buffer' })
+map('n', 'J', 'mzJ`z', { desc = 'Maintain cursor position when wrapping lines with J' })
 
 -- clear highlights on escape in normal mode
-vim.keymap.set('n', '<esc>', ':noh<CR><esc>')
-vim.keymap.set('n', '<esc>^[', '<esc>^[')
-
--- replace all occurences of word under cursor
-vim.keymap.set('n', '<leader>s', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = 'Find and replace word under cursor' })
-vim.keymap.set('n', '<leader>rp', [[:%s/word/word/gI<Left><Left><Left>]], { desc = 'Find and replace' })
+map('n', '<esc>', function()
+  diagnostic_floats.close_all()
+  vim.cmd('noh')
+end, { desc = 'Clear highlights and close diagnostic floats' })
+map('n', '<esc>^[', '<esc>^[')
 
 -- Stay in indent mode (don't lose selection on indent/outdent)
-vim.keymap.set('v', '<S-Tab>', '<gv', { desc = 'Unindent line' })
-vim.keymap.set('v', '<Tab>', '>gv', { desc = 'Indent line' })
-vim.keymap.set('v', '<', '<gv', { desc = 'Unindent line' })
-vim.keymap.set('v', '>', '>gv', { desc = 'Indent line' })
+map('v', '<S-Tab>', '<gv', { desc = 'Unindent line' })
+map('v', '<Tab>', '>gv', { desc = 'Indent line' })
+map('v', '<', '<gv', { desc = 'Unindent line' })
+map('v', '>', '>gv', { desc = 'Indent line' })
 
 -- jump to line start with H and line end with L
-vim.keymap.set('n', '<S-h>', '^', { desc = 'Jump to start of line' })
-vim.keymap.set('n', '<S-l>', '$', { desc = 'Jump to end of line' })
-vim.keymap.set('v', '<S-h>', '_', { desc = 'Jump to start of line' })
-vim.keymap.set('v', '<S-l>', 'g_', { desc = 'Jump to end of line' })
-
--- jump buffers with leader j-k
-vim.keymap.set('n', '<Leader>k', ':bn<cr>')
-vim.keymap.set('n', '<Leader>j', ':bp<cr>')
+map('n', '<S-h>', '^', { desc = 'Jump to start of line' })
+map('n', '<S-l>', '$', { desc = 'Jump to end of line' })
+map('v', '<S-h>', '_', { desc = 'Jump to start of line' })
+map('v', '<S-l>', 'g_', { desc = 'Jump to end of line' })
 
 if vim.g.neovide then
-  vim.keymap.set('n', '<D-s>', ':w<CR>') -- Save
-  vim.keymap.set('v', '<D-c>', '"+y') -- Copy
-  vim.keymap.set('n', '<D-v>', '"+P') -- Paste normal mode
-  vim.keymap.set('v', '<D-v>', '"+P') -- Paste visual mode
-  vim.keymap.set('c', '<D-v>', '<C-R>+') -- Paste command mode
-  vim.keymap.set('i', '<D-v>', '<ESC>l"+Pli') -- Paste insert mode
+  map('n', '<D-s>', ':w<CR>') -- Save
+  map('v', '<D-c>', '"+y') -- Copy
+  map('n', '<D-v>', '"+P') -- Paste normal mode
+  map('v', '<D-v>', '"+P') -- Paste visual mode
+  map('c', '<D-v>', '<C-R>+') -- Paste command mode
+  map('i', '<D-v>', '<ESC>l"+Pli') -- Paste insert mode
 end
-
-vim.keymap.set('n', '<leader>/', function() require('Comment.api').toggle.linewise.current() end, { desc = 'Comment line' })
-vim.keymap.set('v', '<leader>/', "<esc><cmd>lua require('Comment.api').toggle.linewise(vim.fn.visualmode())<cr>", { desc = 'Toggle comment line' })
 
 -- QOL cursor movement for long lines
-vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, desc = 'Move cursor down' })
-vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, desc = 'Move cursor up' })
-
-vim.keymap.set('n', '<leader>e', '<cmd>Neotree reveal_force_cwd toggle<cr>', { desc = 'Toggle Explorer' })
-vim.keymap.set('n', '<leader>o', function()
-  if vim.bo.filetype == 'neo-tree' then
-    vim.cmd.wincmd('p')
-  else
-    vim.cmd.Neotree('focus')
-  end
-end, { desc = 'Toggle Explorer Focus' })
+map('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, desc = 'Move cursor down' })
+map('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, desc = 'Move cursor up' })
 
 -- common keymaps for text editor stuff
-vim.keymap.set('n', '<C-s>', '<cmd>w!<cr>', { desc = 'Force write' })
-vim.keymap.set('i', '<C-s>', '<cmd>w!<cr>', { desc = 'Force write' })
-vim.keymap.set('n', '<C-q>', '<cmd>qa!<cr>', { desc = 'Force quit' })
+map('n', '<C-s>', '<cmd>w!<cr>', { desc = 'Force write' })
+map('i', '<C-s>', '<cmd>w!<cr>', { desc = 'Force write' })
+map('n', '<C-q>', '<cmd>qa!<cr>', { desc = 'Force quit' })
 
 -- Splits
-vim.keymap.set('n', '|', '<cmd>vsplit<cr>', { desc = 'Vertical Split' })
-vim.keymap.set('n', '_', '<cmd>split<cr>', { desc = 'Horizontal Split' })
+map('n', '|', '<cmd>vsplit<cr>', { desc = 'Vertical Split' })
+map('n', '_', '<cmd>split<cr>', { desc = 'Horizontal Split' })
 
-vim.keymap.set('n', '<C-h>', '<cmd>NavigatorLeft<cr>', { desc = 'jump to left split' })
-vim.keymap.set('n', '<C-l>', '<cmd>NavigatorRight<cr>', { desc = 'jump to right split' })
-vim.keymap.set('n', '<C-k>', '<cmd>NavigatorUp<cr>', { desc = 'jump to upper split' })
-vim.keymap.set('n', '<C-j>', '<cmd>NavigatorDown<cr>', { desc = 'jump to lower split' })
+map('n', '<C-h>', '<cmd>NavigatorLeft<cr>', { desc = 'jump to left split' })
+map('n', '<C-l>', '<cmd>NavigatorRight<cr>', { desc = 'jump to right split' })
+map('n', '<C-k>', '<cmd>NavigatorUp<cr>', { desc = 'jump to upper split' })
+map('n', '<C-j>', '<cmd>NavigatorDown<cr>', { desc = 'jump to lower split' })
 
-vim.keymap.set('n', '<S-Up>', '<cmd>resize -2<cr>', { desc = 'Resize split up' })
-vim.keymap.set('n', '<S-Down>', '<cmd>resize +2<cr>', { desc = 'Resize split down' })
-vim.keymap.set('n', '<S-Left>', '<cmd>vertical resize -2<cr>', { desc = 'Resize split left' })
-vim.keymap.set('n', '<S-Right>', '<cmd>vertical resize +2<cr>', { desc = 'Resize split right' })
+map('n', '<S-Up>', '<cmd>resize -2<cr>', { desc = 'Resize split up' })
+map('n', '<S-Down>', '<cmd>resize +2<cr>', { desc = 'Resize split down' })
+map('n', '<S-Left>', '<cmd>vertical resize -2<cr>', { desc = 'Resize split left' })
+map('n', '<S-Right>', '<cmd>vertical resize +2<cr>', { desc = 'Resize split right' })
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
-vim.keymap.set('n', '<leader>dd', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
-vim.keymap.set('n', '<leader>dl', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
-vim.keymap.set('n', '<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', { desc = 'Toggle diagnostics pane' })
-
-vim.keymap.set('n', '<leader>lx', '<cmd>Inspect<cr>', { desc = 'describe token under cursor' })
-
-vim.keymap.set('n', 'gh', function() vim.diagnostic.open_float({ bufnr = 0 }) end, { remap = true, silent = true })
-
-local user_terminals = {}
-local function toggle_term_cmd(name, cmd, count)
-  local key = cmd
-
-  if user_terminals[key] == nil then
-    user_terminals[key] = require('toggleterm.terminal').Terminal:new({
-      cmd = cmd,
-      display_name = name,
-      count = count,
-      close_on_exit = false,
-      on_open = function(term)
-        vim.cmd('startinsert!')
-        vim.keymap.set('t', '<C-\\>', '<cmd>close<CR>', { buffer = term.bufnr, silent = true })
-      end,
-      -- on_close = function() user_terminals[key] = nil end,
-    })
-  end
-  user_terminals[key]:toggle()
-end
-
--- vim.keymap.set('n', '<leader>gg', '<cmd>!tmux new-window -c ' .. vim.fn.getcwd() .. ' -- lazygit <CR><CR>', { desc = 'Git Go' }) -- opens lazygit in a new tmux window
-
-vim.keymap.set('n', '<leader>gg', function() toggle_term_cmd('LazyGit', 'lazygit', 2) end, { desc = 'ToggleTerm lazygit' })
-vim.keymap.set('n', '<leader>ht', function() toggle_term_cmd('HTOP', 'htop', 3) end, { desc = 'ToggleTerm htop' })
-vim.keymap.set('n', '<leader>cc', function() toggle_term_cmd('Claude Code', 'claude', 4) end, { desc = 'ToggleTerm claude' })
-
-vim.keymap.set('n', '<leader>tf', '<cmd>ToggleTerm direction=float<cr>', { desc = 'ToggleTerm float' })
-vim.keymap.set('n', '<leader>th', '<cmd>ToggleTerm size=10 direction=horizontal<cr>', { desc = 'ToggleTerm horizontal split' })
-vim.keymap.set('n', '<leader>tv', '<cmd>ToggleTerm size=80 direction=vertical<cr>', { desc = 'ToggleTerm vertical split' })
-
-local function trim(s)
-  if not s then return 'print("invalid string")' end
-  s = s:gsub('[\n\r]', '')
-  s = s:gsub('^%s*(.-)%s*$', '%1')
-  return s
-end
-
-local function get_visual_selection()
-  -- Yank current visual selection into the 'v' register
-  -- Note that this makes no effort to preserve this register
-  vim.cmd('noau normal! "vy"')
-  return vim.fn.getreg('v')
-end
-
--- execute selection as lua
-vim.keymap.set('v', '<leader>ev', function()
-  local text = get_visual_selection()
-  local res = vim.api.nvim_exec2('lua ' .. trim(text), { output = true })
-  if res and res.output then print(res.output) end
-end, { desc = 'Run selected lua code and print the result' })
-
-vim.keymap.set('n', '<leader>lf', '<cmd>luafile %<CR>', { desc = 'interpret current file as lua' })
+map('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
+map('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
+map('n', 'gh', function() diagnostic_floats.open({ bufnr = 0 }) end, { remap = true, silent = true })
