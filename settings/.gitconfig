@@ -30,7 +30,8 @@
 	editor = nvim
 	excludesfile = ~/.gitignore_global
 	pager = delta
-	hooksPath = /Users/tatlas/.git_hooks
+	# machine-specific path; uncomment on machines that have ~/.git_hooks
+	# hooksPath = /Users/tatlas/.git_hooks
 [interactive]
   diffFilter = delta --color-only
 [delta]
@@ -46,3 +47,9 @@
 	required = true
 [init]
 	defaultBranch = main
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential

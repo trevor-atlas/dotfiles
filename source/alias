@@ -55,7 +55,16 @@ alias p=pnpm
 alias restartproxy="brew services restart bender-proxy"
 alias mvn-verify="mvn clean verify && ding"
 
-alias my_prs="gh search prs --author=@me --created="$(date -v-7d '+%Y-%m-%d')..$(date '+%Y-%m-%d')" --json title,url,state,createdAt,repository --limit 50"
+# "7 days ago" is BSD syntax on macOS, GNU syntax on Linux. Evaluated at
+# alias-use time (single quotes) so the dates are always fresh.
+week_ago() {
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    date -v-7d '+%Y-%m-%d'
+  else
+    date -d '7 days ago' '+%Y-%m-%d'
+  fi
+}
+alias my_prs='gh search prs --author=@me --created="$(week_ago)..$(date +%Y-%m-%d)" --json title,url,state,createdAt,repository --limit 50'
 
 alias mvn="mvn -q --no-transfer-progress"
 

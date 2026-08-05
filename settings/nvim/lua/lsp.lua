@@ -239,11 +239,13 @@ for server_name, server_config in pairs(optional_servers) do
   })
 end
 
-require('hubspot-i18n').setup({
-  keys = {
-    -- Keep the i18n goto-definition behavior available, but don't let the
-    -- plugin own `gd`. lua/nav.lua composes this hidden mapping with the
-    -- normal LSP definition/usages behavior.
-    goto_definition = '<Plug>(hubspot-i18n-goto-definition)',
-  },
-})
+if utils.is_hubspot_machine then
+  require('hubspot-i18n').setup({
+    keys = {
+      -- Keep the i18n goto-definition behavior available, but don't let the
+      -- plugin own `gd`. lua/nav.lua composes this hidden mapping with the
+      -- normal LSP definition/usages behavior.
+      goto_definition = '<Plug>(hubspot-i18n-goto-definition)',
+    },
+  })
+end

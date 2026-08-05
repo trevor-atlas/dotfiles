@@ -49,9 +49,6 @@ vim.pack.add({
   'https://github.com/giuxtaposition/blink-cmp-copilot',
   'https://github.com/MunifTanjim/nui.nvim',
   {
-    src = 'git@github.com:HubSpotEngineering/bend.nvim.git',
-  },
-  {
     src = 'https://github.com/L3MON4D3/LuaSnip',
     version = vim.version.range('2.x'),
     build = 'make install_jsregexp',
@@ -60,6 +57,12 @@ vim.pack.add({
   { src = 'https://github.com/nvim-treesitter/nvim-treesitter', version = 'main', name = 'ts' },
   { src = 'https://github.com/nvim-treesitter/nvim-treesitter-textobjects', version = 'main' },
 })
+
+-- bend.nvim is a private HubSpotEngineering repo requiring work credentials.
+-- Only pull it on machines that have the work marker directory (~/.hubspot).
+if vim.fn.isdirectory(vim.env.HOME .. '/.hubspot') == 1 then
+  vim.pack.add({ src = 'git@github.com:HubSpotEngineering/bend.nvim.git' })
+end
 
 vim.api.nvim_create_autocmd('PackChanged', {
   callback = function(ev)
