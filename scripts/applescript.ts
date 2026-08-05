@@ -1,6 +1,3 @@
-import { promisify } from 'node:util';
-import child_process from 'node:child_process';
-const exec = promisify(child_process.exec);
 // https://github.com/johnlindquist/kit/blob/0de31f203dca2f90ce6f518e9292616a810a1a24/src/api/kit.ts#L495
 async function applescript(
   script: string,
@@ -12,7 +9,6 @@ async function applescript(
   //   ? ['/usr/bin/osascript', '-l', 'JavaScript', '-e', script]
   //   : ['/usr/bin/osascript', '-e', script];
 
-  const { stdout, stderr } = await exec('ls');
   return new Promise<string | null>((res, rej) => {
     Bun.spawn({
       cmd: ['/usr/bin/osascript', '-e', script],
@@ -50,7 +46,7 @@ async function terminal(script: string) {
 `);
 }
 
-export const SLACK = {
+export const Slack = {
   setStatus: (statusMessage: string) =>
     applescript(`
   tell application "Slack" to activate
