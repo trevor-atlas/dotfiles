@@ -1,0 +1,27 @@
+- defaults:
+    link:
+      relink: true
+
+- clean: ["~"]
+
+- link:
+    ~/.config/nvim: settings/nvim
+    ~/.config/alacritty/alacritty.yml: settings/alacritty.yml
+    ~/.config/kitty: settings/kitty
+    ~/.config/starship.toml: settings/starship.toml
+    ~/.config/emacs: settings/emacs
+    ~/.emacs.d: settings/emacs
+    ~/.vimrc: settings/.vimrc
+    ~/.tmux.conf: settings/.tmux.conf
+    ~/.gitconfig: settings/.gitconfig
+    ~/.gitignore_global: settings/.gitignore_global
+    ~/.i3: settings/.i3
+    ~/.inputrc: settings/.inputrc
+
+- create:
+    - ~/src
+    - ~/.config/alacritty
+
+- shell:
+    - [git submodule update --init --recursive, Installing submodules]
+    - [touch ~/.hushlogin, Creating ~/.hushlogin]
