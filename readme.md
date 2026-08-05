@@ -14,6 +14,9 @@ Follow install directions
 ### [Tmux plugin manager](https://github.com/tmux-plugins/tpm)
 `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm`
 
+### [Zellij](https://zellij.dev/documentation/)
+Installed via Brewfile and configured at `settings/zellij`. Use `zbool` for the Zellij version of the main `Bool` workspace.
+
 ## Installation
 ```
 git clone https://github.com/trevor-atlas/config ~/.config/atlas &&\

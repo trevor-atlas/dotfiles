@@ -1,0 +1,146 @@
+// Zellij configuration tuned to feel like settings/.tmux.conf.
+// Upstream reference: https://zellij.dev/documentation/configuration.html
+
+keybinds clear-defaults=true {
+    // Pass-through-first: Zellij starts locked, so Neovim/shells receive Ctrl keys
+    // like <C-s> and <C-h/j/k/l>. Backtick is the only always-available prefix.
+    locked {
+        bind "`" { SwitchToMode "Tmux"; }
+    }
+
+    // If a command or plugin ever drops us into normal mode, keep the same prefix
+    // available and make Escape return to pass-through mode.
+    normal {
+        bind "`" { SwitchToMode "Tmux"; }
+        bind "Esc" { SwitchToMode "Locked"; }
+    }
+
+    tmux {
+        // Press prefix twice to send a literal backtick.
+        bind "`" { Write 96; SwitchToMode "Locked"; }
+        bind "Esc" "Enter" { SwitchToMode "Locked"; }
+
+        // Prefix-based pane navigation. Raw <C-h/j/k/l> now reaches Neovim.
+        bind "h" "Left" { MoveFocusOrTab "Left"; SwitchToMode "Locked"; }
+        bind "j" "Down" { MoveFocus "Down"; SwitchToMode "Locked"; }
+        bind "k" "Up" { MoveFocus "Up"; SwitchToMode "Locked"; }
+        bind "l" "Right" { MoveFocusOrTab "Right"; SwitchToMode "Locked"; }
+
+        // Direct translations from settings/.tmux.conf.
+        bind "|" "%" { NewPane "Right"; SwitchToMode "Locked"; }
+        bind "-" "\"" { NewPane "Down"; SwitchToMode "Locked"; }
+        bind "H" { NewPane "Right"; SwitchToMode "Locked"; }
+        bind "x" { CloseFocus; SwitchToMode "Locked"; }
+        bind "X" { CloseTab; SwitchToMode "Locked"; }
+        bind "R" "," { SwitchToMode "RenameTab"; TabNameInput 0; }
+        bind "o" { NextSwapLayout; SwitchToMode "Locked"; }
+        bind "O" { PreviousSwapLayout; SwitchToMode "Locked"; }
+
+        // A few tmux-compatible conveniences that used to come from Zellij defaults.
+        bind "[" { SwitchToMode "Scroll"; }
+        bind "c" { NewTab; SwitchToMode "Locked"; }
+        bind "d" { Detach; }
+        bind "n" { GoToNextTab; SwitchToMode "Locked"; }
+        bind "p" { GoToPreviousTab; SwitchToMode "Locked"; }
+        bind "z" { ToggleFocusFullscreen; SwitchToMode "Locked"; }
+
+        // fzf-powered floating switchers, analogous to the tmux display-popup bindings.
+        bind "F" {
+            Run "bash" "-lc" "$HOME/.config/atlas/scripts/zellij-tab-switcher" {
+                floating true
+                width "90%"
+                height "85%"
+                name "tabs"
+                close_on_exit true
+            };
+            SwitchToMode "Locked";
+        }
+        bind "P" {
+            Run "bash" "-lc" "$HOME/.config/atlas/scripts/zellij-pane-switcher" {
+                floating true
+                width "90%"
+                height "85%"
+                name "panes"
+                close_on_exit true
+            };
+            SwitchToMode "Locked";
+        }
+
+        // tmux numbers windows from 1 and the muscle memory is strong.
+        bind "1" { GoToTab 1; SwitchToMode "Locked"; }
+        bind "2" { GoToTab 2; SwitchToMode "Locked"; }
+        bind "3" { GoToTab 3; SwitchToMode "Locked"; }
+        bind "4" { GoToTab 4; SwitchToMode "Locked"; }
+        bind "5" { GoToTab 5; SwitchToMode "Locked"; }
+        bind "6" { GoToTab 6; SwitchToMode "Locked"; }
+        bind "7" { GoToTab 7; SwitchToMode "Locked"; }
+        bind "8" { GoToTab 8; SwitchToMode "Locked"; }
+        bind "9" { GoToTab 9; SwitchToMode "Locked"; }
+    }
+
+    scroll {
+        bind "Esc" "Enter" "Ctrl c" { ScrollToBottom; SwitchToMode "Locked"; }
+        bind "e" { EditScrollback; SwitchToMode "Locked"; }
+        bind "s" { SwitchToMode "EnterSearch"; SearchInput 0; }
+        bind "j" "Down" { ScrollDown; }
+        bind "k" "Up" { ScrollUp; }
+        bind "Ctrl f" "PageDown" "Right" "l" { PageScrollDown; }
+        bind "Ctrl b" "PageUp" "Left" "h" { PageScrollUp; }
+        bind "d" { HalfPageScrollDown; }
+        bind "u" { HalfPageScrollUp; }
+    }
+
+    entersearch {
+        bind "Ctrl c" "Esc" { SwitchToMode "Scroll"; }
+        bind "Enter" { SwitchToMode "Search"; }
+    }
+
+    search {
+        bind "Esc" "Enter" "Ctrl c" { ScrollToBottom; SwitchToMode "Locked"; }
+        bind "j" "Down" { ScrollDown; }
+        bind "k" "Up" { ScrollUp; }
+        bind "Ctrl f" "PageDown" "Right" "l" { PageScrollDown; }
+        bind "Ctrl b" "PageUp" "Left" "h" { PageScrollUp; }
+        bind "d" { HalfPageScrollDown; }
+        bind "u" { HalfPageScrollUp; }
+        bind "n" { Search "down"; }
+        bind "p" { Search "up"; }
+        bind "c" { SearchToggleOption "CaseSensitivity"; }
+        bind "w" { SearchToggleOption "Wrap"; }
+        bind "o" { SearchToggleOption "WholeWord"; }
+    }
+
+    renametab {
+        bind "Enter" { SwitchToMode "Locked"; }
+        bind "Ctrl c" "Esc" { UndoRenameTab; SwitchToMode "Locked"; }
+    }
+}
+
+// Prefer the same shell and basic behavior as tmux.
+default_shell "/bin/zsh"
+default_mode "locked"
+mouse_mode true
+scroll_buffer_size 10000
+styled_underlines true
+support_kitty_keyboard_protocol true
+
+// Closest built-in equivalent to the tmux dracula plugin.
+theme "catppuccin-macchiato"
+
+// Hide the session name in the built-in tab/compact bar, eg. show "Zellij" instead of "Zellij (Bool)".
+ui {
+    pane_frames {
+        hide_session_name true
+    }
+}
+
+// Keep the status/tab UI at the top, like `set -g status-position top`.
+default_layout "atlas"
+
+// macOS clipboard integration.
+copy_command "pbcopy"
+copy_clipboard "system"
+copy_on_select true
+
+// Keep panes around when command panes exit, matching tmux `remain-on-exit on`.
+on_force_close "detach"

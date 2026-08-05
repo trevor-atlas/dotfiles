@@ -141,6 +141,41 @@ unbool() {
   tmux kill-server
 }
 
+zunbool() {
+  command -v zellij >/dev/null 2>&1 && zellij kill-session Bool 2>/dev/null || true
+}
+
+# Launch or reconnect main Zellij session with the tmux-inspired Bool layout
+zbool() {
+  if ! command -v zellij >/dev/null 2>&1; then
+    echo "zellij is not installed. Run: brew install zellij" >&2
+    return 1
+  fi
+
+  local SESSION_NAME="Bool"
+  local LAYOUT_PATH="$HOME/.config/zellij/layouts/bool.kdl"
+  if [[ ! -f "$LAYOUT_PATH" && -n "${ATLAS_ROOT:-}" ]]; then
+    LAYOUT_PATH="$ATLAS_ROOT/settings/zellij/layouts/bool.kdl"
+  fi
+
+  if zellij list-sessions --short 2>/dev/null | grep -Fxq "$SESSION_NAME"; then
+    if zellij attach "$SESSION_NAME"; then
+      return
+    fi
+  fi
+
+  if [[ ! -f "$LAYOUT_PATH" ]]; then
+    echo "zbool layout not found: $LAYOUT_PATH" >&2
+    return 1
+  fi
+
+  if [[ -n "${CODE_DIR:-}" && -d "${CODE_DIR:-}" ]]; then
+    (cd "$CODE_DIR" && zellij --session "$SESSION_NAME" --new-session-with-layout "$LAYOUT_PATH")
+  else
+    zellij --session "$SESSION_NAME" --new-session-with-layout "$LAYOUT_PATH"
+  fi
+}
+
 # Launch or reconnect main tmux session
 bool() {
   local SESSION_NAME="Bool"

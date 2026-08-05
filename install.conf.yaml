@@ -11,6 +11,7 @@
     ~/.config/skhd: settings/skhd
     ~/.config/yabai: settings/yabai
     ~/.config/starship.toml: settings/starship.toml
+    ~/.config/zellij: settings/zellij
     ~/.config/brewfile: settings/brewfile
     ~/.config/emacs: settings/emacs
     ~/.emacs.d: settings/emacs

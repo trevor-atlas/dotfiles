@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "zellij-pane-switcher requires jq" >&2
+  sleep 2
+  exit 1
+fi
+
+if ! command -v fzf >/dev/null 2>&1; then
+  echo "zellij-pane-switcher requires fzf" >&2
+  sleep 2
+  exit 1
+fi
+
+selection=$(
+  zellij action list-panes --all --json |
+    jq -r '
+      .[]
+      | select(.is_selectable == true)
+      | [
+          ((.tab_position + 1) | tostring),
+          .tab_name,
+          (if .is_focused then "*" else " " end),
+          (if .is_plugin then "plugin_\(.id)" else "terminal_\(.id)" end),
+          (.tab_id | tostring),
+          (.pane_command // .terminal_command // .plugin_url // .title // ""),
+          (.pane_cwd // "")
+        ]
+      | @tsv
+    ' |
+    fzf --delimiter=$'\t' --with-nth=1,2,3,6,7 --prompt='panes> ' --no-multi --cycle --reverse
+) || exit 0
+
+[[ -z "${selection}" ]] && exit 0
+
+pane_id=$(awk -F'\t' '{print $4}' <<<"${selection}")
+tab_id=$(awk -F'\t' '{print $5}' <<<"${selection}")
+
+zellij action go-to-tab-by-id "${tab_id}"
+zellij action focus-pane-id "${pane_id}"
