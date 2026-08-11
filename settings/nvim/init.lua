@@ -1,10 +1,3 @@
-vim.opt.rtp:prepend(vim.env.HOME .. '/src/hubspot-i18n-nvim')
--- local nix_path = vim.fs.joinpath(vim.fn.stdpath("data"), "nix")
--- local dev_path = require("helpers").get_subdirectories(vim.fs.joinpath(vim.env.HOME, "Projects", "vim-plugins"))
--- local paths = vim.iter({ nix_path, dev_path }):flatten():totable()
-
--- vim.iter(paths):each(function(path) vim.opt.rtp:prepend(path) end)
-
 vim.pack.add({
   'https://github.com/MagicDuck/grug-far.nvim',
   'https://github.com/ThePrimeagen/refactoring.nvim',
@@ -61,7 +54,8 @@ vim.pack.add({
 -- bend.nvim is a private HubSpotEngineering repo requiring work credentials.
 -- Only pull it on machines that have the work marker directory (~/.hubspot).
 if vim.fn.isdirectory(vim.env.HOME .. '/.hubspot') == 1 then
-  vim.pack.add({ src = 'git@github.com:HubSpotEngineering/bend.nvim.git' })
+  vim.opt.rtp:prepend(vim.env.HOME .. '/src/hubspot-i18n-nvim')
+  vim.pack.add({ 'git@github.com:HubSpotEngineering/bend.nvim.git' })
 end
 
 vim.api.nvim_create_autocmd('PackChanged', {
