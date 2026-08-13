@@ -1,0 +1,10 @@
+# Platform-specific entries, mirroring the old install.conf.yaml (macOS) vs
+# install.conf.linux.yaml split. Patterns match TARGET paths.
+{{ if eq .chezmoi.os "darwin" }}.i3{{ end }}
+{{ if eq .chezmoi.os "darwin" }}.i3/**{{ end }}
+{{ if ne .chezmoi.os "darwin" }}.config/skhd{{ end }}
+{{ if ne .chezmoi.os "darwin" }}.config/skhd/**{{ end }}
+{{ if ne .chezmoi.os "darwin" }}.config/yabai{{ end }}
+{{ if ne .chezmoi.os "darwin" }}.config/yabai/**{{ end }}
+{{ if ne .chezmoi.os "darwin" }}.config/brewfile{{ end }}
+{{ if ne .chezmoi.os "darwin" }}.config/brewfile/**{{ end }}

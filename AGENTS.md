@@ -1,15 +1,16 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents working with code in this repository.
 
 ## Repository Overview
 
-This repository contains dotfiles and configuration files managed by a user named Trevor Atlas. It uses [Dotbot](https://github.com/anishathalye/dotbot) for installation and management of dotfiles. The repository contains configurations for:
+This repository contains dotfiles and configuration files managed by a user named Trevor Atlas. It uses [chezmoi](https://chezmoi.io) for installation and management of dotfiles. The repository contains configurations for:
 
 - Shell environments (primarily zsh)
 - Text editors (Neovim, Emacs)
 - Terminal emulators (Alacritty, Kitty, iTerm2)
-- Window managers (Yabai, skhd)
+- Window managers (Yabai, skhd, i3)
+- Zellij (terminal multiplexing)
 - Git configuration
 - Various utility scripts and functions
 - macOS system preferences
@@ -17,19 +18,19 @@ This repository contains dotfiles and configuration files managed by a user name
 
 ## Key Components
 
-- **dotbot/**: Submodule for managing dotfiles
-- **install.conf.yaml**: Configuration for dotbot that specifies which files to symlink
-- **settings/**: Contains configuration files for various applications
-- **source/**: Shell scripts that get sourced by the main `index` file
+- **settings/**: The chezmoi source state (wired in via `.chezmoiroot`). `dot_*` files map to `~/.`, `dot_config/*` to `~/.config/*`; OS-specific files are gated by `.chezmoiignore` templates; `run_once_*` scripts handle one-time setup (dirs, macOS defaults + Homebrew)
+- **index**: Main shell entry point, sourced from `~/.zshrc`
+- **source/**: Shell scripts sourced by `index`
 - **functions/**: Standalone utility scripts
-- **init/**: Setup scripts for different environments
+- **init/**: Setup scripts referenced by the `run_once_*` chezmoi scripts
+- **scripts/**: Standalone utilities (Raycast, applescript, zellij switchers)
 
 ## Installation Process
 
 The repository is designed to be installed at `~/.config/atlas` with:
 
 ```bash
-git clone https://github.com/trevor-atlas/config ~/.config/atlas &&\
+git clone https://github.com/trevor-atlas/dotfiles ~/.config/atlas &&\
 echo "source $HOME/.config/atlas/index" >> .zshrc &&\
 source "$HOME/.zshrc" &&\
 sh ~/.config/atlas/install
@@ -39,14 +40,15 @@ This will:
 1. Clone the repository to `~/.config/atlas`
 2. Add a source line to the user's `.zshrc`
 3. Reload the shell configuration
-4. Run the `install` script which uses Dotbot to create symlinks
+4. Run the `install` script, which bootstraps chezmoi (installing it if needed, writing `~/.config/chezmoi/chezmoi.toml` to point at the repo) and applies the source state
 
 ## Common Commands
 
 ### Dotfiles Management
 
-- **`install_dotfiles`**: Re-run the dotbot installation process
-- **`install_dotfiles_once`**: Initial setup including macOS preferences, homebrew packages
+- **`install_dotfiles`**: Re-run the chezmoi bootstrap (`sh ~/.config/atlas/install`)
+- **`install_dotfiles_once`**: Full one-time setup — delegates to `install_dotfiles`; chezmoi's `run_once_*` scripts handle macOS prefs and Homebrew on first apply
+- **`chezmoi diff` / `chezmoi apply` / `chezmoi add ~/.file` / `chezmoi update`**: Standard chezmoi workflow (config at `~/.config/chezmoi/chezmoi.toml` points at this repo)
 
 ### Utility Functions
 
@@ -72,10 +74,11 @@ This will:
 - **Media Conversion**:
   - `convert_aiff`, `convert_gif`, `convert_webm`, `jpg_to_video`: Various media conversion utilities
 
-### Tmux Session Management
+### Tmux/Zellij Session Management
 
 - **`bool`**: Launch or reconnect to main tmux session with predefined windows
 - **`unbool`**: Kill tmux server
+- **`zbool`**: Zellij version of `bool`
 
 ## Environment Variables
 
@@ -84,6 +87,7 @@ Key environment variables:
 - `ATLAS_NOTES_DIR`: Directory for notes
 - `ATLAS_PROJECTS_DIR`: Directory for code repositories
 - `CODE_DIR`: Alias for source code repositories (typically `~/src`)
+- `DEEPSEEK_API_KEY`: pi provider key, injected into `~/.pi/agent/models.json` by a chezmoi template (never commit the raw key)
 
 ## Git Workflow
 

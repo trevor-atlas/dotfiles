@@ -1,26 +1,73 @@
 #!/usr/bin/env bash
-# POSIX-compatible so `sh install` works on both macOS (sh=bash) and Ubuntu (sh=dash)
-
+# Bootstrap installer: makes sure chezmoi is present, then applies the source
+# state (which includes the one-time macOS/brew run-once scripts).
+# Replaces the old dotbot-based installer.
 set -e
 
-CONFIG="install.conf.yaml"
-DOTBOT_DIR="dotbot"
+ATLAS_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
-DOTBOT_BIN="bin/dotbot"
-BASEDIR="$(cd "$(dirname "$0")" && pwd)"
-
-cd "${BASEDIR}"
-git submodule update --init --recursive "${DOTBOT_DIR}"
-git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
-
-# macOS-only tweak: safe no-op on other platforms (defaults only exists on macOS)
-if [ "$(uname -s)" = "Darwin" ]; then
-  defaults write -g ApplePressAndHoldEnabled -bool false
+# The dotfiles repo lives outside chezmoi's default source dir, so point
+# chezmoi at it explicitly (one-time, idempotent).
+CHEZMOI_CONFIG_DIR="$HOME/.config/chezmoi"
+if [ ! -f "$CHEZMOI_CONFIG_DIR/chezmoi.toml" ]; then
+  mkdir -p "$CHEZMOI_CONFIG_DIR"
+  cat > "$CHEZMOI_CONFIG_DIR/chezmoi.toml" <<EOF
+# Written by ~/.config/atlas/install
+# The dotfiles repo is not in the default source dir, so tell chezmoi where it is.
+sourceDir = "$ATLAS_ROOT"
+EOF
+  echo "==> Wrote $CHEZMOI_CONFIG_DIR/chezmoi.toml (sourceDir = $ATLAS_ROOT)"
 fi
 
-# Use the platform-appropriate dotbot config
-if [ "$(uname -s)" = "Linux" ]; then
-  CONFIG="install.conf.linux.yaml"
+OS="$(uname -s)"
+
+# On macOS, install chezmoi via Homebrew so it lands on PATH. Homebrew is a
+# prerequisite for the rest of the macOS setup anyway (init/brew), so install
+# it first if missing. Everywhere else, use the official get.chezmoi.io
+# installer (OS/arch-aware, SHA-256 verified) into ~/.local/bin.
+if [ "$OS" = "Darwin" ]; then
+  if ! command -v brew >/dev/null 2>&1 && [ ! -x /opt/homebrew/bin/brew ] && [ ! -x /usr/local/bin/brew ]; then
+    echo "==> Installing Homebrew …"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
+
+  if command -v brew >/dev/null 2>&1; then
+    BREW="brew"
+  elif [ -x /opt/homebrew/bin/brew ]; then
+    BREW="/opt/homebrew/bin/brew"
+  else
+    BREW="/usr/local/bin/brew"
+  fi
+
+  if ! command -v chezmoi >/dev/null 2>&1; then
+    echo "==> Installing chezmoi via Homebrew …"
+    HOMEBREW_NO_AUTO_UPDATE=1 "$BREW" install chezmoi
+  fi
+else
+  if ! command -v chezmoi >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/chezmoi" ]; then
+    echo "==> Installing chezmoi to ~/.local/bin …"
+    if command -v curl >/dev/null 2>&1; then
+      curl -fsSL -o /tmp/chezmoi-install.sh https://get.chezmoi.io
+    elif command -v wget >/dev/null 2>&1; then
+      wget -qO /tmp/chezmoi-install.sh https://get.chezmoi.io
+    else
+      echo "Need curl or wget to download chezmoi." >&2
+      exit 1
+    fi
+    sh /tmp/chezmoi-install.sh -b "$HOME/.local/bin"
+  fi
 fi
 
-"${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" -c "${CONFIG}" "${@}"
+# Resolve the chezmoi binary. On a fresh macOS install, brew's bin dir isn't on
+# PATH yet within this script, so check the well-known locations explicitly.
+if command -v chezmoi >/dev/null 2>&1; then
+  CHEZMOI="chezmoi"
+elif [ -x /opt/homebrew/bin/chezmoi ]; then
+  CHEZMOI="/opt/homebrew/bin/chezmoi"
+elif [ -x /usr/local/bin/chezmoi ]; then
+  CHEZMOI="/usr/local/bin/chezmoi"
+else
+  CHEZMOI="$HOME/.local/bin/chezmoi"
+fi
+
+exec "$CHEZMOI" apply "$@"

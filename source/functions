@@ -335,6 +335,11 @@ nvim_logs() {
 # HUBSPOT
 ####################################################
 
+# true when this is a HubSpot work machine (marked by ~/.hubspot)
+is_hs_machine() {
+  [[ -e "$HOME/.hubspot" ]]
+}
+
 # tail the asset bender log file
 tail_bend_logs() {
   tail -f ~/.cache/nvim/asset-bender.log
