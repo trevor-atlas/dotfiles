@@ -2,7 +2,6 @@
 
 # ATLAS_ROOT is the base of this project and provides a safe entry point for other scripts
 export ATLAS_ROOT="$HOME/.config/atlas"
-export ATLAS_STORAGE_DIR="$HOME/Dropbox"
 
 # Obsidian vault detection. Notes live in an Obsidian vault, which lives in a
 # different place on every machine: Windows (mounted at /mnt/<drive> under
@@ -77,18 +76,17 @@ obsidian_vault() {
       ;;
   esac
 
-  # 3) Fallback: the legacy notes dir (Dropbox), matching the old default.
-  printf '%s' "$ATLAS_STORAGE_DIR/notes"
+  # 3) Fallback: a plain notes dir when no vault is found anywhere.
+  printf '%s' "$HOME/notes"
 }
 
-# Respect an explicitly pre-set value, else detect the Obsidian vault.
-if [ -z "${ATLAS_NOTES_DIR:-}" ]; then
-  export ATLAS_NOTES_DIR="$(obsidian_vault)"
-fi
+export ATLAS_STORAGE_DIR="$(obsidian_vault)"
+export ATLAS_NOTES_DIR="$ATLAS_STORAGE_DIR"
 export ATLAS_MEDIA_DIR="$ATLAS_STORAGE_DIR/media"
 export ATLAS_SCREENSHOT_DIR="$ATLAS_STORAGE_DIR/Screenshots"
-export ATLAS_PROJECTS_DIR="$HOME/repos"
-export WEBSITE_DIR="$HOME/repos/trevor-atlas"
+
+export ATLAS_PROJECTS_DIR="$HOME/src"
+export WEBSITE_DIR="$HOME/src/trevor-atlas"
 export BLOG_DIR="$WEBSITE_DIR/posts"
 export UNSPLASH_DOWNLOAD_PATH="$WEBSITE_DIR/public/images"
 
