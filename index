@@ -3,7 +3,88 @@
 # ATLAS_ROOT is the base of this project and provides a safe entry point for other scripts
 export ATLAS_ROOT="$HOME/.config/atlas"
 export ATLAS_STORAGE_DIR="$HOME/Dropbox"
-export ATLAS_NOTES_DIR="$ATLAS_STORAGE_DIR/notes"
+
+# Obsidian vault detection. Notes live in an Obsidian vault, which lives in a
+# different place on every machine: Windows (mounted at /mnt/<drive> under
+# WSL), macOS (often iCloud-synced), or Linux. Obsidian's own registry file
+# lists every vault ever opened (and flags the currently-open one), so prefer
+# it, then fall back to probing common locations for a .obsidian marker.
+obsidian_vault() {
+  local registry="" vault winuser
+
+  # `command` prefixes: the user's aliases (e.g. alias ls='eza …') must not
+  # break detection, since this runs inside their interactive shell.
+  case "$(command uname -s)" in
+    Darwin)
+      registry="$HOME/Library/Application Support/obsidian/obsidian.json"
+      ;;
+    Linux)
+      if [ -n "${WSL_DISTRO_NAME:-}" ] || command grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then
+        # WSL: Obsidian runs on Windows, so its registry lives on the C: drive.
+        winuser="$(command ls /mnt/c/Users 2>/dev/null | command grep -viE '^(all users|default|default user|public|desktop\.ini)$' | command head -1)"
+        registry="/mnt/c/Users/${winuser:-$USER}/AppData/Roaming/obsidian/obsidian.json"
+      else
+        registry="$HOME/.config/obsidian/obsidian.json"
+      fi
+      ;;
+  esac
+
+  # 1) The registry is authoritative: prefer the vault marked "open", else the
+  #    first listed. Windows drive paths (F:\obsidian\atlas) become
+  #    /mnt/f/obsidian/atlas under WSL.
+  if [ -f "$registry" ]; then
+    if command -v jq >/dev/null 2>&1; then
+      vault="$(command jq -r '.vaults | to_entries[] | select(.value.open == true) | .value.path' "$registry" | command head -1)"
+      [ -n "$vault" ] || vault="$(command jq -r '.vaults[] | .path' "$registry" | command head -1)"
+    else
+      vault="$(command grep -oE '"path":"[^"]*"' "$registry" | command head -1 | command sed -E 's/^"path":"(.*)"$/\1/')"
+    fi
+    if [ -n "$vault" ]; then
+      vault="$(printf '%s' "$vault" | command sed 's/\\\\/\\/g')"  # unescape JSON \\ -> \
+      case "$vault" in
+        [A-Za-z]:*)
+          local rest="${vault#*:}"
+          rest="${rest#\\}"
+          vault="/mnt/$(printf '%s' "${vault%%:*}" | command tr 'A-Z' 'a-z')/$(printf '%s' "$rest" | command sed 's/\\/\//g')"
+          ;;
+      esac
+      if [ -d "$vault" ]; then
+        printf '%s' "$vault"
+        return 0
+      fi
+    fi
+  fi
+
+  # 2) No registry: probe common locations for a .obsidian marker.
+  case "$(command uname -s)" in
+    Darwin)
+      for vault in "$HOME"/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/* \
+                   "$HOME/Dropbox" "$HOME/Documents" "$HOME/Obsidian"; do
+        [ -d "$vault/.obsidian" ] && { printf '%s' "$vault"; return 0; }
+      done
+      ;;
+    Linux)
+      for vault in "$HOME/Dropbox" "$HOME/Documents" "$HOME/Obsidian" "$HOME/notes"; do
+        [ -d "$vault/.obsidian" ] && { printf '%s' "$vault"; return 0; }
+      done
+      if [ -n "${WSL_DISTRO_NAME:-}" ] || command grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then
+        winuser="${winuser:-$(command ls /mnt/c/Users 2>/dev/null | command grep -viE '^(all users|default|default user|public|desktop\.ini)$' | command head -1)}"
+        for vault in "/mnt/c/Users/$winuser/Dropbox" "/mnt/c/Users/$winuser/Documents" \
+                     "/mnt/c/Users/$winuser/OneDrive/Documents" "/mnt/c/Users/$winuser/OneDrive"; do
+          [ -d "$vault/.obsidian" ] && { printf '%s' "$vault"; return 0; }
+        done
+      fi
+      ;;
+  esac
+
+  # 3) Fallback: the legacy notes dir (Dropbox), matching the old default.
+  printf '%s' "$ATLAS_STORAGE_DIR/notes"
+}
+
+# Respect an explicitly pre-set value, else detect the Obsidian vault.
+if [ -z "${ATLAS_NOTES_DIR:-}" ]; then
+  export ATLAS_NOTES_DIR="$(obsidian_vault)"
+fi
 export ATLAS_MEDIA_DIR="$ATLAS_STORAGE_DIR/media"
 export ATLAS_SCREENSHOT_DIR="$ATLAS_STORAGE_DIR/Screenshots"
 export ATLAS_PROJECTS_DIR="$HOME/repos"

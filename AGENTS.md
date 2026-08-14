@@ -84,7 +84,7 @@ This will:
 
 Key environment variables:
 - `ATLAS_ROOT`: Base directory for dotfiles (defaults to `~/.config/atlas`)
-- `ATLAS_NOTES_DIR`: Directory for notes
+- `ATLAS_NOTES_DIR`: Directory for notes — auto-detected Obsidian vault via `obsidian_vault()` (Obsidian's registry, then common locations, then `~/Dropbox/notes`); WSL-aware (Windows drive paths → `/mnt/<drive>/…`)
 - `ATLAS_PROJECTS_DIR`: Directory for code repositories
 - `CODE_DIR`: Alias for source code repositories (typically `~/src`)
 - `DEEPSEEK_API_KEY`: pi provider key, injected into `~/.pi/agent/models.json` by a chezmoi template (never commit the raw key)
