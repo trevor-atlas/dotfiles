@@ -48,8 +48,10 @@
 [init]
 	defaultBranch = main
 [credential "https://github.com"]
+	# PATH-based lookup so the same config works on every machine
+	# (gh is /opt/homebrew/bin/gh on macOS, /usr/bin/gh elsewhere)
 	helper = 
-	helper = !/opt/homebrew/bin/gh auth git-credential
+	helper = !gh auth git-credential
 [credential "https://gist.github.com"]
 	helper = 
-	helper = !/opt/homebrew/bin/gh auth git-credential
+	helper = !gh auth git-credential
