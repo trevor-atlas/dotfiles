@@ -40,7 +40,7 @@ ns() {
 # search note filenames
 nl() {
   local files
-  files="$(rg --files $ATLAS_NOTES_DIR | fzf --delimiter / --with-nth -1 --preview "head -100 {} ")"
+  files="$(rg --files "$ATLAS_NOTES_DIR" | fzf --layout=reverse --delimiter / --with-nth -1 --preview "head -100 {}" --preview-window 'up,60%,border-bottom')"
   if [[ -n $files ]]; then
     v $files
   fi
@@ -51,7 +51,7 @@ alias rgf='rg --files | rg'
 
 # search repos
 rs() {
-  local files="$(rg --files "$CODE_DIR" | fzf --delimiter / --with-nth -1 --preview 'bat --color=always {}')"
+  local files="$(rg --files "$CODE_DIR" | fzf --layout=reverse --delimiter / --with-nth -1 --preview 'bat --color=always {}' --preview-window 'up,60%,border-bottom')"
   if [[ -n $files ]]; then
     v $files
   fi
