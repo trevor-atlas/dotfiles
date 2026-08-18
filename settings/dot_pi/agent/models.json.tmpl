@@ -1,0 +1,33 @@
+{{- $isHsMachine := stat (joinPath .chezmoi.destDir ".hubspot") -}}
+{{- if $isHsMachine -}}
+{
+  "providers": {
+    "openai": {
+      "baseUrl": "https://litellm.hubteamqa.com/v1",
+      "apiKey": "!hsauthctl idp get-token",
+      "authHeader": true
+    },
+    "anthropic": {
+      "baseUrl": "https://litellm.hubteamqa.com/v1",
+      "apiKey": "!hsauthctl idp get-token",
+      "authHeader": true
+    }
+  }
+}
+{{- else -}}
+{{- $dsAPIKey := env "DEEPSEEK_API_KEY" -}}
+{{- if not $dsAPIKey }}{{ fail "DEEPSEEK_API_KEY must be set when applying the personal Pi configuration" }}{{ end -}}
+{{- $oaiAPIKey := env "OPENAI_API_KEY" -}}
+{{- if not $oaiAPIKey }}{{ fail "OPENAI_API_KEY must be set when applying the personal Pi configuration" }}{{ end -}}
+{
+  "providers": {
+    "deepseek": {
+      "baseUrl": "https://api.deepseek.com/v1",
+      "apiKey": {{ $dsAPIKey | toJson }}
+    },
+    "openai": {
+      "apiKey": {{ $oaiAPIKey | toJson }}
+    }
+  }
+}
+{{- end }}
