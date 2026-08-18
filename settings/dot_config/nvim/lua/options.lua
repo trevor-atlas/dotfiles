@@ -94,8 +94,11 @@ vim.o.hlsearch = true
 -- Enable break indent
 vim.o.breakindent = true
 
--- Save undo history
-vim.opt.undodir = vim.fn.stdpath('config') .. '/undodir'
+-- Save undo history. Keep it in the XDG state dir, NOT inside the
+-- chezmoi-managed config tree (undo files used to leak into the
+-- dotfiles repo via stdpath('config') .. '/undodir').
+vim.fn.mkdir(vim.fn.stdpath('state') .. '/undo', 'p')
+vim.opt.undodir = vim.fn.stdpath('state') .. '/undo'
 vim.o.undofile = true
 
 -- Keep signcolumn on by default

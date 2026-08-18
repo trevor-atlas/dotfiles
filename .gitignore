@@ -6,7 +6,9 @@ complete-icebreakers.json
 scripts/complete-icebreakers.json
 .vscode
 
+
 settings/dot_config/nvim/undodir
+settings/nvim/undodir
 settings/dot_config/nvim/backupdir
 node_modules
 lazy-lock.json
