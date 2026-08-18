@@ -134,30 +134,200 @@ is_inside_git_repo() {
     git rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
 
-# clone a repo if it doesn't exist
+# Clone or navigate to a repository.
+#   repo                                  # interactive fzf picker over your repos (tab = multi-select)
+#   repo <partial name>                   # search your repos, clone the match(es)
+#   repo owner/repo                       # exact repo — any public/open-source repo works
+#   repo https://github.com/owner/repo.git
+#   repo git@github.com:owner/repo.git
+#   repo --org <org> <target>             # restrict the search/list to one org
+#   repo -f <target>                      # enter an existing dir even if its remote mismatches
 # @example
 # repo some-repo-name
 repo() {
-  if [[ -d "$CODE_DIR/$1" ]]; then
-    echo "⚠️ Repo already exists, changing directory to $CODE_DIR/$1"
-    cd $CODE_DIR/$1
-  else
-    echo "⚠️ Repo missing: \"$1\", cloning into $CODE_DIR/$1"
-    cd $CODE_DIR
-    git clone "git@github.com:HubSpotEngineering/$1.git"
-    echo "✅ cloned $1 to $CODE_DIR/$1"
-    cd $CODE_DIR/$1
+  local org="" force=0
+  local -a targets=()
+  while (( $# )); do
+    case "$1" in
+      --org)
+        if (( $# < 2 )); then
+          echo "repo: --org requires an org name" >&2
+          return 1
+        fi
+        org="$2"; shift 2 ;;
+      -f|--force) force=1; shift ;;
+      -*) echo "repo: unknown option: $1" >&2; return 1 ;;
+      *) targets+=("$1"); shift ;;
+    esac
+  done
+
+  local list="$(_repo_list "$org")"
+
+  # interactive mode: fzf over everything
+  if (( ${#targets} == 0 )); then
+    if [[ -z "$list" ]]; then
+      echo "repo: no repos found (is gh authenticated?)" >&2
+      return 1
+    fi
+    local picked="$(_repo_pick "$list")"
+    [[ -n "$picked" ]] || return 0  # esc = cancel
+    _repo_clone_selected "$picked" "$force"
+    return $?
   fi
+
+  if (( ${#targets} > 1 )); then
+    echo "repo: expected one target (or none for the picker), got: $*" >&2
+    return 1
+  fi
+
+  local target="$targets[1]" spec
+  # URL or owner/repo → normalize to OWNER/REPO and go
+  if [[ "$target" == */* || "$target" == *'://'* || "$target" == git@* || "$target" == *.git ]]; then
+    if _repo_normalize "$target"; then
+      _repo_go "$REPLY" "$force"
+      return $?
+    fi
+    echo "repo: unrecognized repo reference: $target" >&2
+    return 1
+  fi
+
+  # bare word → search the union scope
+  local matches="$(printf '%s\n' "$list" | grep -F -i -- "$target" | sed '/^$/d')"
+  local n="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
+  if (( n == 0 )); then
+    echo "repo: no repo matching '$target' in your scope" >&2
+    echo "repo: public GitHub repos named like that:" >&2
+    gh search repos "$target" --limit 5 --json fullName --jq '.[].fullName' 2>/dev/null | sed 's/^/  /' >&2
+    return 1
+  fi
+  if (( n == 1 )); then
+    _repo_go "$matches" "$force"
+    return $?
+  fi
+  local picked="$(_repo_pick "$matches")"
+  [[ -n "$picked" ]] || return 0
+  _repo_clone_selected "$picked" "$force"
+  return $?
+}
+
+# namespaces to search: authed user + orgs we belong to
+_repo_namespaces() {
+  gh api user --jq '.login' 2>/dev/null
+  gh api user/orgs --paginate --jq '.[].login' 2>/dev/null
+}
+
+# union list of OWNER/REPO (source repos only, no forks), deduped
+_repo_list() {
+  local org="$1"
+  if [[ -n "$org" ]]; then
+    gh repo list "$org" --limit 1000 --source --json nameWithOwner --jq '.[].nameWithOwner' 2>/dev/null | sort -u
+    return
+  fi
+  local ns
+  for ns in ${(f)"$(_repo_namespaces)"}; do
+    gh repo list "$ns" --limit 1000 --source --json nameWithOwner --jq '.[].nameWithOwner' 2>/dev/null
+  done | sort -u
+}
+
+# normalize a URL / owner/repo reference to OWNER/REPO; sets $REPLY on success
+_repo_normalize() {
+  local clean="$1"
+  clean="${clean#ssh://git@github.com/}"
+  clean="${clean#git@github.com:}"
+  clean="${clean#https://github.com/}"
+  clean="${clean#http://github.com/}"
+  clean="${clean#github.com/}"
+  clean="${clean#https://}"
+  clean="${clean#http://}"
+  clean="${clean#ssh://}"
+  clean="${clean#git://}"
+  clean="${clean%.git}"
+  clean="${clean%/}"
+  if [[ "$clean" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]]; then
+    REPLY="$clean"
+    return 0
+  fi
+  return 1
+}
+
+# fzf picker over OWNER/REPO lines; echoes the selected line(s)
+_repo_pick() {
+  local list="$1"
+  local preview='gh repo view {} --json description,url,updatedAt,isPrivate,primaryLanguage,stargazerCount --jq "[.description // \"n/a\", .url, (\"updated \" + (.updatedAt[0:10])), (\"lang \" + (.primaryLanguage.name // \"n/a\")), (if .isPrivate then \"private\" else \"public\" end), (\"stars \" + (.stargazerCount|tostring))] | join(\"\n\")"'
+  printf '%s\n' "$list" | fzf -m --prompt='clone> ' \
+    --header 'tab: multi-select · enter: clone · esc: cancel' \
+    --preview "$preview" \
+    --preview-window 'right:60%:wrap' 2>/dev/null
+}
+
+# clone OWNER/REPO into $CODE_DIR, or cd into it when already present
+_repo_go() {
+  local spec="$1" force="$2"
+  local name dest
+  name="${spec##*/}"
+  dest="$CODE_DIR/$name"
+
+  if [[ -d "$dest" ]]; then
+    if git -C "$dest" rev-parse --is-inside-work-tree &>/dev/null; then
+      local origin="$(git -C "$dest" config --get remote.origin.url 2>/dev/null)"
+      if _repo_normalize "$origin"; then
+        if [[ "${REPLY:l}" == "${spec:l}" ]]; then
+          echo "✅ $dest already exists — entering"
+          cd "$dest"
+          return 0
+        fi
+        if (( force )); then
+          echo "⚠️ $dest is ${REPLY}, not $spec — entering anyway (-f)"
+          cd "$dest"
+          return 0
+        fi
+        echo "⚠️ $dest is ${REPLY}, not $spec — blocked. Use 'repo -f $spec' to enter anyway." >&2
+        return 1
+      fi
+      if (( force )); then
+        echo "⚠️ $dest exists (unrecognized remote '$origin') — entering anyway (-f)"
+        cd "$dest"
+        return 0
+      fi
+      echo "⚠️ $dest exists but its remote is unrecognized ('$origin'). Use 'repo -f $spec' to enter anyway." >&2
+      return 1
+    fi
+    if (( force )); then
+      echo "⚠️ $dest exists but isn't a git repo — entering anyway (-f)"
+      cd "$dest"
+      return 0
+    fi
+    echo "⚠️ $dest exists but isn't a git repo. Use 'repo -f $spec' to enter anyway." >&2
+    return 1
+  fi
+
+  echo "⏳ cloning $spec → $dest"
+  mkdir -p "$CODE_DIR"
+  if (cd "$CODE_DIR" && gh repo clone "$spec"); then
+    echo "✅ cloned $spec"
+    cd "$dest"
+    return 0
+  fi
+  echo "❌ failed to clone $spec" >&2
+  return 1
+}
+
+# clone (or enter) each picked line, ending in the last one
+_repo_clone_selected() {
+  local picked="$1" force="$2" line
+  local -a lines=("${(f)picked}")
+  for line in $lines; do
+    _repo_go "$line" "$force" || return 1
+  done
 }
 
 ghrepo() {
-  if [[ -d ".git" ]]; then
-    open $(get_git_origin_browser_url)
-    exit 0
+  if is_inside_git_repo; then
+    gh browse
+    return
   fi
-  repo $1
-  open $(get_git_origin_browser_url)
-  cd -
+  repo "$@"
+  is_inside_git_repo && gh browse
 }
 
 

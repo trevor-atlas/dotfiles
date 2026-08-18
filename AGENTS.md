@@ -88,6 +88,7 @@ Key environment variables:
 - `ATLAS_PROJECTS_DIR`: Directory for code repositories
 - `CODE_DIR`: Alias for source code repositories (typically `~/src`)
 - `DEEPSEEK_API_KEY`: pi provider key, injected into `~/.pi/agent/models.json` by a chezmoi template (never commit the raw key)
+- `OPENAI_API_KEY`: pi provider key, injected into `~/.pi/agent/models.json` by a chezmoi template (never commit the raw key)
 
 ## Git Workflow
 

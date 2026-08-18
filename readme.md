@@ -37,12 +37,14 @@ and `zellij-pane-switcher` live in `scripts/`).
 
 ## Pi provider key
 
-`~/.pi/agent/models.json` is a template that reads the DeepSeek key from the
-`DEEPSEEK_API_KEY` environment variable (the key itself is never in the repo).
-Export it on each machine before applying, e.g. in your shell profile:
+`~/.pi/agent/models.json` is a template that reads the DeepSeek and OpenAI keys
+from the `DEEPSEEK_API_KEY` and `OPENAI_API_KEY` environment variables
+(the keys themselves are never in the repo).
+Export them on each machine before applying, e.g. in your shell profile:
 
 ```
 export DEEPSEEK_API_KEY=...
+export OPENAI_API_KEY=...
 ```
 
 ## Daily use
