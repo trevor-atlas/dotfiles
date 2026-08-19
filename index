@@ -3,6 +3,10 @@
 # ATLAS_ROOT is the base of this project and provides a safe entry point for other scripts
 export ATLAS_ROOT="$HOME/.config/atlas"
 
+# User-local binaries (bat, gh, chezmoi, nvim, ...) live in ~/.local/bin.
+# Prepended so they take precedence over system copies.
+export PATH="$HOME/.local/bin:$PATH"
+
 # Obsidian vault detection. Notes live in an Obsidian vault, which lives in a
 # different place on every machine: Windows (mounted at /mnt/<drive> under
 # WSL), macOS (often iCloud-synced), or Linux. Obsidian's own registry file
