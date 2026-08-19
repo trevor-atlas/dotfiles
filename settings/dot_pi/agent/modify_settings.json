@@ -19,8 +19,8 @@
 ]` -}}
 {{- $settings
   | setValueAtPath "packages" $packages
-  | setValueAtPath "defaultProvider" "openai"
-  | setValueAtPath "defaultModel" "gpt-5.6-luna"
+  | setValueAtPath "defaultProvider" "deepseek"
+  | setValueAtPath "defaultModel" "deepseek-v4-flash"
   | setValueAtPath "hideThinkingBlock" true
   | setValueAtPath "quietStartup" true
   | setValueAtPath "collapseChangelog" true
