@@ -1,8 +1,9 @@
 [color]
 	ui = true
 [user]
-	email = me@trevoratlas.com
-	name = Trevor Atlas
+	email = tatlas@hubspot.com
+	signingkey = {{ .chezmoi.homeDir }}/.ssh/id_rsa.pub
+	name = tatlas
 [github]
 	user = trevor-atlas
 [format]
@@ -24,14 +25,14 @@
 	# 'git push' will push the current branch to its tracking branch
 	# the usual default is to push all branches
 	default = tracking
+	autoSetupRemote = true
 [core]
 	autocrlf = false
 	ignorecase = true
 	editor = nvim
-	excludesfile = ~/.gitignore_global
+	excludesfile = {{ .chezmoi.homeDir }}/.gitignore_global
 	pager = delta
-	# machine-specific path; uncomment on machines that have ~/.git_hooks
-	# hooksPath = /Users/tatlas/.git_hooks
+	hooksPath = {{ .chezmoi.homeDir }}/.git_hooks
 [interactive]
   diffFilter = delta --color-only
 [delta]
@@ -46,10 +47,18 @@
 	process = git-lfs filter-process
 	required = true
 [init]
-	defaultBranch = main
+	defaultBranch = master
+[gpg]
+	format = ssh
+[commit]
+	gpgsign = true
+[alias]
+	append = town append
+	hack = town hack
+	sync = town sync
+[rebase]
+	autoStash = true
 [credential "https://github.com"]
-	# PATH-based lookup so the same config works on every machine
-	# (gh is /opt/homebrew/bin/gh on macOS, /usr/bin/gh elsewhere)
 	helper = 
 	helper = !gh auth git-credential
 [credential "https://gist.github.com"]

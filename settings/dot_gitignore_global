@@ -1,24 +1,66 @@
 ## Configuration
 # git config --global core.excludesfile ~/.gitignore_global
 
-# UndoTree
+# Editors and OS
+*~
+*.swp
+*.orig
 *.un~
-
-# OSX
 .DS_Store
-
-# Vor
 .vor
 
 # Python
 __pycache__
+*.pyc
+*.egg-info
+*.egg-info/
+*.egg
+.pydevproject
+.venv
+venv/
+.ipynb_checkpoints
+.coverage
+.coverage.*
+nosetests.xml
+.Python
+pip-log.txt
 
-# Jetbrains
+# JavaScript / build output
+node_modules/
+npm-debug.log
+yarn-error.log
+target/
+dist/
+out/
+
+# Gradle / JVM
+.gradle-enterprise/
+.mvn/.gradle-enterprise/
+.develocity/
+.bsp/
+.metals/
+.hs-workspace/
+
+# IDEs and project metadata
+.vscode/
 .idea
+*.iml
+*.hprof
+.classpath
+.project
+.settings
+.factorypath
+.checkstyle
+
+# Hadoop
+hadoop-keytabs/
+hadoop-krb5-configs/
 
 # Direnv
 .envrc
 
-# Gradle Enterprise
-.mvn/.gradle-enterprise/
-.gradle-enterprise/
+# Claude Code / local agent state
+**/.claude/settings.local.json
+**/.claude/rules/managed/
+**/.claude/rules/managed
+.playwright-cli/
