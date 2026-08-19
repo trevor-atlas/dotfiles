@@ -7,7 +7,6 @@
 {{- $packages := fromJson `[
   "npm:pi-mcp-adapter",
   "npm:pi-code-previews",
-  "npm:@tintinweb/pi-subagents",
   "npm:pi-safety-net",
   "npm:pi-subagents",
   "npm:pi-prompt-template-model",
@@ -16,9 +15,7 @@
   "npm:@ff-labs/pi-fff",
   "npm:pi-hermes-memory",
   "npm:@narumitw/pi-goal",
-  "npm:pi-intercom",
-  "npm:pi-powerline-footer",
-  "npm:@heyhuynhgiabuu/pi-pretty"
+  "npm:pi-intercom"
 ]` -}}
 {{- $settings
   | setValueAtPath "packages" $packages
