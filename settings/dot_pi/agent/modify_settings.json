@@ -4,6 +4,13 @@
 {{- $input = `{}` -}}
 {{- end -}}
 {{- $settings := fromJson $input -}}
+{{- $isHsMachine := stat (joinPath .chezmoi.destDir ".hubspot") -}}
+{{- $defaultProvider := "deepseek" -}}
+{{- $defaultModel := "deepseek-v4-flash" -}}
+{{- if $isHsMachine -}}
+{{- $defaultProvider = "openai" -}}
+{{- $defaultModel = "gpt-5.6-luna" -}}
+{{- end -}}
 {{- $packages := fromJson `[
   "npm:pi-mcp-adapter",
   "npm:pi-code-previews",
@@ -19,8 +26,8 @@
 ]` -}}
 {{- $settings
   | setValueAtPath "packages" $packages
-  | setValueAtPath "defaultProvider" "deepseek"
-  | setValueAtPath "defaultModel" "deepseek-v4-flash"
+  | setValueAtPath "defaultProvider" $defaultProvider
+  | setValueAtPath "defaultModel" $defaultModel
   | setValueAtPath "hideThinkingBlock" true
   | setValueAtPath "quietStartup" true
   | setValueAtPath "collapseChangelog" true
