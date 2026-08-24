@@ -1,4 +1,3 @@
-
 ---
 name: ic-orchestrator
 description: "Run multi-round research/implementation projects as a technical lead: decompose into discrete IC tasks, delegate to parallel IC subagents, verify each task with a separate adversarial review agent, commit verified work as the single committer, iterate until every phase is SHIPPABLE. Use whenever the user asks you to act as a technical lead or DRI, tells you to delegate rather than implement yourself, hands over a multi-phase project or a GitHub ticket queue, or wants work fanned out across parallel subagents — even if they never use the word 'orchestrate'."
