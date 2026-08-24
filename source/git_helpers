@@ -161,10 +161,50 @@ repo() {
     esac
   done
 
-  local list="$(_repo_list "$org")"
+  if (( ${#targets} > 1 )); then
+    echo "repo: expected one target (or none for the picker), got: $*" >&2
+    return 1
+  fi
 
-  # interactive mode: fzf over everything
+  # Exact references do not need repository discovery at all.
+  local target=""
+  if (( ${#targets} == 1 )); then
+    target="${targets[1]}"
+    if [[ "$target" == */* || "$target" == *'://'* || "$target" == git@* || "$target" == *.git ]]; then
+      if _repo_normalize "$target"; then
+        _repo_go "$REPLY" "$force"
+        return $?
+      fi
+      echo "repo: unrecognized repo reference: $target" >&2
+      return 1
+    fi
+
+    # A local bare target is authoritative and needs no GitHub lookup.
+    local local_dest="$CODE_DIR/$target"
+    if [[ -d "$local_dest" ]]; then
+      if git -C "$local_dest" rev-parse --is-inside-work-tree &>/dev/null; then
+        echo "✅ $local_dest already exists — entering"
+        cd "$local_dest"
+        return 0
+      fi
+      if (( force )); then
+        echo "⚠️ $local_dest exists but isn't a git repo — entering anyway (-f)"
+        cd "$local_dest"
+        return 0
+      fi
+      echo "⚠️ $local_dest exists but isn't a git repo. Use 'repo -f $target' to enter anyway." >&2
+      return 1
+    fi
+  fi
+
+  # The large union list is only needed by the no-argument picker.
   if (( ${#targets} == 0 )); then
+    local cache_file="$(_repo_cache_file "$org")"
+    local list="$(_repo_list "$org")"
+    if [[ ! -f "$cache_file" ]]; then
+      echo "repo: repository list is warming in the background; try again shortly" >&2
+      return 1
+    fi
     if [[ -z "$list" ]]; then
       echo "repo: no repos found (is gh authenticated?)" >&2
       return 1
@@ -175,29 +215,11 @@ repo() {
     return $?
   fi
 
-  if (( ${#targets} > 1 )); then
-    echo "repo: expected one target (or none for the picker), got: $*" >&2
-    return 1
-  fi
-
-  local target="$targets[1]" spec
-  # URL or owner/repo → normalize to OWNER/REPO and go
-  if [[ "$target" == */* || "$target" == *'://'* || "$target" == git@* || "$target" == *.git ]]; then
-    if _repo_normalize "$target"; then
-      _repo_go "$REPLY" "$force"
-      return $?
-    fi
-    echo "repo: unrecognized repo reference: $target" >&2
-    return 1
-  fi
-
-  # bare word → search the union scope
-  local matches="$(printf '%s\n' "$list" | grep -F -i -- "$target" | sed '/^$/d')"
+  # Bare word → one targeted GitHub search rather than the entire union scope.
+  local matches="$(_repo_search_repos "$target" "$org")"
   local n="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
   if (( n == 0 )); then
-    echo "repo: no repo matching '$target' in your scope" >&2
-    echo "repo: public GitHub repos named like that:" >&2
-    gh search repos "$target" --limit 5 --json fullName --jq '.[].fullName' 2>/dev/null | sed 's/^/  /' >&2
+    echo "repo: no GitHub repo matching '$target' in your scope" >&2
     return 1
   fi
   if (( n == 1 )); then
@@ -216,8 +238,8 @@ _repo_namespaces() {
   gh api user/orgs --paginate --jq '.[].login' 2>/dev/null
 }
 
-# union list of OWNER/REPO (source repos only, no forks), deduped
-_repo_list() {
+# Fetch the union list of OWNER/REPO (source repos only, no forks), deduped.
+_repo_list_remote() {
   local org="$1"
   if [[ -n "$org" ]]; then
     gh repo list "$org" --limit 1000 --source --json nameWithOwner --jq '.[].nameWithOwner' 2>/dev/null | sort -u
@@ -227,6 +249,107 @@ _repo_list() {
   for ns in ${(f)"$(_repo_namespaces)"}; do
     gh repo list "$ns" --limit 1000 --source --json nameWithOwner --jq '.[].nameWithOwner' 2>/dev/null
   done | sort -u
+}
+
+# Resolve a single bare target without discovering every namespace's repos.
+_repo_search_repos() {
+  local target="$1" org="$2"
+  if [[ -n "$org" ]]; then
+    gh search repos "$target" --owner "$org" --match name --include-forks=false --limit 10 --json fullName --jq '.[].fullName' 2>/dev/null
+  else
+    gh search repos "$target" --match name --include-forks=false --limit 10 --json fullName --jq '.[].fullName' 2>/dev/null
+  fi
+}
+
+# Repository discovery is remote and can take tens of seconds. Keep a private,
+# line-oriented cache and refresh it stale-while-revalidate so the picker can
+# open from the last known list immediately.
+_repo_cache_dir() {
+  printf '%s\n' "${XDG_CACHE_HOME:-$HOME/.cache}/atlas"
+}
+
+_repo_cache_key() {
+  local key="${1:-all}"
+  key="${key//[^A-Za-z0-9_.-]/_}"
+  printf '%s\n' "${key:-all}"
+}
+
+_repo_cache_file() {
+  printf '%s/repos-%s.list\n' "$(_repo_cache_dir)" "$(_repo_cache_key "$1")"
+}
+
+_repo_cache_mtime() {
+  local mtime
+  mtime="$(command stat -f %m "$1" 2>/dev/null)"
+  if [[ "$mtime" == <-> ]]; then
+    printf '%s\n' "$mtime"
+    return 0
+  fi
+  command stat -c %Y "$1" 2>/dev/null
+}
+
+_repo_cache_is_stale() {
+  local file="$1" ttl="${REPO_CACHE_TTL_SECONDS:-900}" mtime now age
+  [[ "$ttl" == <-> ]] || ttl=900
+  mtime="$(_repo_cache_mtime "$file")"
+  [[ -n "$mtime" ]] || return 0
+  now="$(date +%s)"
+  age=$(( now - mtime ))
+  (( age >= ttl ))
+}
+
+# Update one cache file. mkdir is used as an atomic cross-platform lock.
+_repo_refresh() {
+  local org="$1" cache_file="$2" cache_dir="${cache_file:h}"
+  local lock_dir="${cache_file}.lock" lock_mtime now tmp_file
+
+  mkdir -p "$cache_dir" || return 1
+  chmod 700 "$cache_dir" 2>/dev/null || true
+
+  # A killed background job can leave the lock behind; only discard locks that
+  # have been idle for an hour, well beyond the normal refresh duration.
+  if [[ -d "$lock_dir" ]]; then
+    lock_mtime="$(_repo_cache_mtime "$lock_dir")"
+    now="$(date +%s)"
+    if [[ -n "$lock_mtime" ]] && (( now - lock_mtime > 3600 )); then
+      rm -rf "$lock_dir"
+    else
+      return 0
+    fi
+  fi
+  mkdir "$lock_dir" 2>/dev/null || return 0
+
+  if ! tmp_file="$(mktemp "${cache_file}.tmp.XXXXXX")"; then
+    rmdir "$lock_dir" 2>/dev/null || true
+    return 1
+  fi
+
+  # Keep the previous cache when GitHub is unavailable or returns no data.
+  if _repo_list_remote "$org" > "$tmp_file" 2>/dev/null && [[ -s "$tmp_file" ]]; then
+    chmod 600 "$tmp_file" 2>/dev/null || true
+    mv -f "$tmp_file" "$cache_file" 2>/dev/null || true
+  fi
+  rm -f "$tmp_file"
+  rmdir "$lock_dir" 2>/dev/null || rm -rf "$lock_dir"
+}
+
+_repo_refresh_async() {
+  local org="$1" cache_file="$2"
+  _repo_refresh "$org" "$cache_file" >/dev/null 2>&1 &!
+}
+
+_repo_list() {
+  local org="$1" cache_file="$(_repo_cache_file "$org")"
+  if [[ -f "$cache_file" ]]; then
+    command cat "$cache_file"
+    if _repo_cache_is_stale "$cache_file"; then
+      _repo_refresh_async "$org" "$cache_file"
+    fi
+    return 0
+  fi
+
+  _repo_refresh_async "$org" "$cache_file"
+  return 0
 }
 
 # normalize a URL / owner/repo reference to OWNER/REPO; sets $REPLY on success

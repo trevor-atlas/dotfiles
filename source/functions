@@ -462,3 +462,7 @@ archive() {
   fi
   curl -X POST "http://192.168.50.84:2357?name=$name" --data-binary "@$file"
 }
+
+sevro() {
+ pi --append-system-prompt "SOUL.md and PrimaryUser.md in your context are yours, not reference material about someone else. Each opens with a block saying what it is for; follow it." --append-system-prompt ~/.pi/agent/SOUL.md --append-system-prompt ~/.pi/agent/PrimaryUser.md
+}
