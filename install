@@ -15,6 +15,10 @@ if [ ! -f "$CHEZMOI_CONFIG_DIR/chezmoi.toml" ]; then
 # Written by ~/.config/atlas/install
 # The dotfiles repo is not in the default source dir, so tell chezmoi where it is.
 sourceDir = "$ATLAS_ROOT"
+
+# Symlink static files back to the source repo so they stay live-editable.
+# Templates (.tmpl), scripts (run_once_*, modify_*) are still copied/rendered.
+mode = "symlink"
 EOF
   echo "==> Wrote $CHEZMOI_CONFIG_DIR/chezmoi.toml (sourceDir = $ATLAS_ROOT)"
 fi

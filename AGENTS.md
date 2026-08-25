@@ -18,7 +18,7 @@ This repository contains dotfiles and configuration files managed by a user name
 
 ## Key Components
 
-- **settings/**: The chezmoi source state (wired in via `.chezmoiroot`). `dot_*` files map to `~/.`, `dot_config/*` to `~/.config/*`; OS-specific files are gated by `.chezmoiignore` templates; `run_once_*` scripts handle one-time setup (dirs, macOS defaults + Homebrew)
+- **settings/**: The chezmoi source state (wired in via `.chezmoiroot`). `dot_*` files map to `~/.`, `dot_config/*` to `~/.config/*`; OS-specific files are gated by `.chezmoiignore` templates; `run_once_*` scripts handle one-time setup (dirs, macOS defaults + Homebrew). chezmoi runs in `mode = "symlink"` (set in the generated `~/.config/chezmoi/chezmoi.toml`), so static files are applied as symlinks back into `settings/` and edits to the deployed file edit the repo directly. Templates (`*.tmpl`), modify-templates (`modify_*`), and scripts (`run_once_*`) are still copied/rendered, never symlinked — so sensitive/generated files are never live-linked. New files still need a one-time `chezmoi add`.
 - **index**: Main shell entry point, sourced from `~/.zshrc`
 - **source/**: Shell scripts sourced by `index`
 - **functions/**: Standalone utility scripts

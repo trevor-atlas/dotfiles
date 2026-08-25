@@ -64,3 +64,6 @@ hadoop-krb5-configs/
 **/.claude/rules/managed/
 **/.claude/rules/managed
 .playwright-cli/
+
+# Managed by nex.claude_code
+**/.claude/skills/bpm-*
