@@ -1,0 +1,56 @@
+# Herdr configuration tuned to feel like settings/dot_tmux.conf and the zellij config.
+# Upstream reference: https://herdr.dev/docs/configuration/ and /docs/config-reference/
+#
+# Model note: Herdr is an agent orchestrator, not a plain multiplexer. Its nesting is
+# session -> workspace (per project) -> tab -> pane, and agents (claude/codex/pi) are
+# first-class, state-tracked entities in the sidebar. Sessions persist server-side, so
+# there is no bool/zbool-style rebuild step -- make a workspace once and it survives
+# detach/restart. Herdr is also mouse-native; the keyboard layer below is optional.
+
+# Skip the first-run onboarding flow.
+onboarding = false
+
+[keys]
+# tmux `set -g prefix ``  -- backtick prefix for muscle memory.
+# CAVEAT: unlike tmux there is no documented double-tap-to-send-literal, so emitting a
+# literal ` into a pane may be awkward. If that gets annoying, switch to "ctrl+b".
+prefix = "backtick"
+
+# Side-by-side split (Herdr calls this "vertical") on both `-` and `|`, per request.
+# tmux used `|`/`H` for side-by-side; here `-` joins it too.
+split_vertical = ["prefix+|", "prefix+minus"]
+# Stacked split (Herdr "horizontal") relocated off `-` onto `\`, which sits next to `|`.
+split_horizontal = "prefix+backslash"
+
+# Everything else already matches your tmux/zellij bindings via Herdr defaults:
+#   focus panes    prefix+h/j/k/l      (tmux C-h/j/k/l target; the raw-ctrl
+#                                        vim-tmux-navigator has no Herdr equivalent,
+#                                        so use the prefix form)
+#   close pane     prefix+x            (tmux `x`)
+#   close tab      prefix+shift+x      (tmux `X`)
+#   new tab        prefix+c            (zellij `c`)
+#   next/prev tab  prefix+n / prefix+p (tmux `n`/`p`)
+#   zoom           prefix+z            (zellij `z`)
+#   copy mode      prefix+[            (tmux/zellij `[`)
+#   goto tab 1-9   prefix+1..9         (zellij number jumps)
+#   rename tab     prefix+shift+t      (tmux used `R`; kept default to avoid the
+#                                        reload_config = prefix+shift+r collision)
+#   detach         prefix+q            (tmux/zellij `d`)
+#   workspace nav  prefix+w            (replaces the fzf F/P popups; mouse sidebar too)
+#   session goto   prefix+g            (fuzzy jump across workspaces/tabs/panes)
+
+[terminal]
+# tmux `set -g default-shell /bin/zsh`.
+default_shell = "/bin/zsh"
+# Start login shells on macOS so Homebrew / path_helper PATH setup runs in new panes.
+shell_mode = "auto"
+
+[theme]
+# Closest match to the zellij catppuccin-macchiato theme (and the tmux dracula vibe).
+name = "catppuccin"
+
+[ui]
+# tmux `set-option -g status-position top`.
+tab_bar_position = "top"
+# zellij copy_on_select / copy_on_select true (also the Herdr default).
+copy_on_select = true
