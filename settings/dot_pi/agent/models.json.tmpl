@@ -27,6 +27,25 @@
     },
     "openai": {
       "apiKey": {{ $oaiAPIKey | toJson }}
+    },
+    "ollama": {
+      "baseUrl": "http://192.168.50.189:11434/v1",
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": [
+        {
+          "id": "qwen3.8:27b",
+          "name": "Qwen 3.8 27B (Ollama)",
+          "reasoning": true,
+          "contextWindow": 131072,
+          "maxTokens": 32768,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+        }
+      ]
     }
   }
 }

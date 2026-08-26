@@ -17,11 +17,7 @@
   "npm:pi-safety-net",
   "npm:@tintinweb/pi-subagents",
   "npm:pi-prompt-template-model",
-  "npm:pi-web-access",
-  "npm:@juicesharp/rpiv-ask-user-question",
-  "npm:pi-hermes-memory",
-  "npm:@narumitw/pi-goal",
-  "npm:pi-intercom"
+  "npm:@juicesharp/rpiv-ask-user-question"
 ]` -}}
 {{- $settings
   | setValueAtPath "packages" $packages
