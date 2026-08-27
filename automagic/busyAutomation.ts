@@ -10,8 +10,8 @@
  * ours" rule so it never stomps a mode another tool started.
  *
  * That call→theme behavior is just what it currently does, not what it *is* —
- * the actor reads events and does stuff; calls are one kind of event. It reuses
- * the dumb `startActor` for the actual subscription.
+ * the subscriber reads events and does stuff; calls are one kind of event. It
+ * reuses the dumb `startActor` primitive for the actual subscription.
  *
  * The only input is where the bar lives; the call→theme map is a plain constant.
  */
@@ -20,47 +20,48 @@ import { startActor } from './actor';
 import type { Actor } from './actor';
 import type { EventBus } from './eventBus';
 import type { SystemEvent } from './systemEvents';
+import type { Reporter } from './board';
 
 /**
- * Start the busy-bar actor on `bus`: subscribe to events and react — currently
- * by showing a theme while a call is live and releasing when it ends. Returns an
+ * Start the busy-bar subscriber on `bus`: subscribe to events and react —
+ * currently by showing a theme while a call is live and releasing when it ends.
+ * Reflects its status through the injected {@link Reporter}. Returns an
  * {@link Actor stop}. Internal state is deliberately simple: track the current
  * hold so `stop()` and shutdown release only what we started.
  */
 export function startBarActor(
   bus: EventBus<SystemEvent>,
+  report: Reporter,
   bar: ConstructorParameters<typeof BusyDefaults>[0],
 ): Actor {
   const busy = new BusyDefaults(bar || {});
   busy.playTheme('nyan_cat');
   let hold: import('./busy-defaults').HeldMode | null = null;
+  report('waiting');
+
+  const showMeeting = async (): Promise<void> => {
+    if (hold) return;
+    hold = await busy.run('meeting');
+    report('showing: meeting');
+  };
+
+  const release = async (): Promise<void> => {
+    const current = hold;
+    hold = null;
+    await current?.release().catch(() => {});
+    report('idle');
+  };
 
   const onEvent = async (event: SystemEvent): Promise<void> => {
     if (event.type === 'call_state_changed') {
-      if (event.app === null) {
-        const current = hold;
-        hold = null;
-        await current?.release().catch(() => {});
-        return;
-      }
-      if (hold) return;
-      hold = await busy.run('meeting');
-      return;
+      if (event.app === null) return release();
+      return showMeeting();
     }
 
     /** Theme to show while a call is live */
-    if (event.type === 'call_started') {
-      if (hold) return;
-      hold = await busy.run('meeting');
-      return;
-    }
+    if (event.type === 'call_started') return showMeeting();
 
-    if (event.type === 'call_ended') {
-      const current = hold;
-      hold = null;
-      await current?.release().catch(() => {});
-      return;
-    }
+    if (event.type === 'call_ended') return release();
   };
 
   const actor = startActor(bus, onEvent);
@@ -71,6 +72,7 @@ export function startBarActor(
       const current = hold;
       hold = null;
       await current?.release().catch(() => {});
+      report('idle');
     },
   };
 }

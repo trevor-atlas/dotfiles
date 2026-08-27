@@ -4,17 +4,17 @@
  * via AppleScript, and when whether a call is live changes it publishes events to
  * the bus and updates its current state.
  *
- * A producer owns its whole lifecycle and schedule — the caller just hands it the
- * bus (`(bus) => handle`). It also logs the transitions it emits, so the daemon
- * wiring doesn't manually subscribe to the bus to surface them.
+ * A producer owns its whole lifecycle and schedule — the runtime hands `start`
+ * the bus and a bound `report` handle. It also logs the transitions it emits, so
+ * the daemon wiring doesn't manually subscribe to the bus to surface them.
  *
  * This is the template for future sources (mic audio, a calendar feed, …): their
  * own `pollEvery` loop + plain `bus.publish` on the shared bus.
  */
 import { spawnSync } from 'bun';
-import type { EventBus } from './eventBus';
 import type { SystemEvent, CallState } from './systemEvents';
-import { pollEvery, type Producer, type ProducerHandle } from './poll';
+import { pollEvery, type ProducerDescriptor } from './poll';
+import { log } from './logSink';
 
 /** How often the call detector samples window titles (its own cadence). */
 const CALL_POLL_MS = 3000;
@@ -55,32 +55,43 @@ function zoomWindowTitles(): string[] {
     .filter((t) => t.length > 0);
 }
 
-const callDetector: Producer<CallState, SystemEvent> = (bus: EventBus<SystemEvent>) => {
-  let currentApp: CallApp | null = null;
+/**
+ * The call detector as a self-naming, self-reporting producer descriptor. The
+ * runtime binds a board reporter to this component's row before `start` runs;
+ * `start` reflects the live call state through `report` and publishes events.
+ */
+export const callDetector: ProducerDescriptor<CallState, SystemEvent> = {
+  name: 'call detector',
+  start: (bus, report) => {
+    let currentApp: CallApp | null = null;
 
-  const tick = () => {
-    const app = classifyCall(zoomWindowTitles());
-    if (app === currentApp) return;
+    const tick = () => {
+      const app = classifyCall(zoomWindowTitles());
+      if (app === currentApp) return;
 
-    if (currentApp !== null) {
-      bus.publish({ type: 'call_ended', app: currentApp });
-      console.log('call ended');
-    }
-    if (app !== null) {
-      bus.publish({ type: 'call_started', app });
-      console.log('call started');
-    }
-    bus.publish({ type: 'call_state_changed', app });
+      if (currentApp !== null) {
+        bus.publish({ type: 'call_ended', app: currentApp });
+        log('call ended');
+      }
+      if (app !== null) {
+        bus.publish({ type: 'call_started', app });
+        log('call started');
+      }
+      bus.publish({ type: 'call_state_changed', app });
 
-    currentApp = app;
-  };
+      currentApp = app;
+      report(app === null ? 'idle' : `call: ${app}`);
+    };
 
-  const loop = pollEvery(CALL_POLL_MS, tick);
-  return {
-    getCurrentState: () => ({ app: currentApp }),
-    stop: loop.stop,
-    done: loop.done,
-  };
+    // Report the initial state; the first tick runs synchronously below and
+    // will overwrite this the moment it observes a live call.
+    report('idle');
+
+    const loop = pollEvery(CALL_POLL_MS, tick);
+    return {
+      getCurrentState: () => ({ app: currentApp }),
+      stop: loop.stop,
+      done: loop.done,
+    };
+  },
 };
-
-export default callDetector;

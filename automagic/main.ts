@@ -18,7 +18,7 @@ import { parseArgs } from 'util';
 import { systemBus } from './systemEvents';
 import { Runtime } from './runtime';
 import { startBarActor } from './busyAutomation';
-import callDetector from './callDetector';
+import { callDetector } from './callDetector';
 
 const { values } = parseArgs({
   args: process.argv.slice(2),
@@ -30,22 +30,24 @@ const { values } = parseArgs({
 
 const runtime = new Runtime(systemBus);
 
-// Subscribe/start the actor BEFORE the producer starts polling. The producer's
-// first tick runs synchronously on registration (see `pollEvery`), so if we
-// registered it first it would publish `call_state_changed` (and `call started`)
-// before the bar actor was listening — the initial full-state event would be
-// missed and, since the producer only republishes on a change, the bar would
-// stay dark for the whole meeting.
+// Subscribe/start the subscriber BEFORE the producer starts polling. The
+// producer's first tick runs synchronously on registration (see `pollEvery`),
+// so if we registered it first it would publish `call_state_changed` (and
+// `call started`) before the bar subscriber was listening — the initial
+// full-state event would be missed and, since the producer only republishes on
+// a change, the bar would stay dark for the whole meeting.
 //
 // Shutdown order is independent of this: `stopAll()` always stops producers
-// before actors ([...producers, ...actors]), so the bar is still released last.
-runtime.registerActor((bus) =>
-  startBarActor(bus, {
-    host: values.host,
-    HTTPAccessPassword: values.access,
-  }),
-);
-runtime.registerProducers(callDetector);
+// before subscribers ([...producers, ...subscribers]), so the bar is released last.
+runtime.registerSubscriber({
+  name: 'busy bar',
+  start: (bus, report) =>
+    startBarActor(bus, report, {
+      host: values.host,
+      HTTPAccessPassword: values.access,
+    }),
+});
+runtime.registerProducer(callDetector);
 
 let shuttingDown = false;
 const shutdown = async (code: number): Promise<void> => {

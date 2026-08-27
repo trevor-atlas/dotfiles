@@ -19,6 +19,8 @@
  */
 
 import type { EventBus } from './eventBus';
+import type { Reporter } from './board';
+import { log } from './logSink';
 
 export interface PollLoop {
   /** Stop the loop and wait for it to unwind. */
@@ -56,6 +58,27 @@ export type Producer<TState, TEvent> = {
 };
 
 /**
+ * A self-naming, self-reporting producer registration. `name` is the display
+ * name (known before `start` runs, so the runtime can create the board row and
+ * bind its reporter first); `start` is the old producer factory plus an injected
+ * {@link Reporter} the component uses to publish its current status.
+ */
+export interface ProducerDescriptor<TState, TEvent> {
+  name: string;
+  start: (bus: EventBus<TEvent>, report: Reporter) => ProducerHandle<TState>;
+}
+
+/**
+ * A self-naming, self-reporting subscriber registration: `name` plus a `start`
+ * that builds an {@link Actor} against the bus and reports its status via the
+ * injected {@link Reporter}.
+ */
+export interface SubscriberDescriptor<TEvent> {
+  name: string;
+  start: (bus: EventBus<TEvent>, report: Reporter) => import('./actor').Actor;
+}
+
+/**
  * Run `poll()` immediately (first tick), then again every `intervalMs` on a
  * deadline based on each tick's start time, until stopped. Errors thrown by
  * `poll()` are logged and the loop continues (a bad read shouldn't kill the
@@ -80,7 +103,7 @@ export function pollEvery(
         try {
           await poll();
         } catch (err) {
-          console.error(`[poll] error: ${(err as Error).message}`);
+          log(`[poll] error: ${(err as Error).message}`);
         }
         pollNow = false;
         startedAt = Date.now();
