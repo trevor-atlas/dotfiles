@@ -1,17 +1,17 @@
 // https://github.com/johnlindquist/kit/blob/0de31f203dca2f90ce6f518e9292616a810a1a24/src/api/kit.ts#L495
 async function applescript(
   script: string,
-  // options: { scriptType: 'osascript' | 'JavaScript' } = {
-  //   scriptType: 'osascript',
-  // },
+  options: { scriptType: 'osascript' | 'JavaScript' } = {
+    scriptType: 'osascript',
+  },
 ) {
-  // const cmd = options.scriptType === 'JavaScript'
-  //   ? ['/usr/bin/osascript', '-l', 'JavaScript', '-e', script]
-  //   : ['/usr/bin/osascript', '-e', script];
+  const cmd = options.scriptType === 'JavaScript'
+    ? ['/usr/bin/osascript', '-l', 'JavaScript', '-e', script]
+    : ['/usr/bin/osascript', '-e', script];
 
   return new Promise<string | null>((res, rej) => {
     Bun.spawn({
-      cmd: ['/usr/bin/osascript', '-e', script],
+      cmd,
       windowsHide: true,
       async onExit(subprocess, exitCode, signalCode, error) {
         await subprocess.exited;
