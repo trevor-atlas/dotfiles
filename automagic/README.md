@@ -16,16 +16,18 @@ bun install
 | `busy-defaults.ts`  | `BusyDefaults` — typed wrapper over the bar's HTTP client: profiles, snapshots, run/release, `playTheme`, `cycle`, `status`. Re-exports the shared display + nyan primitives. |
 | `display.ts`        | Reusable display core: a minimal **PNG encoder**, pixel-buffer helpers, and `BitmapStreamer` (upload + stream full-frame bitmaps as images). Not nyan-specific — any future theme reuses it. |
 | `nyan-cat.ts`       | The **Nyan Cat** animation theme: palette, geometry, pure `renderFrame`, and a `NyanCatPlayer` that streams frames through `BitmapStreamer`. |
-| `index.ts`          | CLI front-end for `BusyDefaults` (modes, list, status, cycle). |
+| `board.ts`          | Observable board model — ordered producer/subscriber rows, each with a live status string a component overwrites through its own `Reporter`. `snapshot()`/`subscribe()` feed the TUI; imports nothing else. |
+| `logSink.ts`        | Shared bounded log ring (`logSink`) — components `log()` here instead of `console.log`, and the TUI subscribes to render the log pane. `setMirror()` toggles console echo (off once Ink mounts). |
+| `ui.tsx`            | Ink view — `renderBoard(board, logSink, { onExit })` renders **Producers**/**Subscribers** sections + a log pane. Pure reader; `exitOnCtrlC: false` with a raw-mode guard so non-TTY stdin never throws. |
 | `eventBus.ts`        | The **dumb bus** — `EventBus<T>`: receive + broadcast only, no domain knowledge, no filtering, no replay. Plus `createEventBus()` for isolated test buses. |
 | `systemEvents.ts`    | **System-event vocabulary + shared bus** — the generic `systemBus` (typed `EventBus`), with call state as today's `SystemEvent` / `CallState` types. No logic beyond the contract. |
-| `callDetector.ts`     | **Call source** — a self-scheduled *producer* `(bus) => handle`: a `pollEvery` loop (its own cadence) reads window titles (AppleScript), classifies via the pure `classifyCall`, and on change publishes `call_started` / `call_ended` / `call_state_changed`. Exposes `getCurrentState()` and logs its own transitions. |
+| `callDetector.ts`     | **Call source** — a self-scheduled *producer* descriptor `{ name, start }`: the runtime binds a board reporter to its row, then `start(bus, report)` runs a `pollEvery` loop (its own cadence) reading window titles (AppleScript), classifies via the pure `classifyCall`, and on change publishes `call_started` / `call_ended` / `call_state_changed` while reporting its state through the injected reporter. Logs its own transitions. |
 | `actor.ts`            | The **dumb actor** — `startActor(bus, onEvent)`: subscribe to the bus + `stop()` detaches. Generic, knows nothing about themes/calls/bar. |
-| `busyAutomation.ts`   | **The bar actor** — `startBarActor(bus, { host, HTTPAccessPassword })` subscribes to the bus (via the dumb actor), reads events, and reacts — today by showing/releasing a call theme on the bar (only-if-ours). Calls are just the reaction it currently has, not what it is. |
+| `busyAutomation.ts`   | **The bar subscriber** — `startBarActor(bus, report, { host, HTTPAccessPassword })` subscribes to the bus (via the dumb actor), reads events, and reacts — today by showing/releasing a call theme on the bar (only-if-ours) — reporting its status through the injected reporter. Calls are just the reaction it currently has, not what it is. |
 | `systemEvents.test.ts`| Unit tests for the bus and the pure `classifyCall` (driven with fake titles — no OS/bar needed). |
-| `main.ts`            | CLI entry that wires the shared bus + detector + bar actor together. |
+| `main.ts`            | Daemon entry: constructs the `Board` + shared `logSink`, injects the board into the `Runtime`, registers the descriptors (`registerSubscriber`/`registerProducer`), and mounts the Ink board (`renderBoard`). Ink owns the terminal lifecycle; `q`/Ctrl-C runs an orderly `shutdown`. |
 | `poll.ts`             | Shared deadline-driven schedule (`pollEvery`) plus the generic **`Producer`** type — `(bus) => ProducerHandle<TState>` (`getCurrentState` / `stop` / `done`). A producer owns its own schedule; the caller just hands it the bus. |
-| `runtime.ts`          | Registry + orderly shutdown. Takes the bus in its constructor, hands it to every component; `stopAll()` stops **producers then the actor** (two lanes), isolating failures. |
+| `runtime.ts`          | Registry + orderly shutdown. Takes the bus (and an optional `Board`) in its constructor; `registerProducer`/`registerSubscriber` take self-naming descriptors, add a board row, and start each component with the bus + that row's reporter. `stopAll()` stops **producers then subscribers** (two lanes), isolating failures. |
 | `testappdetector.ts`| Probe which window titles any app exposes (aids writing detectors). |
 
 ### Runtime & types
@@ -34,6 +36,8 @@ bun install
   `verbatimModuleSyntax`, `noFallthroughCasesInSwitch`. `bunx tsc --noEmit` is clean.
 - **`@busy-app/busy-lib@~0.17.0`** — the typed HTTP client used by `BusyDefaults`,
   so no raw HTTP for profiles/snapshots/assets/display.
+- **`ink@^5` + `react@^18`** — the live TUI board (`ui.tsx`) that `bun main.ts`
+  renders (`@types/react` for the JSX types).
 
 ## The BUSY Bar
 
@@ -51,23 +55,17 @@ Design philosophy inherited from the Python originals — **never preempt the
 display**: the wrappers skip a draw (or leave a release alone) when a
 higher-priority app owns the screen, rather than rudely interrupt it.
 
-## CLI
+## Live TUI board
 
-The default mode is `busy`; `--host` defaults to `192.168.50.85`.
+`bun main.ts` runs the daemon and renders a live Ink board of the registered
+producers and subscribers with their current status, plus a log pane of recent
+lines. Ink owns the terminal; `q` or Ctrl-C stops the daemon, releases the bar,
+and restores the terminal cleanly.
 
 ```bash
-bun run index.ts --mode busy                # BUSY profile
-bun run index.ts --mode on_air              # CUSTOM profile, theme on_air
-bun run index.ts --mode nyan_cat            # built-in nyan-cat animation (until Ctrl-C)
-bun run index.ts --mode off                 # stop the session / release the display
-bun run index.ts --list                     # show stored profiles (busy + custom)
-bun run index.ts --status                   # what owns the display right now
-bun run index.ts --cycle                    # show every theme, 5s each, then stop
-bun run index.ts --cycle --duration 2000    # 2s per theme
+bun main.ts                    # live board; --host 192.168.50.85 by default
+bun main.ts --host 127.0.0.1   # emulator / Wi-Fi bar
 ```
-
-Every command stops cleanly on Ctrl-C (SIGINT/SIGTERM), releasing whatever it
-held or clearing the animation.
 
 ## Themes
 
@@ -102,10 +100,12 @@ upscaled) in a preview tool during development.
 
 ## Call automation
 
-Detect a live video call on this Mac and set the bar theme accordingly.
+Detect a live video call on this Mac and set the bar theme accordingly. `bun
+main.ts` mounts the live TUI board (Producers/Subscribers rows + a log pane);
+`q` or Ctrl-C stops it and releases the bar.
 
 ```bash
-bun run main.ts                    # e.g. main --host 192.168.50.85
+bun main.ts                    # live board; --host 192.168.50.85 by default
 ```
 
 Call automation is a set of decoupled pieces, bridged by a **shared, dumb bus**
