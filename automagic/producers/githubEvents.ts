@@ -7,10 +7,12 @@
  * to its board row.
  *
  * There is no per-user GitHub webhook, so — with NO new GitHub App / OAuth — we
- * poll the notifications REST API through the already-authenticated `gh` CLI on
- * BOTH hosts the user has (personal `github.com` and the HubSpot enterprise
- * server `git.hubteam.com`), normalise, and publish. Low latency isn't needed
- * (a ~5-minute cadence is fine), so this is a plain deadline poll like the rest.
+ * poll the notifications REST API through the already-authenticated `gh` CLI for
+ * EACH github.com account the user has (personal + the work EMU account). Both
+ * accounts live on github.com; we fetch each with its own token via
+ * `gh auth token --user`, so the active `gh` account is never disturbed, then
+ * normalise and publish. Low latency isn't needed (a ~5-minute cadence is fine),
+ * so this is a plain deadline poll like the rest.
  *
  * The design mirrors `callDetector.ts`: a PURE core (`normalizeNotifications`,
  * `selectNew` — exported and unit-tested) split from thin IO
@@ -22,6 +24,8 @@
  * as read.
  */
 import { spawnSync } from 'bun';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import type { SystemEvent } from '../events/systemEvents';
 import { pollEvery, type ProducerDescriptor } from '../core/poll';
 import { log } from '../core/logSink';
@@ -29,8 +33,12 @@ import { log } from '../core/logSink';
 /** How often we poll GitHub notifications (its own cadence). Editable. */
 const GITHUB_POLL_MS = 5 * 60_000;
 
-/** The hosts the user has `gh` authenticated for. Editable. */
-const GITHUB_HOSTS = ['github.com', 'git.hubteam.com'] as const;
+/**
+ * The github.com accounts the user has authenticated in `gh` (personal + work
+ * EMU). Each is polled with its own token via `gh auth token --user`, so the
+ * active `gh` account is never touched. Editable.
+ */
+const GITHUB_ACCOUNTS = ['trevor-atlas', 'tatlas_hubspot'] as const;
 
 /**
  * `participating=true` = only threads that directly involve the user (mentions,
@@ -38,6 +46,25 @@ const GITHUB_HOSTS = ['github.com', 'git.hubteam.com'] as const;
  * merely watch. Editable — flip to widen the net.
  */
 const GITHUB_PARTICIPATING = true;
+
+/**
+ * Cap on the persisted "already emitted" cursor so it can't grow without bound
+ * on a long-lived daemon. When exceeded, the oldest keys are dropped (a dropped
+ * thread that later reappears re-fires once — a rare, acceptable cost). Editable.
+ */
+const SEEN_CAP = 2000;
+
+/**
+ * Where the "already emitted" cursor is persisted, so a restart re-emits only
+ * genuine deltas (including anything that arrived while the daemon was down)
+ * instead of replaying the backlog or silently dropping it. Honors
+ * `$XDG_STATE_HOME`, else `~/.local/state`.
+ */
+const SEEN_PATH = join(
+  process.env.XDG_STATE_HOME || join(process.env.HOME || '.', '.local', 'state'),
+  'automagic',
+  'github-seen.json',
+);
 
 /**
  * The coarse, downstream-facing normalisation of a notification. Kept small and
@@ -62,10 +89,12 @@ export type GithubEventKind =
  * A normalised GitHub notification — a plain, serialisable object carrying just
  * what a local automation needs to decide whether to act. No classes, no `gh`
  * types leaking through. `url` is a browser link (not the API URL) or null when
- * one can't be derived; `host` distinguishes personal vs. enterprise.
+ * one can't be derived; `account` says which of the user's gh accounts surfaced
+ * it (personal vs. work), and `host` is the repo's host (github.com today).
  */
 export type GithubEvent = {
   id: string;
+  account: string;
   host: string;
   kind: GithubEventKind;
   reason: string;
@@ -90,19 +119,31 @@ export type GithubState = { lastPolledAt: number | null; seenCount: number };
  * (or `null` for `url`). A non-array payload (e.g. a `{ "message": … }` error
  * body) yields `[]`.
  */
-export function normalizeNotifications(rawJson: string | unknown[]): GithubEvent[] {
+export function normalizeNotifications(
+  rawJson: string | unknown[],
+  account = '',
+): GithubEvent[] {
   const out: GithubEvent[] = [];
   for (const item of toArray(rawJson)) {
-    const event = normalizeOne(item);
+    const event = normalizeOne(item, account);
     if (event) out.push(event);
   }
   return out;
 }
 
 /**
+ * The dedup key for one event: account + thread + `updatedAt`. Exported so the
+ * persisted cursor and the tests share exactly one definition.
+ */
+export function seenKey(event: GithubEvent): string {
+  return `${event.account}:${event.id}:${event.updatedAt}`;
+}
+
+/**
  * Split `events` into the ones not yet seen (`fresh`) and the advanced cursor
- * (`nextSeen`). Pure. Keyed on `id:updatedAt` so a thread only re-fires once it
- * has genuinely new activity (a newer `updatedAt`); `nextSeen` is a superset of
+ * (`nextSeen`). Pure. Keyed by {@link seenKey} (account + thread + `updatedAt`)
+ * so a thread only re-fires once it has genuinely new activity (a newer
+ * `updatedAt`) and the two accounts can't collide; `nextSeen` is a superset of
  * `seen` plus every key in this batch.
  */
 export function selectNew(
@@ -112,7 +153,7 @@ export function selectNew(
   const nextSeen = new Set(seen);
   const fresh: GithubEvent[] = [];
   for (const event of events) {
-    const key = `${event.id}:${event.updatedAt}`;
+    const key = seenKey(event);
     if (nextSeen.has(key)) continue;
     nextSeen.add(key);
     fresh.push(event);
@@ -120,8 +161,37 @@ export function selectNew(
   return { fresh, nextSeen };
 }
 
+/** Serialise the cursor to a JSON array of keys (newest last). Pure. */
+export function serializeSeen(seen: ReadonlySet<string>): string {
+  return JSON.stringify([...seen]);
+}
+
+/**
+ * Parse a persisted cursor (a JSON array of string keys) back into a Set. Pure
+ * and tolerant: malformed JSON, a non-array, or non-string entries yield an
+ * empty (or filtered) Set — never throws.
+ */
+export function parseSeen(json: string): Set<string> {
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((k): k is string => typeof k === 'string'));
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * Bound the cursor to at most `cap` keys, dropping the oldest (Sets preserve
+ * insertion order, so the retained tail is the most recent). Pure.
+ */
+export function pruneSeen(seen: ReadonlySet<string>, cap: number): Set<string> {
+  if (seen.size <= cap) return new Set(seen);
+  return new Set([...seen].slice(seen.size - cap));
+}
+
 /** One raw notification → `GithubEvent`, or null if it has no usable thread id. */
-function normalizeOne(item: unknown): GithubEvent | null {
+function normalizeOne(item: unknown, account: string): GithubEvent | null {
   if (!item || typeof item !== 'object') return null;
   const o = item as Record<string, unknown>;
 
@@ -138,6 +208,7 @@ function normalizeOne(item: unknown): GithubEvent | null {
 
   return {
     id,
+    account,
     host,
     kind: classifyKind(reason, subjectType),
     reason,
@@ -222,26 +293,70 @@ function hostOf(htmlUrl: string): string {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Fetch a host's participating notifications via the authenticated `gh` CLI.
- * Returns `[]` on ANY failure (gh missing, host not authed, network error,
- * non-zero exit, non-JSON) — never throws. READ-ONLY: only a GET.
+ * Fetch one account's participating notifications from github.com via the `gh`
+ * CLI, using that account's own token (`gh auth token --user`) injected as
+ * `GH_TOKEN` so the active `gh` account is never switched. Returns `[]` on ANY
+ * failure (gh missing, account not authed, network error, non-zero exit,
+ * non-JSON) — never throws. READ-ONLY: only a GET.
  */
-function fetchNotifications(host: string): unknown[] {
+function fetchNotifications(account: string): unknown[] {
   try {
-    const participating = GITHUB_PARTICIPATING ? 'true' : 'false';
-    const proc = spawnSync([
+    const tokenProc = spawnSync([
       'gh',
-      'api',
+      'auth',
+      'token',
+      '--user',
+      account,
       '--hostname',
-      host,
-      `/notifications?participating=${participating}&all=false`,
-      '--paginate',
+      'github.com',
     ]);
+    if (!tokenProc.success) return [];
+    const token = tokenProc.stdout.toString().trim();
+    if (!token) return [];
+
+    const participating = GITHUB_PARTICIPATING ? 'true' : 'false';
+    const proc = spawnSync(
+      [
+        'gh',
+        'api',
+        '--hostname',
+        'github.com',
+        `/notifications?participating=${participating}&all=false`,
+        '--paginate',
+      ],
+      { env: { ...process.env, GH_TOKEN: token } },
+    );
     if (!proc.success) return [];
     const parsed = JSON.parse(proc.stdout.toString());
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
+  }
+}
+
+/**
+ * Load the persisted "already emitted" cursor. Returns the Set plus whether a
+ * file existed — on the very first run (no file) the producer baselines instead
+ * of emitting the whole backlog. Never throws (missing/unreadable → empty).
+ */
+function loadSeen(): { seen: Set<string>; existed: boolean } {
+  try {
+    return { seen: parseSeen(readFileSync(SEEN_PATH, 'utf8')), existed: true };
+  } catch {
+    return { seen: new Set(), existed: false };
+  }
+}
+
+/**
+ * Persist the cursor (mkdir + write). Soft-warns on failure; the daemon keeps
+ * running from the in-memory Set.
+ */
+function saveSeen(seen: ReadonlySet<string>): void {
+  try {
+    mkdirSync(dirname(SEEN_PATH), { recursive: true });
+    writeFileSync(SEEN_PATH, serializeSeen(seen));
+  } catch (err) {
+    log(`github: could not persist cursor: ${(err as Error).message}`);
   }
 }
 
@@ -251,47 +366,56 @@ function fetchNotifications(host: string): unknown[] {
 
 /**
  * The GitHub-notifications producer as a self-naming, self-reporting descriptor
- * (see `callDetector.ts`). The first tick SEEDS the baseline into `seen`
- * WITHOUT publishing — so the whole unread backlog isn't replayed on startup —
- * then every later tick publishes only genuinely-new threads.
+ * (see `callDetector.ts`). The "already emitted" cursor is persisted to disk, so
+ * across restarts it emits only genuine deltas — anything new (including while
+ * the daemon was down) fires exactly once, and nothing already emitted re-fires.
+ * On the very first run (no persisted cursor) it baselines the current backlog
+ * without publishing, so first launch doesn't dump history.
  */
 export const githubEventDetector: ProducerDescriptor<GithubState, SystemEvent> = {
   name: 'github events',
   start: (bus, report) => {
-    let seen = new Set<string>();
+    const restored = loadSeen();
+    let seen = restored.seen;
     let lastPolledAt: number | null = null;
-    let seeded = false;
+    // A restored cursor means we're already primed — emit deltas immediately.
+    // Only the very first run (no file) baselines the backlog without emitting.
+    let seeded = restored.existed;
 
-    // Fetch + normalise both hosts; a host that returns nothing is skipped by
+    // Fetch + normalise every account; one that returns nothing is skipped by
     // the natural empty flatMap (no special-casing needed).
     const collect = (): GithubEvent[] =>
-      GITHUB_HOSTS.flatMap((host) => normalizeNotifications(fetchNotifications(host)));
+      GITHUB_ACCOUNTS.flatMap((account) =>
+        normalizeNotifications(fetchNotifications(account), account),
+      );
 
     const tick = () => {
       const events = collect();
       lastPolledAt = Date.now();
 
       if (!seeded) {
-        // Baseline: absorb everything currently unread, publish nothing.
-        seen = selectNew(events, seen).nextSeen;
+        // First run ever: absorb the current backlog into the cursor and persist
+        // it, but publish nothing.
+        seen = pruneSeen(selectNew(events, seen).nextSeen, SEEN_CAP);
         seeded = true;
+        saveSeen(seen);
         report(seen.size ? `idle · ${seen.size} tracked` : 'idle');
         return;
       }
 
       const { fresh, nextSeen } = selectNew(events, seen);
-      seen = nextSeen;
+      seen = pruneSeen(nextSeen, SEEN_CAP);
 
       for (const event of fresh) {
         bus.publish({ type: 'github_event', event });
-        log(`github: ${event.kind} ${event.repo} · ${event.title}`);
+        log(`github: [${event.account}] ${event.kind} ${event.repo} · ${event.title}`);
       }
+      if (fresh.length) saveSeen(seen);
 
       report(statusFor(fresh, lastPolledAt));
     };
 
-    // Report the initial state; the first tick runs synchronously below and
-    // overwrites it the moment it has seeded the baseline.
+    // Report the initial state; the first tick runs synchronously below.
     report('idle');
 
     const loop = pollEvery(GITHUB_POLL_MS, tick);

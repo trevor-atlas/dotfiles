@@ -13,7 +13,15 @@
  * Fixtures ship inline so a test is a readable spec of one notification shape.
  */
 import { test, expect } from 'bun:test';
-import { normalizeNotifications, selectNew, type GithubEvent } from './githubEvents';
+import {
+  normalizeNotifications,
+  selectNew,
+  seenKey,
+  serializeSeen,
+  parseSeen,
+  pruneSeen,
+  type GithubEvent,
+} from './githubEvents';
 
 /** A well-formed personal-host notification (review requested on a PR). */
 const reviewRequestedPr = {
@@ -29,9 +37,10 @@ const reviewRequestedPr = {
 };
 
 test('normalizeNotifications: maps every field and derives kind + browser url (PR review)', () => {
-  const [event] = normalizeNotifications([reviewRequestedPr]);
+  const [event] = normalizeNotifications([reviewRequestedPr], 'trevor-atlas');
   expect(event).toEqual({
     id: '1001',
+    account: 'trevor-atlas',
     host: 'github.com',
     kind: 'review_requested',
     reason: 'review_requested',
@@ -98,7 +107,7 @@ test('normalizeNotifications: unknown reason + unknown subject.type → other', 
   expect(event?.url).toBeNull();
 });
 
-test('normalizeNotifications: GHES enterprise host derives its own host + browser url', () => {
+test('normalizeNotifications: a non-github.com host derives its own host + browser url', () => {
   const [event] = normalizeNotifications([
     {
       id: '2001',
@@ -106,14 +115,14 @@ test('normalizeNotifications: GHES enterprise host derives its own host + browse
       updated_at: '2024-02-01T10:00:00Z',
       subject: {
         title: 'Enterprise change',
-        url: 'https://git.hubteam.com/api/v3/repos/team/repo/pulls/7',
+        url: 'https://ghe.example.com/api/v3/repos/team/repo/pulls/7',
         type: 'PullRequest',
       },
-      repository: { full_name: 'team/repo', html_url: 'https://git.hubteam.com/team/repo' },
+      repository: { full_name: 'team/repo', html_url: 'https://ghe.example.com/team/repo' },
     },
   ]);
-  expect(event?.host).toBe('git.hubteam.com');
-  expect(event?.url).toBe('https://git.hubteam.com/team/repo/pull/7');
+  expect(event?.host).toBe('ghe.example.com');
+  expect(event?.url).toBe('https://ghe.example.com/team/repo/pull/7');
 });
 
 test('normalizeNotifications: missing subject.url → url is null, other fields survive', () => {
@@ -155,35 +164,68 @@ test('normalizeNotifications: tolerates malformed input without throwing', () =>
 });
 
 test('selectNew: first-seen items are fresh and accumulate into nextSeen', () => {
-  const events = normalizeNotifications([
-    reviewRequestedPr,
-    { ...reviewRequestedPr, id: '1002', updated_at: '2024-01-02T12:00:00Z' },
-  ]);
+  const events = normalizeNotifications(
+    [reviewRequestedPr, { ...reviewRequestedPr, id: '1002', updated_at: '2024-01-02T12:00:00Z' }],
+    'me',
+  );
   const { fresh, nextSeen } = selectNew(events, new Set());
   expect(fresh.map((e) => e.id)).toEqual(['1001', '1002']);
-  expect(nextSeen.has('1001:2024-01-02T12:00:00Z')).toBe(true);
-  expect(nextSeen.has('1002:2024-01-02T12:00:00Z')).toBe(true);
+  expect(nextSeen.has('me:1001:2024-01-02T12:00:00Z')).toBe(true);
+  expect(nextSeen.has('me:1002:2024-01-02T12:00:00Z')).toBe(true);
 });
 
 test('selectNew: already-seen items are filtered out', () => {
-  const events = normalizeNotifications([reviewRequestedPr]);
-  const seen = new Set(['1001:2024-01-02T12:00:00Z']);
+  const events = normalizeNotifications([reviewRequestedPr], 'me');
+  const seen = new Set(['me:1001:2024-01-02T12:00:00Z']);
   const { fresh, nextSeen } = selectNew(events, seen);
   expect(fresh).toEqual([]);
   expect(nextSeen).toEqual(seen);
 });
 
 test('selectNew: same id with a newer updated_at re-fires', () => {
-  const older: GithubEvent[] = normalizeNotifications([reviewRequestedPr]);
+  const older: GithubEvent[] = normalizeNotifications([reviewRequestedPr], 'me');
   const { nextSeen: afterFirst } = selectNew(older, new Set());
 
-  const newer = normalizeNotifications([
-    { ...reviewRequestedPr, updated_at: '2024-01-02T18:45:00Z' },
-  ]);
+  const newer = normalizeNotifications(
+    [{ ...reviewRequestedPr, updated_at: '2024-01-02T18:45:00Z' }],
+    'me',
+  );
   const { fresh, nextSeen } = selectNew(newer, afterFirst);
 
   expect(fresh.map((e) => e.updatedAt)).toEqual(['2024-01-02T18:45:00Z']);
   // The cursor keeps both the old and the new key.
-  expect(nextSeen.has('1001:2024-01-02T12:00:00Z')).toBe(true);
-  expect(nextSeen.has('1001:2024-01-02T18:45:00Z')).toBe(true);
+  expect(nextSeen.has('me:1001:2024-01-02T12:00:00Z')).toBe(true);
+  expect(nextSeen.has('me:1001:2024-01-02T18:45:00Z')).toBe(true);
+});
+
+test('seenKey: namespaces by account so the two accounts never collide', () => {
+  const [a] = normalizeNotifications([reviewRequestedPr], 'trevor-atlas');
+  const [b] = normalizeNotifications([reviewRequestedPr], 'tatlas_hubspot');
+  expect(seenKey(a!)).toBe('trevor-atlas:1001:2024-01-02T12:00:00Z');
+  expect(seenKey(b!)).toBe('tatlas_hubspot:1001:2024-01-02T12:00:00Z');
+  expect(seenKey(a!)).not.toBe(seenKey(b!));
+});
+
+test('selectNew: the same thread id under two accounts is not deduped away', () => {
+  const events = [
+    ...normalizeNotifications([reviewRequestedPr], 'trevor-atlas'),
+    ...normalizeNotifications([reviewRequestedPr], 'tatlas_hubspot'),
+  ];
+  const { fresh } = selectNew(events, new Set());
+  expect(fresh.map((e) => e.account)).toEqual(['trevor-atlas', 'tatlas_hubspot']);
+});
+
+test('parseSeen / serializeSeen: round-trip and tolerate junk', () => {
+  const seen = new Set(['me:1:t1', 'me:2:t2']);
+  expect(parseSeen(serializeSeen(seen))).toEqual(seen);
+  // Tolerant: bad JSON, a non-array, and non-string entries never throw.
+  expect(parseSeen('not json')).toEqual(new Set());
+  expect(parseSeen('{"nope":true}')).toEqual(new Set());
+  expect(parseSeen('["ok", 42, null, "ok2"]')).toEqual(new Set(['ok', 'ok2']));
+});
+
+test('pruneSeen: keeps the most-recent `cap` keys, drops the oldest', () => {
+  const seen = new Set(['a', 'b', 'c', 'd']); // insertion order = oldest→newest
+  expect(pruneSeen(seen, 10)).toEqual(seen); // under cap: unchanged
+  expect([...pruneSeen(seen, 2)]).toEqual(['c', 'd']); // over cap: newest kept
 });
