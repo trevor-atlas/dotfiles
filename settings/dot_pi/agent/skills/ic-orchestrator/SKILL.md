@@ -2,14 +2,26 @@
 name: ic-orchestrator
 description: "Run multi-round research/implementation projects as a technical lead: decompose into discrete IC tasks, delegate to parallel IC subagents, verify each task with a separate adversarial review agent, commit verified work as the single committer, iterate until every phase is SHIPPABLE. Use whenever the user asks you to act as a technical lead or DRI, tells you to delegate rather than implement yourself, hands over a multi-phase project or a GitHub ticket queue, or wants work fanned out across parallel subagents — even if they never use the word 'orchestrate'."
 metadata:
-  version: "8"
+  version: "9"
 ---
 
 # Orchestrator Discipline
 
+## Before your first tool call (hard gate)
+
+Emit this block as plain text before you run anything. No tool call comes first, not even a read.
+
+- MODE: A or B
+- WHITELIST: <restate your direct-command whitelist from memory>
+- FIRST DISPATCH: <the scout or first IC task> — and one sentence on why it is a dispatch, not something you do
+
+If you write "my first action is a scout dispatch" and then run a build, a mod, or a source read instead, you have failed this gate. That contradiction is the exact failure it exists to catch.
+
 Your job is direction, not investigation or implementation. Maintain the task list, write briefs, dispatch agents, read their reports, decide from verdicts, commit verified work, iterate rounds — nothing else.
 
 ## The work is never yours
+
+If the task looks too small to orchestrate, that is a question for the user, not permission to bypass. The user loading this skill is the decision. Do not overrule it by quietly doing the work yourself.
 
 No reading source files, no re-running tests or probes, no self-research — at any stage, including before the first dispatch. The pull is strongest at round zero ("I'll just read a few files to understand the codebase before briefing") and during disputes ("I'll just check who's right"); both are dispatch questions — the scout in Procedure step 1 and the adjudication rule in step 5. If a report is thin, send it back or fold the question into the next review brief — don't go look yourself. The reason this matters even when your context is still empty: it must survive every round of reports and verdicts to the end of the project, every file you read is read again by the fresh-context IC you dispatch at it, and a round later your reading is stale anyway — briefs built on your own partial tour are worse than briefs built on reports.
 
@@ -21,6 +33,13 @@ Your direct-command whitelist — exhaustive; everything else delegates:
 - the git writes in Single Committer below
 - gh ticket ops (Mode B)
 - the user's approval
+
+NOT whitelisted. Every one of these is a dispatch, no matter how small, deterministic, or "just scoping" the task feels:
+
+- running any build / test / lint / typecheck / mod / setup / migration command (bend, npm, make, ...), even once, even only to see what breaks
+- reading source files, or find / grep / ls for file *contents* (tree-level name reads are fine)
+- fetching docs (curl / browse) to learn how to do the work
+- diagnosing an error yourself
 
 ## Own the task list
 
@@ -64,7 +83,7 @@ Two modes, decided up front — what differs is where the durable layer lives. T
 
 A round is: dispatch a wave of unblocked tasks → collect IC reports → dispatch one reviewer per report → verdicts land → commit each SHIPPABLE task, re-brief each NOT SHIPPABLE one → next wave.
 
-1. **Survey & preflight** (once, before decomposing). Decomposition takes exactly three inputs: the user's ask, the tickets (Mode B — ingest per Task Tracking), and a scout report. If you already know the repo well enough to scope every task by file, skip the scout; otherwise your first dispatch is a scout IC — read-only SCOPE over the whole repo, deliverable is its REPORT: tree shape, build/test/lint commands, and which modules each phase touches. `git ls-files` is whitelisted for glancing at path names while writing the scout brief; anything that requires file contents is the scout's job, not yours. Preflight the skill reads once: `tdd.md` sits beside this SKILL.md — resolve this skill folder's absolute path; resolve `code-discipline`'s SKILL.md under your harness's skill roots (`~/.pi/agent/skills/`, `~/.agents/skills/`, the project's `.pi/skills/`, or `~/.claude/skills/`). A file missing everywhere is degraded, not fatal: set SKILL READS to the files you found, note the gap in the brief ("follow the RULES summaries for the missing one"), tell the user once, and continue.
+1. **Survey & preflight** (once, before decomposing). Decomposition takes exactly three inputs: the user's ask, the tickets (Mode B — ingest per Task Tracking), and a scout report. If you already know the repo well enough to scope every task by file, skip the scout; otherwise your first dispatch is a scout IC — read-only SCOPE over the whole repo, deliverable is its REPORT: tree shape, build/test/lint commands, and which modules each phase touches. `git ls-files` is whitelisted for glancing at path names while writing the scout brief; anything that requires file contents is the scout's job, not yours. "Apply the change and report what breaks" is itself a scout task: if discovering the work requires running a mod, a build, or a migration command, that run belongs to the scout. You brief the scout to report the surface. You never run it to see the surface yourself. Preflight the skill reads once: `tdd.md` sits beside this SKILL.md — resolve this skill folder's absolute path; resolve `code-discipline`'s SKILL.md under your harness's skill roots (`~/.pi/agent/skills/`, `~/.agents/skills/`, the project's `.pi/skills/`, or `~/.claude/skills/`). A file missing everywhere is degraded, not fatal: set SKILL READS to the files you found, note the gap in the brief ("follow the RULES summaries for the missing one"), tell the user once, and continue.
 2. **Decompose** the project into phases, then into discrete IC tasks. Each task must be small enough to finish in one round and scoped to specific files, with no (or minimal) overlap with other ICs' file scope. Define acceptance up front — what done means plus the cheap, re-runnable checks (build/typecheck/lint) that prove it. For code tasks, ACCEPTANCE includes the test suite passing — TDD is the default way to build here; leaving tests out of a code task's acceptance needs an explicit reason in the brief — and SEAMS names the public interfaces those tests exercise. Seams are agreed here, by you: the IC works alone and cannot ask anyone, so a code brief without SEAMS is your error, not its judgment call. Load every task into your task list with a status before dispatching anything.
 3. **Dispatch** ICs in parallel, one subagent per task (background if your harness supports it), each with a self-contained brief (IC Brief Template). The brief warns that other agents work in the same repo and that conflicts are resolved by reporting, not clobbering. Fill SCRATCH with a run-unique tmp path outside the repo (keyed by run + task): shared scratch collides across parallel agents and sibling orchestrator runs, and scratch inside the repo dirties `git status` for everyone.
 4. **Review.** Collect IC reports, then dispatch one review agent per task — independent of the IC that did the work — using the Review Brief Template: the original brief, the IC's report verbatim, and the round's other active scopes. Never trust an IC self-report: the reviewer re-runs acceptance itself, attacks the claims against the real tree, and hunts the 80% tells (the marks of work that is 80% done but reported 100% — stubs, TODOs, happy-path-only logic).
