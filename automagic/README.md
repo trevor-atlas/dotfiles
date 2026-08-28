@@ -11,24 +11,59 @@ bun install
 
 ## Module map
 
-| File                | Purpose |
-|---------------------|---------|
-| `busy-defaults.ts`  | `BusyDefaults` — typed wrapper over the bar's HTTP client: profiles, snapshots, run/release, `playTheme`, `cycle`, `status`. Re-exports the shared display + nyan primitives. |
-| `display.ts`        | Reusable display core: a minimal **PNG encoder**, pixel-buffer helpers, and `BitmapStreamer` (upload + stream full-frame bitmaps as images). Not nyan-specific — any future theme reuses it. |
-| `nyan-cat.ts`       | The **Nyan Cat** animation theme: palette, geometry, pure `renderFrame`, and a `NyanCatPlayer` that streams frames through `BitmapStreamer`. |
-| `board.ts`          | Observable board model — ordered producer/subscriber rows, each with a live status string a component overwrites through its own `Reporter`. `snapshot()`/`subscribe()` feed the TUI; imports nothing else. |
-| `logSink.ts`        | Shared bounded log ring (`logSink`) — components `log()` here instead of `console.log`, and the TUI subscribes to render the log pane. `setMirror()` toggles console echo (off once Ink mounts). |
-| `ui.tsx`            | Ink view — `renderBoard(board, logSink, { onExit })` renders **Producers**/**Subscribers** sections + a log pane. Pure reader; `exitOnCtrlC: false` with a raw-mode guard so non-TTY stdin never throws. |
-| `eventBus.ts`        | The **dumb bus** — `EventBus<T>`: receive + broadcast only, no domain knowledge, no filtering, no replay. Plus `createEventBus()` for isolated test buses. |
-| `systemEvents.ts`    | **System-event vocabulary + shared bus** — the generic `systemBus` (typed `EventBus`), with call state as today's `SystemEvent` / `CallState` types. No logic beyond the contract. |
-| `callDetector.ts`     | **Call source** — a self-scheduled *producer* descriptor `{ name, start }`: the runtime binds a board reporter to its row, then `start(bus, report)` runs a `pollEvery` loop (its own cadence) reading window titles (AppleScript), classifies via the pure `classifyCall`, and on change publishes `call_started` / `call_ended` / `call_state_changed` while reporting its state through the injected reporter. Logs its own transitions. |
-| `actor.ts`            | The **dumb actor** — `startActor(bus, onEvent)`: subscribe to the bus + `stop()` detaches. Generic, knows nothing about themes/calls/bar. |
-| `busyAutomation.ts`   | **The bar subscriber** — `startBarActor(bus, report, { host, HTTPAccessPassword })` subscribes to the bus (via the dumb actor), reads events, and reacts — today by showing/releasing a call theme on the bar (only-if-ours) — reporting its status through the injected reporter. Calls are just the reaction it currently has, not what it is. |
-| `systemEvents.test.ts`| Unit tests for the bus and the pure `classifyCall` (driven with fake titles — no OS/bar needed). |
-| `main.ts`            | Daemon entry: constructs the `Board` + shared `logSink`, injects the board into the `Runtime`, registers the descriptors (`registerSubscriber`/`registerProducer`), and mounts the Ink board (`renderBoard`). Ink owns the terminal lifecycle; `q`/Ctrl-C runs an orderly `shutdown`. |
-| `poll.ts`             | Shared deadline-driven schedule (`pollEvery`) plus the producer/subscriber descriptor types (`ProducerDescriptor` / `SubscriberDescriptor`) and `ProducerHandle<TState>` (`getCurrentState` / `stop` / `done`). A producer owns its own schedule; the caller just hands it the bus. |
-| `runtime.ts`          | Registry + orderly shutdown. Takes the bus (and an optional `Board`) in its constructor; `registerProducer`/`registerSubscriber` take self-naming descriptors, add a board row, and start each component with the bus + that row's reporter. `stopAll()` stops **producers then subscribers** (two lanes), isolating failures. |
-| `testappdetector.ts`| Probe which window titles any app exposes (aids writing detectors). |
+Modules are grouped by role. `main.ts` stays at the root; every `*.test.ts`
+lives beside the source it covers.
+
+**`core/`** — domain-agnostic runtime + reporting substrate
+
+| File | Purpose |
+|------|---------|
+| `core/eventBus.ts` | The **dumb bus** — `EventBus<T>`: receive + broadcast only, no domain knowledge, no filtering, no replay. Plus `createEventBus()` for isolated test buses. |
+| `core/poll.ts` | Shared deadline-driven schedule (`pollEvery`) plus the producer/subscriber descriptor types (`ProducerDescriptor` / `SubscriberDescriptor`) and `ProducerHandle<TState>` (`getCurrentState` / `stop` / `done`). A producer owns its own schedule; the caller just hands it the bus. |
+| `core/runtime.ts` | Registry + orderly shutdown. Takes the bus (and an optional `Board`) in its constructor; `registerProducer`/`registerSubscriber` take self-naming descriptors, add a board row, and start each component with the bus + that row's reporter. `stopAll()` stops **producers then subscribers** (two lanes), isolating failures. |
+| `core/actor.ts` | The **dumb actor** — `startActor(bus, onEvent)`: subscribe to the bus + `stop()` detaches. Generic, knows nothing about themes/calls/bar. |
+| `core/board.ts` | Observable board model — ordered producer/subscriber rows, each with a live status string a component overwrites through its own `Reporter`. `snapshot()`/`subscribe()` feed the TUI; imports nothing else. |
+| `core/logSink.ts` | Shared bounded log ring (`logSink`) — components `log()` here instead of `console.log`, and the TUI subscribes to render the log pane. `setMirror()` toggles console echo (off once Ink mounts). |
+
+**`events/`** — the shared event vocabulary
+
+| File | Purpose |
+|------|---------|
+| `events/systemEvents.ts` | **System-event vocabulary + shared bus** — the generic `systemBus` (typed `EventBus`), carrying call state (`call_started` / `call_ended` / `call_state_changed`) and GitHub activity (`github_event`) as today's `SystemEvent` union. No logic beyond the contract. |
+
+**`producers/`** — sources that poll and publish
+
+| File | Purpose |
+|------|---------|
+| `producers/callDetector.ts` | **Call source** — a self-scheduled *producer* descriptor `{ name, start }`: the runtime binds a board reporter to its row, then `start(bus, report)` runs a `pollEvery` loop (its own cadence) reading window titles (AppleScript), classifies via the pure `classifyCall`, and on change publishes `call_started` / `call_ended` / `call_state_changed` while reporting its state through the injected reporter. Logs its own transitions. |
+| `producers/githubEvents.ts` | **GitHub source** — a *producer* descriptor polling the GitHub notifications API via the `gh` CLI on both `github.com` and `git.hubteam.com` (~5-min cadence, **no new GitHub App**). Pure `normalizeNotifications` + `selectNew` (dedup by `id:updatedAt`) split from thin `gh` IO; seeds a baseline on the first tick (no startup replay), then publishes `github_event` for genuinely-new threads and reports a terse status. Degrades gracefully when a host is unauthed. |
+
+**`subscribers/`** — consumers that react to events
+
+| File | Purpose |
+|------|---------|
+| `subscribers/busyAutomation.ts` | **The bar subscriber** — `startBarActor(bus, report, { host, HTTPAccessPassword })` subscribes to the bus (via the dumb actor), reads events, and reacts — today by showing/releasing a call theme on the bar (only-if-ours) — reporting its status through the injected reporter. Calls are just the reaction it currently has, not what it is. |
+
+**`bar/`** — the BUSY-bar device domain (drawing + themes)
+
+| File | Purpose |
+|------|---------|
+| `bar/busy-defaults.ts` | `BusyDefaults` — typed wrapper over the bar's HTTP client: profiles, snapshots, run/release, `playTheme`, `cycle`, `status`. Re-exports the shared display + nyan primitives. |
+| `bar/display.ts` | Reusable display core: a minimal **PNG encoder**, pixel-buffer helpers, and `BitmapStreamer` (upload + stream full-frame bitmaps as images). Not nyan-specific — any future theme reuses it. |
+| `bar/nyan-cat.ts` | The **Nyan Cat** animation theme: palette, geometry, pure `renderFrame`, and a `NyanCatPlayer` that streams frames through `BitmapStreamer`. |
+
+**`ui/`** — the Ink TUI board view
+
+| File | Purpose |
+|------|---------|
+| `ui/ui.tsx` | Ink view — `renderBoard(board, logSink, { onExit })` renders **Producers**/**Subscribers** sections + a log pane. Pure reader; `exitOnCtrlC: false` with a raw-mode guard so non-TTY stdin never throws. |
+
+**root / `scratch/`**
+
+| File | Purpose |
+|------|---------|
+| `main.ts` | Daemon entry: constructs the `Board` + shared `logSink`, injects the board into the `Runtime`, registers the descriptors (`registerSubscriber`/`registerProducer`), and mounts the Ink board (`renderBoard`). Ink owns the terminal lifecycle; `q`/Ctrl-C runs an orderly `shutdown`. |
+| `scratch/testappdetector.ts` | Probe which window titles any app exposes (aids writing detectors). Not part of the app. |
 
 ### Runtime & types
 - **Bun** (`bun.lock`, `@types/bun`). Run scripts with `bun run <file>.ts`.
