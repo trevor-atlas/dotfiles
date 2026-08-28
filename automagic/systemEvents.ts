@@ -17,6 +17,7 @@
 
 import { EventBus } from './eventBus';
 import type { CallApp } from './callDetector';
+import type { GithubEvent } from './githubEvents';
 
 /** Semantic system events the bus can carry. */
 export type SystemEvent =
@@ -24,7 +25,9 @@ export type SystemEvent =
   | { type: 'call_ended'; app: CallApp }
   // Full-state snapshot: what is true *right now*, not a change.
   // `app === null` means no call live. Consumers use it to learn current state.
-  | { type: 'call_state_changed'; app: CallApp | null };
+  | { type: 'call_state_changed'; app: CallApp | null }
+  // A GitHub notification relevant to the user (see `githubEvents.ts`).
+  | { type: 'github_event'; event: GithubEvent };
 // Future events (not yet emitted) could look like:
 //   | { type: 'mic_active' }
 //   | { type: 'calendar_meeting_started'; title: string }

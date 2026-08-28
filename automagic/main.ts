@@ -24,6 +24,7 @@ import { systemBus } from './systemEvents';
 import { Runtime } from './runtime';
 import { startBarActor } from './busyAutomation';
 import { callDetector } from './callDetector';
+import { githubEventDetector } from './githubEvents';
 import { Board } from './board';
 import { logSink, log } from './logSink';
 import { renderBoard } from './ui';
@@ -62,6 +63,7 @@ runtime.registerSubscriber({
     }),
 });
 runtime.registerProducer(callDetector);
+runtime.registerProducer(githubEventDetector);
 
 log(`call automation started · bar ${values.host} · press q or Ctrl-C to stop`);
 
