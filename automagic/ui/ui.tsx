@@ -19,8 +19,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Box, Text, render, useInput, useStdin } from 'ink';
-import { Board, type BoardRow } from './board';
-import { LogSink } from './logSink';
+import { Board, type BoardRow } from '../core/board';
+import { LogSink } from '../core/logSink';
 
 /** Width of the name column so row values line up. */
 const NAME_WIDTH = 16;

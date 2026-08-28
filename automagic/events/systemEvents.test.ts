@@ -7,9 +7,9 @@
  *   - the pure classifier: title sets → call app (the real decision logic).
  */
 import { test, expect } from 'bun:test';
-import { createEventBus } from './eventBus';
+import { createEventBus } from '../core/eventBus';
 import type { SystemEvent } from './systemEvents';
-import { classifyCall } from './callDetector';
+import { classifyCall } from '../producers/callDetector';
 
 test('bus: publishes to all subscribers, unsubscribe removes', async () => {
   const bus = createEventBus<SystemEvent>();

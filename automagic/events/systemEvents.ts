@@ -15,9 +15,9 @@
  * Generic bus machinery (the dumb `EventBus`, `createEventBus`) lives in `./eventBus`.
  */
 
-import { EventBus } from './eventBus';
-import type { CallApp } from './callDetector';
-import type { GithubEvent } from './githubEvents';
+import { EventBus } from '../core/eventBus';
+import type { CallApp } from '../producers/callDetector';
+import type { GithubEvent } from '../producers/githubEvents';
 
 /** Semantic system events the bus can carry. */
 export type SystemEvent =

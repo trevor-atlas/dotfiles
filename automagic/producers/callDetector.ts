@@ -12,9 +12,9 @@
  * own `pollEvery` loop + plain `bus.publish` on the shared bus.
  */
 import { spawnSync } from 'bun';
-import type { SystemEvent, CallState } from './systemEvents';
-import { pollEvery, type ProducerDescriptor } from './poll';
-import { log } from './logSink';
+import type { SystemEvent, CallState } from '../events/systemEvents';
+import { pollEvery, type ProducerDescriptor } from '../core/poll';
+import { log } from '../core/logSink';
 
 /** How often the call detector samples window titles (its own cadence). */
 const CALL_POLL_MS = 3000;

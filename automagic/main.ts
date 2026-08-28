@@ -20,14 +20,14 @@
  *   bun main.ts [--host 192.168.50.85]
  */
 import { parseArgs } from 'util';
-import { systemBus } from './systemEvents';
-import { Runtime } from './runtime';
-import { startBarActor } from './busyAutomation';
-import { callDetector } from './callDetector';
-import { githubEventDetector } from './githubEvents';
-import { Board } from './board';
-import { logSink, log } from './logSink';
-import { renderBoard } from './ui';
+import { systemBus } from './events/systemEvents';
+import { Runtime } from './core/runtime';
+import { startBarActor } from './subscribers/busyAutomation';
+import { callDetector } from './producers/callDetector';
+import { githubEventDetector } from './producers/githubEvents';
+import { Board } from './core/board';
+import { logSink, log } from './core/logSink';
+import { renderBoard } from './ui/ui';
 
 const { values } = parseArgs({
   args: process.argv.slice(2),

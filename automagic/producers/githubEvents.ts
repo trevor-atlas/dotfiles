@@ -22,9 +22,9 @@
  * as read.
  */
 import { spawnSync } from 'bun';
-import type { SystemEvent } from './systemEvents';
-import { pollEvery, type ProducerDescriptor } from './poll';
-import { log } from './logSink';
+import type { SystemEvent } from '../events/systemEvents';
+import { pollEvery, type ProducerDescriptor } from '../core/poll';
+import { log } from '../core/logSink';
 
 /** How often we poll GitHub notifications (its own cadence). Editable. */
 const GITHUB_POLL_MS = 5 * 60_000;

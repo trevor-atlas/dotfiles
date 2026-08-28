@@ -15,12 +15,12 @@
  *
  * The only input is where the bar lives; the call→theme map is a plain constant.
  */
-import { BusyDefaults } from './busy-defaults';
-import { startActor } from './actor';
-import type { Actor } from './actor';
-import type { EventBus } from './eventBus';
-import type { SystemEvent } from './systemEvents';
-import type { Reporter } from './board';
+import { BusyDefaults } from '../bar/busy-defaults';
+import { startActor } from '../core/actor';
+import type { Actor } from '../core/actor';
+import type { EventBus } from '../core/eventBus';
+import type { SystemEvent } from '../events/systemEvents';
+import type { Reporter } from '../core/board';
 
 /**
  * Start the busy-bar subscriber on `bus`: subscribe to events and react —
@@ -36,7 +36,7 @@ export function startBarActor(
 ): Actor {
   const busy = new BusyDefaults(bar || {});
   busy.playTheme('nyan_cat');
-  let hold: import('./busy-defaults').HeldMode | null = null;
+  let hold: import('../bar/busy-defaults').HeldMode | null = null;
   report('waiting');
 
   const showMeeting = async (): Promise<void> => {
