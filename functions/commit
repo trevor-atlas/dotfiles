@@ -2,6 +2,11 @@
 
 trap 'exit 130' INT
 
+# Sync gh active account + repo-local git identity to origin before committing.
+# This runs in its own bash process (it bypasses the zsh git() wrapper), so call
+# the standalone guard directly. Degrades gracefully; never blocks the commit.
+"${ATLAS_ROOT:-$HOME/.config/atlas}/functions/gh-sync-identity" 2>/dev/null || true
+
 if [[ -z $(command -v gum) ]]; then
 	message=$(cat <<-MSG
 	  ╔════════════════════════════════╗

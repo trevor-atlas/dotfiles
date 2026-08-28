@@ -59,6 +59,18 @@ make_branch() {
   # gitb "$issue"
 }
 
+# Transparent `git` wrapper: before a `git commit`, sync the active gh account
+# and repo-local git identity to the repo's origin (see functions/gh-sync-identity).
+# Everything else passes straight through to real git with no overhead. The
+# guard runs in its own bash process, degrades gracefully, and never blocks the
+# commit. `command git` avoids recursing back into this function.
+function git() {
+  if [[ "$1" == commit ]]; then
+    "$ATLAS_ROOT/functions/gh-sync-identity" 2>/dev/null
+  fi
+  command git "$@"
+}
+
 function __git_prompt_git() {
   GIT_OPTIONAL_LOCKS=0 command git "$@"
 }

@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+#
+# gh-sync-identity — align the active `gh` CLI account AND the repo-local git
+# identity with the current repo's `origin` remote.
+#
+# WHY: two GitHub accounts are authenticated in `gh` on this machine
+# (personal `trevor-atlas` + work EMU `tatlas_hubspot`). `gh` has a single
+# *active* account, so `gh issue create` / `gh pr create` hit the wrong account
+# whenever it's switched to the other one. New clones also inherit the global
+# work identity even for personal repos. This resolves both, keyed off origin,
+# at commit time.
+#
+# Safe, idempotent, quiet: only prints when it actually changes something (or a
+# soft warning). Never errors out / never blocks a commit. Unknown origin,
+# missing gh, single account, or no origin => clean no-op.
+#
+# Invoke directly before committing (AI agents / scripts):
+#   "$ATLAS_ROOT/functions/gh-sync-identity"
+# Interactive shells get it for free via the git() wrapper in source/git_helpers
+# and via functions/commit.
+
+set -u
+
+# ---------------------------------------------------------------------------
+# MAPPING TABLE — edit here to add/adjust accounts.
+# Given a normalized origin (host + owner), resolve:
+#   ACCOUNT  gh account to activate (gh auth switch --user ACCOUNT)
+#   GNAME    git config user.name
+#   GEMAIL   git config user.email
+# Rules (first match wins):
+#   host git.hubteam.com          (any owner)          -> tatlas_hubspot
+#   host github.com owner HubSpot (case-insensitive)   -> tatlas_hubspot
+#   host github.com owner trevor-atlas                 -> trevor-atlas
+#   anything else                                      -> unrecognized (no-op)
+# ---------------------------------------------------------------------------
+resolve_identity() {
+  # args: <host> <owner>  ; sets ACCOUNT/GNAME/GEMAIL, returns 1 if unrecognized
+  local host="$1" owner="$2"
+  local owner_lc="${owner}"
+  owner_lc="$(printf '%s' "$owner_lc" | tr '[:upper:]' '[:lower:]')"
+
+  case "$host" in
+    git.hubteam.com)
+      ACCOUNT="tatlas_hubspot"; GNAME="tatlas"; GEMAIL="tatlas@hubspot.com"; return 0 ;;
+    github.com)
+      case "$owner_lc" in
+        hubspot)
+          ACCOUNT="tatlas_hubspot"; GNAME="tatlas"; GEMAIL="tatlas@hubspot.com"; return 0 ;;
+        trevor-atlas)
+          ACCOUNT="trevor-atlas"; GNAME="trevor-atlas"; GEMAIL="me@trevoratlas.com"; return 0 ;;
+      esac
+      ;;
+  esac
+  return 1
+}
+
+# Normalize an origin URL into "<host> <owner>" (echoed), for both SSH and
+# HTTPS forms. Returns 1 when it can't be parsed.
+#   git@host:owner/repo.git
+#   ssh://git@host/owner/repo.git
+#   https://host/owner/repo(.git)
+parse_origin() {
+  local url="$1" host="" owner="" rest=""
+  [ -n "$url" ] || return 1
+
+  case "$url" in
+    *://*)
+      # scheme://[user@]host/owner/...
+      rest="${url#*://}"
+      rest="${rest#*@}"          # strip optional user@
+      host="${rest%%/*}"
+      rest="${rest#*/}"          # owner/repo...
+      owner="${rest%%/*}"
+      ;;
+    *@*:*)
+      # user@host:owner/repo.git  (scp-like SSH)
+      rest="${url#*@}"           # host:owner/repo.git
+      host="${rest%%:*}"
+      rest="${rest#*:}"          # owner/repo.git
+      owner="${rest%%/*}"
+      ;;
+    *:*/*)
+      # host:owner/repo.git (no user@)
+      host="${url%%:*}"
+      rest="${url#*:}"
+      owner="${rest%%/*}"
+      ;;
+    *)
+      return 1 ;;
+  esac
+
+  host="${host%%/*}"
+  owner="${owner%.git}"
+  [ -n "$host" ] && [ -n "$owner" ] || return 1
+  printf '%s %s' "$host" "$owner"
+}
+
+warn() { printf 'gh-sync-identity: %s\n' "$1" >&2; }
+
+main() {
+  # Only act inside a work tree; silent no-op otherwise.
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+
+  local origin
+  origin="$(git config --get remote.origin.url 2>/dev/null)"
+  [ -n "$origin" ] || return 0   # no origin => no-op
+
+  local parsed host owner
+  parsed="$(parse_origin "$origin")" || return 0
+  host="${parsed%% *}"
+  owner="${parsed#* }"
+
+  ACCOUNT=""; GNAME=""; GEMAIL=""
+  resolve_identity "$host" "$owner" || return 0   # unrecognized => no-op
+
+  # --- git identity (repo-local), only when it doesn't already match ---
+  local cur_name cur_email
+  cur_name="$(git config --local user.name 2>/dev/null)"
+  cur_email="$(git config --local user.email 2>/dev/null)"
+  if [ "$cur_name" != "$GNAME" ] || [ "$cur_email" != "$GEMAIL" ]; then
+    git config --local user.name "$GNAME" 2>/dev/null || true
+    git config --local user.email "$GEMAIL" 2>/dev/null || true
+    printf 'gh-sync-identity: git identity -> %s <%s>\n' "$GNAME" "$GEMAIL"
+  fi
+
+  # --- gh active account, only when gh exists, has >1 account, and differs ---
+  command -v gh >/dev/null 2>&1 || return 0
+
+  local accounts
+  accounts="$(gh auth status 2>/dev/null | grep -c 'Logged in to')"
+  [ "${accounts:-0}" -ge 2 ] || return 0   # single (or zero) account => no-op
+
+  local active
+  active="$(gh auth status --active 2>/dev/null | sed -n 's/.*account \([^ ]*\).*/\1/p' | head -1)"
+  if [ -n "$active" ] && [ "$active" = "$ACCOUNT" ]; then
+    return 0   # already correct => quiet
+  fi
+
+  if gh auth switch --user "$ACCOUNT" >/dev/null 2>&1; then
+    printf 'gh-sync-identity: gh account -> %s\n' "$ACCOUNT"
+  else
+    warn "could not switch gh to '$ACCOUNT' (leaving active account unchanged)"
+  fi
+}
+
+main "$@"
