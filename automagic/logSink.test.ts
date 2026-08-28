@@ -49,6 +49,39 @@ test('subscribe fires on append; unsubscribe stops further notifications', () =>
   expect(count).toBe(2);
 });
 
+test('snapshot is a copy: mutating the returned array does not affect the sink', () => {
+  const sink = createLogSink();
+  sink.setMirror(false);
+
+  sink.append('a');
+  sink.append('b');
+
+  const snap = sink.snapshot() as string[];
+  snap.push('c');
+  snap.splice(0, 1);
+
+  expect(sink.snapshot()).toEqual(['a', 'b']);
+});
+
+test('multiple subscribers all fire on append; unsubscribing one still fires the other', () => {
+  const sink = createLogSink();
+  sink.setMirror(false);
+
+  let a = 0;
+  let b = 0;
+  const unsubA = sink.subscribe(() => { a += 1; });
+  sink.subscribe(() => { b += 1; });
+
+  sink.append('one');
+  expect(a).toBe(1);
+  expect(b).toBe(1);
+
+  unsubA();
+  sink.append('two');
+  expect(a).toBe(1);
+  expect(b).toBe(2);
+});
+
 test('mirror off: append does not call console.log', () => {
   const sink = createLogSink();
   sink.setMirror(false);

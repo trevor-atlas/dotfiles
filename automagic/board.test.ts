@@ -63,6 +63,24 @@ test('snapshot preserves insertion order and each row kind', () => {
   ]);
 });
 
+test('snapshot rows are frozen: a cast-away write cannot mutate the model', () => {
+  const board = createBoard();
+  const report = board.addRow('producer', 'zoom');
+  report('active');
+
+  const row = board.snapshot()[0]!;
+  expect(Object.isFrozen(row)).toBe(true);
+
+  // Frozen: a write is a no-op (and throws in strict mode) either way.
+  try {
+    (row as any).value = 'x';
+  } catch {
+    // strict-mode TypeError on a frozen property
+  }
+
+  expect(board.snapshot()[0]).toEqual({ kind: 'producer', name: 'zoom', value: 'active' });
+});
+
 test('subscribe fires on report; unsubscribe stops notifications', () => {
   const board = createBoard();
   const report = board.addRow('producer', 'zoom');

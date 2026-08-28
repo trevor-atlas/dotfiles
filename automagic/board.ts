@@ -49,9 +49,9 @@ export class Board {
    */
   addRow(kind: RowKind, name: string): Reporter {
     const index = this.rows.length;
-    this.rows.push({ kind, name, value: PLACEHOLDER });
+    this.rows.push(Object.freeze({ kind, name, value: PLACEHOLDER }));
     return (value: string) => {
-      this.rows[index] = { kind, name, value };
+      this.rows[index] = Object.freeze({ kind, name, value });
       this.notify();
     };
   }

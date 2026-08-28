@@ -47,7 +47,7 @@ export class Runtime<TEvent> {
    * present), then start it against the shared bus with that row's reporter.
    * Chainable — returns `this`.
    */
-  registerProducer(descriptor: ProducerDescriptor<any, TEvent>): this {
+  registerProducer<TState>(descriptor: ProducerDescriptor<TState, TEvent>): this {
     const report = this.board ? this.board.addRow('producer', descriptor.name) : () => {};
     this.producers.push(descriptor.start(this.bus, report));
     return this;

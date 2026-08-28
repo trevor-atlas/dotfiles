@@ -26,7 +26,7 @@ bun install
 | `busyAutomation.ts`   | **The bar subscriber** — `startBarActor(bus, report, { host, HTTPAccessPassword })` subscribes to the bus (via the dumb actor), reads events, and reacts — today by showing/releasing a call theme on the bar (only-if-ours) — reporting its status through the injected reporter. Calls are just the reaction it currently has, not what it is. |
 | `systemEvents.test.ts`| Unit tests for the bus and the pure `classifyCall` (driven with fake titles — no OS/bar needed). |
 | `main.ts`            | Daemon entry: constructs the `Board` + shared `logSink`, injects the board into the `Runtime`, registers the descriptors (`registerSubscriber`/`registerProducer`), and mounts the Ink board (`renderBoard`). Ink owns the terminal lifecycle; `q`/Ctrl-C runs an orderly `shutdown`. |
-| `poll.ts`             | Shared deadline-driven schedule (`pollEvery`) plus the generic **`Producer`** type — `(bus) => ProducerHandle<TState>` (`getCurrentState` / `stop` / `done`). A producer owns its own schedule; the caller just hands it the bus. |
+| `poll.ts`             | Shared deadline-driven schedule (`pollEvery`) plus the producer/subscriber descriptor types (`ProducerDescriptor` / `SubscriberDescriptor`) and `ProducerHandle<TState>` (`getCurrentState` / `stop` / `done`). A producer owns its own schedule; the caller just hands it the bus. |
 | `runtime.ts`          | Registry + orderly shutdown. Takes the bus (and an optional `Board`) in its constructor; `registerProducer`/`registerSubscriber` take self-naming descriptors, add a board row, and start each component with the bus + that row's reporter. `stopAll()` stops **producers then subscribers** (two lanes), isolating failures. |
 | `testappdetector.ts`| Probe which window titles any app exposes (aids writing detectors). |
 
@@ -119,8 +119,8 @@ that is *not* call-specific — call events are just today's vocabulary on it:
    isolated buses for tests.
 2. **Detector / source** (`callDetector.ts`): a *producer* `(bus) => handle` that runs its own `pollEvery` schedule, reads system state, and publishes call events — `call_started` / `call_ended` deltas **plus** `call_state_changed` full state. It knows nothing about the bar. Adding a future source (mic audio, calendar, screen state) is another self-contained producer that publishes to the same bus on *its own* cadence.
 3. **Dumb actor** (`actor.ts`): `startActor(bus, onEvent)` — subscribes to the bus and feeds every event to `onEvent`; `stop()` detaches. Generic, knows nothing about themes/calls/bar, so it can drive any behavior.
-4. **Bar actor** (`busyAutomation.ts`): the bar side reads the bus and does stuff. `startBarActor(bus, { host, httpPassword })` subscribes (via the dumb `startActor`) and today reacts to `call_state_changed` — `{ app: 'zoom' }` → `run(CALL_THEME)`, `{ app: null }` → release; only releases what it started. That reaction is what it currently does, not what it *is*: it's a bus-reading actor, and call theming is one reaction among any. It knows nothing about *how* calls are detected.
-5. **Runtime** (`runtime.ts`): owns the shared bus and orderly shutdown. Producers are registered separately from the actor; `stopAll()` stops producers first (no new events), then the actor (releases the bar).
+4. **Bar subscriber** (`busyAutomation.ts`): the bar side reads the bus and does stuff. `startBarActor(bus, { host, httpPassword })` subscribes (via the dumb `startActor`) and today reacts to `call_state_changed` — `{ app: 'zoom' }` → `run(CALL_THEME)`, `{ app: null }` → release; only releases what it started. That reaction is what it currently does, not what it *is*: it's a bus-reading subscriber, and call theming is one reaction among any. It knows nothing about *how* calls are detected.
+5. **Runtime** (`runtime.ts`): owns the shared bus and orderly shutdown. Producers are registered separately from the subscriber; `stopAll()` stops producers first (no new events), then the subscriber (releases the bar).
 
 Detectors share only one bit of machinery — the deadline-driven schedule
 `pollEvery()` (`poll.ts`) — borrowed by each self-contained source so none
@@ -139,12 +139,12 @@ Each piece is **individually testable** (`bun test`): the bus is pure pub/sub;
 the decision logic is the pure `classifyCall` fed window titles directly (no
 AppleScript); both are asserted in `systemEvents.test.ts`.
 
-The only bar-related decision lives in the actor's theme map (`appThemes`), defaulting to `zoom → meeting`.
+The only bar-related decision lives in the subscriber's theme map (`appThemes`), defaulting to `zoom → meeting`.
 
 - **Detection details** (`callDetector.ts`): a `pollEvery` loop reads Zoom's window titles via AppleScript and, when the call state changes, publishes the events. A call is "live" when a `Zoom Meeting` window is open (vs. the always-present `Zoom Workplace`).
-- The detector is a generic **`Producer`** (`callDetector: Producer<CallState, SystemEvent>`) from `poll.ts` — `(bus) => handle`, owning its own cadence. Future sources (mic, calendar) share the same callable shape and borrow the same loop.
+- The detector is a self-naming **`ProducerDescriptor`** (`callDetector: ProducerDescriptor<CallState, SystemEvent>`) from `poll.ts` — `{ name, start }`, owning its own cadence. Future sources (mic, calendar) share the same descriptor shape and borrow the same loop.
 - **Poll loop is deadline-driven**, not `setInterval` — each poll is scheduled from the previous poll's start time, so system sleep or a clock jump can't cause a burst of stale ticks.
-- Both halves reuse the "only release if still ours" rule, so the actor never stomps a mode another tool started. `stop()`/Ctrl-C releases cleanly.
+- Both halves reuse the "only release if still ours" rule, so the subscriber never stomps a mode another tool started. `stop()`/Ctrl-C releases cleanly.
 - **Probe signals** before trusting a new app:
   ```bash
   bun run testappdetector.ts zoom      # ["Zoom Workplace", "Zoom Meeting"]

@@ -44,20 +44,6 @@ export interface ProducerHandle<TState> {
 }
 
 /**
- * The signature of a *producer*: a function that starts a polled source on a
- * bus and returns its {@link ProducerHandle}. Reads {@link TState} current
- * state and publishes {@link TEvent} events.
- *
- * A producer owns its own schedule (see `pollEvery`) — the caller just hands it
- * the bus. Captures the whole producer shape, so any source (call windows, mic
- * audio, a calendar feed, …) has the same callable signature rather than each
- * defining its own ad-hoc return type.
- */
-export type Producer<TState, TEvent> = {
-  (bus: EventBus<TEvent>): ProducerHandle<TState>;
-};
-
-/**
  * A self-naming, self-reporting producer registration. `name` is the display
  * name (known before `start` runs, so the runtime can create the board row and
  * bind its reporter first); `start` is the old producer factory plus an injected
