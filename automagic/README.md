@@ -42,7 +42,7 @@ lives beside the source it covers.
 
 | File | Purpose |
 |------|---------|
-| `subscribers/busyAutomation.ts` | **The bar subscriber** — `startBarActor(bus, report, { host, HTTPAccessPassword })` subscribes to the bus (via the dumb actor), reads events, and reacts — today by showing/releasing a call theme on the bar (only-if-ours) — reporting its status through the injected reporter. Calls are just the reaction it currently has, not what it is. |
+| `subscribers/busyAutomation.ts` | **The bar subscriber** — `startBarActor(bus, report, { host, HTTPAccessPassword })` subscribes to the bus (via the dumb actor) and drives the bar. When idle it plays **nyan-cat continuously** as the default animation — run *unawaited* under an `AbortController` (awaiting the forever-loop would hang the app) and supervised so a transient bar timeout backs off and restarts instead of killing it. On a call it **pauses** the idle animation and shows the `meeting` theme (only-if-ours), then resumes nyan when the call ends. Every bar request is wrapped: a timeout is a quiet one-line log (deduped per failure streak), never an unhandled `DOMException`. Reports status through the injected reporter. |
 
 **`bar/`** — the BUSY-bar device domain (drawing + themes)
 
