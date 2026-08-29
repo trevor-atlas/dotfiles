@@ -1,12 +1,29 @@
 # pi-interactive-subagents
 
-Async subagents for [pi](https://github.com/badlogic/pi-mono), running in tmux panes. Spawn a sub-agent, keep working in the main session, and get the result steered back when it finishes. Fully non-blocking.
+Async subagents for [pi](https://github.com/badlogic/pi-mono), running in terminal-multiplexer panes — **tmux or herdr**. Spawn a sub-agent, keep working in the main session, and get the result steered back when it finishes. Fully non-blocking.
 
-**tmux-only fork.** See [Acknowledgements](#acknowledgements) for the upstream project, which also supports cmux, zellij, and WezTerm.
+Fork of [HazAT/pi-interactive-subagents](https://github.com/HazAT/pi-interactive-subagents) (which supports cmux, zellij, and WezTerm), trimmed to tmux plus a new [herdr](https://herdr.dev) backend. See [Acknowledgements](#acknowledgements).
+
+## Surfaces
+
+Sub-agent panes run on the active terminal multiplexer, auto-detected:
+
+- **herdr** — when pi runs inside herdr (`HERDR_ENV=1` + socket + pane + `herdr` on PATH). Panes are split off the calling pane (`--current`) with `herdr pane split`; commands run via `herdr pane run`; screens are read with `herdr pane read --source visible`.
+- **tmux** — when `TMUX` is set and `tmux` is on PATH. Panes split off `$TMUX_PANE`.
+
+Force a backend with `PI_SUBAGENT_MUX=herdr|tmux` (the chosen multiplexer must actually be running). If neither is available, the tools return a clear error instead of failing silently.
+
+herdr-specific notes:
+- Splits are `right` (or `down`) only, at `--ratio 0.5`; herdr does not support left/up splits. Panes are not re-balanced after spawn/exit like tmux's `even-horizontal` layout — use herdr's zoom/focus if panes get lopsided.
+- If your shell startup is slow and launch commands get dropped before the prompt is ready, raise the delay:
+
+  ```bash
+  export PI_SUBAGENT_SHELL_READY_DELAY_MS=2500   # default: 500
+  ```
 
 ## How it works
 
-`subagent()` returns immediately. The sub-agent runs in its own tmux pane — a right split off the parent pi pane, so pane creation never steals keyboard focus. A live widget above the input tracks every running sub-agent, and when one finishes, its result is steered into the main session as a notification that triggers a new turn.
+`subagent()` returns immediately. The sub-agent runs in its own pane — a right split off the parent pi pane, so pane creation never steals keyboard focus. A live widget above the input tracks every running sub-agent, and when one finishes, its result is steered into the main session as a notification that triggers a new turn.
 
 ```
 ╭─ Subagents ──────────────────────────── 2 running ─╮
@@ -17,7 +34,7 @@ Async subagents for [pi](https://github.com/badlogic/pi-mono), running in tmux p
 
 Spawn several in parallel — they run concurrently and steer results back independently as each finishes.
 
-Panes are kept evenly sized: the extension re-applies an `even-horizontal` layout after every spawn and exit (debounced). The layout is a single constant, `SUBAGENT_TMUX_LAYOUT` in `pi-extension/subagents/tmux.ts` — change it to any named tmux layout (`main-vertical`, `tiled`, …).
+Panes are kept evenly sized (tmux only): the extension re-applies an `even-horizontal` layout after every spawn and exit (debounced). The layout is a single constant, `SUBAGENT_TMUX_LAYOUT` in `pi-extension/subagents/tmux.ts` — change it to any named tmux layout (`main-vertical`, `tiled`, …).
 
 If your shell startup is slow and launch commands get dropped before the prompt is ready, raise the delay:
 
@@ -167,7 +184,12 @@ Set a per-agent default with `cwd:` in frontmatter.
 
 The widget tracks each sub-agent from a runtime activity snapshot written by the child: `starting`, `active` (turn/provider/tool work), `waiting` (open for input or another stage), `stalled` (no valid snapshot for too long), or `running` (fallback). Sub-agent sessions also show their own tools widget — toggle it with `Ctrl+Alt+O`. Completion messages expand with `Ctrl+O`.
 
-Status display is configured via `config.json` in the extension directory (copy `config.json.example`; it's gitignored):
+Status display is configured via `config.json` in the extension directory (copy `config.json.example`):
+
+> **Note (chezmoi/vendored installs):** this extension resolves its own path
+> through symlinks, so `config.json` must live next to `config.json.example`
+> in the source tree (e.g. `settings/dot_pi/agent/packages/pi-interactive-subagents/config.json`),
+> not in `~/.pi/agent/packages/...`. The default already matches the example, so this is only needed to customize.
 
 ```json
 {
@@ -178,10 +200,11 @@ Status display is configured via `config.json` in the extension directory (copy 
 ## Requirements
 
 - [pi](https://github.com/badlogic/pi-mono)
-- [tmux](https://github.com/tmux/tmux)
+- [tmux](https://github.com/tmux/tmux) **or** [herdr](https://herdr.dev)
 
 ```bash
-tmux new -A -s pi 'pi'
+tmux new -A -s pi 'pi'   # tmux
+herdr && pi             # herdr
 ```
 
 ## Acknowledgements

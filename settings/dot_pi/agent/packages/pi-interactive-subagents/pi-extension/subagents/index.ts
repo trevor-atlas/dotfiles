@@ -24,7 +24,7 @@ import {
   closeSurface,
   shellEscape,
   readScreen,
-} from "./tmux.ts";
+} from "./mux.ts";
 
 import {
   countSessionEntryLines,
@@ -508,10 +508,10 @@ function muxUnavailableResult() {
     content: [
       {
         type: "text" as const,
-        text: `Subagents require tmux. ${muxSetupHint()}`,
+        text: `Subagents require a supported terminal multiplexer. ${muxSetupHint()}`,
       },
     ],
-    details: { error: "tmux not available" },
+    details: { error: "mux not available" },
   };
 }
 
@@ -1008,7 +1008,7 @@ function steerSubagent(
   } catch (error: any) {
     return {
       error:
-        `Failed to deliver message to subagent "${running.name}" via tmux: ` +
+        `Failed to deliver message to subagent "${running.name}": ` +
         `${error?.message ?? String(error)}`,
     };
   }
@@ -1281,14 +1281,21 @@ async function launchSubagent(
       .replace(/^-|-$/g, "") || "subagent"}-${id}.sh`;
     const launchScriptFile = join(artifactDir, "subagent-scripts", launchScriptName);
 
-    sendLongCommand(surface, command, {
-      scriptPath: launchScriptFile,
-      scriptPreamble: [
-        `# Claude Code subagent launch script for ${params.name}`,
-        `# Generated: ${new Date().toISOString()}`,
-        `# Surface: ${surface}`,
-      ].join("\n"),
-    });
+    try {
+      sendLongCommand(surface, command, {
+        scriptPath: launchScriptFile,
+        scriptPreamble: [
+          `# Claude Code subagent launch script for ${params.name}`,
+          `# Generated: ${new Date().toISOString()}`,
+          `# Surface: ${surface}`,
+        ].join("\n"),
+      });
+    } catch (error: any) {
+      try { closeSurface(surface); } catch {}
+      throw new Error(
+        `Failed to launch subagent in ${surface}: ${error?.message ?? String(error)}`,
+      );
+    }
 
     const running: RunningSubagent = {
       id,
@@ -1422,15 +1429,22 @@ async function launchSubagent(
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "") || "subagent"}-${id}.sh`;
   const launchScriptFile = join(artifactDir, "subagent-scripts", launchScriptName);
-  sendLongCommand(surface, command, {
-    scriptPath: launchScriptFile,
-    scriptPreamble: [
-      `# Subagent launch script for ${params.name}`,
-      `# Generated: ${new Date().toISOString()}`,
-      `# Session: ${subagentSessionFile}`,
-      `# Surface: ${surface}`,
-    ].join("\n"),
-  });
+  try {
+    sendLongCommand(surface, command, {
+      scriptPath: launchScriptFile,
+      scriptPreamble: [
+        `# Subagent launch script for ${params.name}`,
+        `# Generated: ${new Date().toISOString()}`,
+        `# Session: ${subagentSessionFile}`,
+        `# Surface: ${surface}`,
+      ].join("\n"),
+    });
+  } catch (error: any) {
+    try { closeSurface(surface); } catch {}
+    throw new Error(
+      `Failed to launch subagent in ${surface}: ${error?.message ?? String(error)}`,
+    );
+  }
 
   const running: RunningSubagent = {
     id,
@@ -1802,6 +1816,9 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         let running;
         try {
           running = await launchSubagent(params, ctx);
+        } catch (error: any) {
+          const err = `Failed to launch subagent "${params.name}": ${error?.message ?? String(error)}`;
+          return { content: [{ type: "text" as const, text: err }], details: { error: err } };
         } finally {
           if (reservedName) reservedNames.delete(reservedName);
         }
@@ -2149,7 +2166,15 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         // transcript doesn't block the UI.
         const entryCountBefore = countSessionEntryLines(sessionPath);
 
-        const surface = createSurface(name);
+        let surface: string;
+        try {
+          surface = createSurface(name);
+        } catch (error: any) {
+          const err =
+            `Failed to resume "${name}": could not create a pane ` +
+            `(${error?.message ?? String(error)}).`;
+          return { content: [{ type: "text" as const, text: err }], details: { error: err } };
+        }
         await new Promise<void>((resolve) => setTimeout(resolve, getShellReadyDelayMs()));
 
         // Build pi resume command
@@ -2223,16 +2248,24 @@ export default function subagentsExtension(pi: ExtensionAPI) {
             .replace(/-+/g, "-")
             .replace(/^-|-$/g, "") || "resume"}-resume-${Date.now()}.sh`,
         );
-        sendLongCommand(surface, command, {
-          scriptPath: launchScriptFile,
-          scriptPreamble: [
-            `# Subagent resume script for ${name}`,
-            `# Generated: ${new Date().toISOString()}`,
-            `# Session: ${sessionPath}`,
-            `# Surface: ${surface}`,
-            ...(resumeMsgFile ? [`# Resume message file: ${resumeMsgFile}`] : []),
-          ].join("\n"),
-        });
+        try {
+          sendLongCommand(surface, command, {
+            scriptPath: launchScriptFile,
+            scriptPreamble: [
+              `# Subagent resume script for ${name}`,
+              `# Generated: ${new Date().toISOString()}`,
+              `# Session: ${sessionPath}`,
+              `# Surface: ${surface}`,
+              ...(resumeMsgFile ? [`# Resume message file: ${resumeMsgFile}`] : []),
+            ].join("\n"),
+          });
+        } catch (error: any) {
+          try { closeSurface(surface); } catch {}
+          const err =
+            `Failed to resume "${name}": could not run the resume command in the pane ` +
+            `(${error?.message ?? String(error)}).`;
+          return { content: [{ type: "text" as const, text: err }], details: { error: err } };
+        }
 
         // Register as a running subagent for widget tracking
         const running: RunningSubagent = {
