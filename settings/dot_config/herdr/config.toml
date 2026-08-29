@@ -54,3 +54,4 @@ name = "catppuccin"
 tab_bar_position = "top"
 # zellij copy_on_select / copy_on_select true (also the Herdr default).
 copy_on_select = true
+show_agent_labels_on_pane_borders = true
