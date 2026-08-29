@@ -90,6 +90,13 @@ Key environment variables:
 - `DEEPSEEK_API_KEY`: pi provider key, injected into `~/.pi/agent/models.json` by a chezmoi template (never commit the raw key)
 - `OPENAI_API_KEY`: pi provider key, injected into `~/.pi/agent/models.json` by a chezmoi template (never commit the raw key)
 
+## Pi config
+
+When working in pi config, extensions, packages, skills, script placement, or wiring under
+`~/.pi/agent/`, read `settings/dot_pi/agent/README.md` first — it maps the directory, the
+chezmoi manage/ignore boundaries (incl. herdr-managed vs repo-managed), and the
+extension discovery/import-alias rules.
+
 ## Git Workflow
 
 A custom commit helper is available via the `commit` function, which uses [gum](https://github.com/charmbracelet/gum) to create conventional commit messages.
