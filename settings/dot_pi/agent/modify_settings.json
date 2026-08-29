@@ -19,7 +19,6 @@
   "npm:pi-code-previews",
   "npm:pi-safety-net",
   "npm:pi-prompt-template-model",
-  "npm:@juicesharp/rpiv-ask-user-question",
   "./packages/pi-interactive-subagents"
 ]` -}}
 {{- $settings
