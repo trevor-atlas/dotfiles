@@ -1,0 +1,40 @@
+# `cl` — pick a file by name and open it in the editor.
+#
+# Port of the old fzf `cl` (list code files, open in $EDITOR) onto television's
+# `files` channel. The stock `files` channel only opens the editor via f12 and
+# otherwise just echoes the selection; this pinned a self-contained copy with
+# Enter bound straight to the edit action so muscle memory is unchanged.
+#
+# Invoked as:   tv cl [DIR]
+# From the shell alias `cl` in source/functions (defaults to $CODE_DIR).
+[metadata]
+name = "cl"
+description = "Pick a file by name and open it in the editor"
+requirements = ["fd", "bat"]
+
+[source]
+command = [
+  { name = "Default", run = "fd -t f" },
+  { name = "Hidden",  run = "fd -t f -H" },
+]
+
+[preview]
+command = "bat -n --color=always '{}'"
+env = { BAT_THEME = "ansi" }
+
+[keybindings]
+shortcut = "f3"
+enter = "actions:edit"
+f12 = "actions:edit"
+ctrl-up = "actions:goto_parent_dir"
+
+[actions.edit]
+description = "Opens the selected entries with the default editor (falls back to vim)"
+command = "${EDITOR:-vim} {}"
+shell = "bash"
+mode = "execute"
+
+[actions.goto_parent_dir]
+description = "Re-opens the picker in the parent directory"
+command = "tv cl .."
+mode = "execute"
