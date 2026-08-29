@@ -1,4 +1,3 @@
-
 ---
 name: code-discipline
 description: "Coding doctrine for implementation agents: produce the most result with the least code, make the type system do the proof work, keep the diff small and maintainable. Read this before writing any non-trivial code — it is required reading for ICs dispatched by ic-orchestrator, and applies any time you implement typed code."
