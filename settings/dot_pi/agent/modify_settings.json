@@ -11,13 +11,16 @@
 {{- $defaultProvider = "anthropic" -}}
 {{- $defaultModel = "claude-opus-4-8" -}}
 {{- end -}}
+{{- /* pi-interactive-subagents is vendored at settings/dot_pi/agent/packages/pi-interactive-subagents
+       (chezmoi symlinks it to ~/.pi/agent/packages/pi-interactive-subagents); the relative
+       ./packages/... source resolves against ~/.pi/agent/settings.json. */ -}}
 {{- $packages := fromJson `[
   "npm:pi-mcp-adapter",
   "npm:pi-code-previews",
   "npm:pi-safety-net",
-  "npm:@tintinweb/pi-subagents",
   "npm:pi-prompt-template-model",
-  "npm:@juicesharp/rpiv-ask-user-question"
+  "npm:@juicesharp/rpiv-ask-user-question",
+  "./packages/pi-interactive-subagents"
 ]` -}}
 {{- $settings
   | setValueAtPath "packages" $packages
