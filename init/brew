@@ -23,13 +23,13 @@ brew install gnu-sed
 brew install wget
 
 # Install more recent versions of some macOS tools.
-brew install vim
 brew install grep
 brew install ripgrep
 brew install openssh
 brew install screen
 
 # Install other useful binaries.
+brew install rtk
 brew install tmux
 brew install bat
 brew install fd
@@ -43,9 +43,8 @@ brew install hub
 brew install neovim
 brew install tldr
 brew install yarn
-brew install z
+brew install zoxide
 brew install gum
-
 brew install television
 
 brew install zsh-syntax-highlighting
@@ -67,7 +66,6 @@ brew install --cask kitty
 brew install --cask docker
 brew install --cask dropbox
 brew install --cask betterzipql
-brew install --cask nikitabobko/tap/aerospace
 brew install --cask claude-code
 
 # post install steps

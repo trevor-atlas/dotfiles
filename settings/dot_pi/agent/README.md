@@ -44,6 +44,7 @@ are rendered; edits to deployed files edit the repo and vice versa.
 - `extensions/prompt-snippets/` — `/snippets` command + `alt+s`; snippet `.md` files in its `snippets/` dir, re-scanned on menu open/send.
 - `extensions/ask-user-question.ts` — the `ask_user_question` tool.
 - `extensions/custom-header.ts` — replaces the startup header (editable `buildHeader()`).
+- `extensions/custom-footer.ts` — starship-style powerline footer, split layout: left = cwd + git branch/status (catppuccin peach/yellow), right = context %, token/cost stats, model (blue space: sky/blue/lavender), all truecolor ANSI. `/builtin-footer` restores the default.
 - `packages/pi-interactive-subagents` — bundled in `packages/` (registered in `settings.json`
   `packages`), not auto-discovered; entry at `pi-extension/subagents/index.ts`, resolves
   `agents/` and `config.json.example` relative to its own path through the symlink.

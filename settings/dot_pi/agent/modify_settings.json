@@ -19,7 +19,9 @@
   "npm:pi-code-previews",
   "npm:pi-safety-net",
   "npm:pi-prompt-template-model",
-  "./packages/pi-interactive-subagents"
+  "./packages/pi-interactive-subagents",
+  "npm:@grammeaway/pi-clip",
+  "npm:pi-powerline-footer"
 ]` -}}
 {{- $settings
   | setValueAtPath "packages" $packages
@@ -29,4 +31,9 @@
   | setValueAtPath "quietStartup" true
   | setValueAtPath "collapseChangelog" true
   | setValueAtPath "theme" "dark"
+  | setValueAtPath "powerline.preset" "default"
+  | setValueAtPath "powerline.separator" "chevron"
+  | setValueAtPath "powerline.placement" "above"
+  | setValueAtPath "workingVibe" "ordis"
+  | setValueAtPath "workingVibeModel" "deepseek/deepseek-v4-flash"
   | toPrettyJson -}}

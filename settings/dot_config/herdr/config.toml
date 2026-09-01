@@ -22,6 +22,13 @@ prefix = "backtick"
 previous_tab = "prefix+j"
 next_tab = "prefix+k"
 
+# Leader n/p workspace navigation (tmux-style: `prefix+n`/`prefix+p` move across
+# windows). Herdr calls these "workspaces" (per-project spaces). Unset by
+# default, so these are explicit overrides. `prefix+N` still creates a workspace
+# (new_workspace below), matching tmux's create-window on the uppercase variant.
+previous_workspace = "prefix+p"
+next_workspace = "prefix+n"
+
 # Pane navigation on raw Ctrl+hjkl (vim-tmux-navigator muscle memory), instead of
 # the prefix+h/l defaults. These are written as raw chords, not prefix-bound.
 # NOTE: in most terminal multiplexers ctrl+h / ctrl+j collide with backspace /
@@ -32,11 +39,11 @@ focus_pane_down  = "ctrl+j"
 focus_pane_up    = "ctrl+k"
 focus_pane_right = "ctrl+l"
 
-# Side-by-side split (Herdr calls this "vertical") on both `-` and `|`, per request.
-# tmux used `|`/`H` for side-by-side; here `-` joins it too.
-split_vertical = ["prefix+|", "prefix+minus"]
-# Stacked split (Herdr "horizontal") relocated off `-` onto `\`, which sits next to `|`.
-split_horizontal = "prefix+backslash"
+# Split keys follow the symbol shapes: `|` is a side-by-side split (Herdr
+# "vertical"), `-` is a stacked split (Herdr "horizontal") — tmux-style, where
+# `|`/`H` = side-by-side and `-` = stacked.
+split_vertical = "prefix+|"
+split_horizontal = ["prefix+minus", "prefix+backslash"]
 
 # Everything else already matches your tmux/zellij bindings via Herdr defaults:
 #   focus panes    ctrl+h/j/k/l        (vim-tmux-navigator-style raw chords; no
@@ -54,7 +61,9 @@ split_horizontal = "prefix+backslash"
 #   rename tab     prefix+shift+t      (tmux used `R`; kept default to avoid the
 #                                        reload_config = prefix+shift+r collision)
 #   detach         prefix+q            (tmux/zellij `d`)
-#   workspace nav  prefix+w            (replaces the fzf F/P popups; mouse sidebar too)
+#   workspace nav  prefix+n / prefix+p (override of the tmux-cycle defaults; j/k
+#                                        for tabs, n/p for workspaces)
+#   workspace picker prefix+w           (replaces the fzf F/P popups; mouse sidebar too)
 #   session goto   prefix+g            (fuzzy jump across workspaces/tabs/panes)
 
 # Explicit binding for creating a new workspace (a project "space"). This is the

@@ -26,16 +26,25 @@ function buildHeader(theme: Theme): string {
 	// Change this to whatever you want as the title line.
 
 	const ascii_art_2 = [
-		"   ███████████████████████████╗  ",
-		"   ╚══██████╔════════██████╔══╝  ",
-		"      ██████║        ██████║     ",
-		"      ██████║        ██████║     ",
-		"      ██████║        ██████║     ",
-		"      ██████║        ██████║     ",
-		"      ██████║        ██████║     ",
-		"      ██████║        ██████║     ",
-		"   ████████████╗  ████████████╗  ",
-		"   ╚═══════════╝  ╚═══════════╝  ",
+
+"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠃⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿",
+"⣿⣿⣿⣿⣿⣿⠋⣥⢻⡔⣶⡖⣼⣿⠏⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⢻⣿⣿⣿⣿⣿⣿⣿",
+"⣿⣿⣿⣟⢡⣌⢣⣙⣥⣧⣭⣴⣿⡏⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠏⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿",
+"⣿⣿⣿⣿⣷⣥⣾⣿⣿⣿⣿⣿⡟⠀⠀⠀⠀⠘⣿⣿⣿⣿⣿⣿⣿⣿⡟⠁⠀⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿",
+"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠃⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⠏⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿",
+"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⡿⠁⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿",
+"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠀⠀⠀⠀⠀⠀⠀⠛⠻⠿⢿⠟⠀⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⣿⣿⣿",
+"⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⡇⣶⣶⡏⣽",
+"⣿⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣠⣤⣦⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⣿⣿⢸⣿⢏⣼⣿",
+"⣿⣿⣿⣿⣿⣿⣿⡏⠀⠀⣼⣿⣿⡏⢹⡄⠀⠀⠀⠀⠀⢀⣤⣤⣄⠀⠀⠀⠀⣿⣿⣿⣿⡏⣾⢏⣾⣿⣿",
+"⣿⣿⣿⣿⠉⠙⠛⣧⠀⠀⠹⣿⣿⡀⣸⠃⠀⠀⠀⠀⣤⡇⢸⣿⣿⣦⠀⠀⠀⠸⣿⣿⣿⣷⣭⣾⣿⣿⣿",
+"⣿⣿⣿⣿⡿⠿⠾⣿⣄⠀⠀⠈⠙⠛⠉⠀⠀⠀⠀⠸⢿⠁⣼⣿⣿⡟⠀⠀⠀⢸⣿⢫⣭⣍⢻⣿⣿⣿⣿",
+"⣿⣿⣿⣧⣤⣴⣶⣿⣿⣷⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠛⠋⠁⠀⠀⣠⣿⣿⣎⣛⠿⣸⣿⣿⣿⣿",
+"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣾⡿⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿",
+"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣶⣶⣶⣶⣶⣿⣿⠿⢿⣿⣶⣦⣬⣿⣿⣿⣿⣿⣿⣿",
+"⣿⢨⢛⢍⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡄⣹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿",
+"⠋⠔⡇⡈⠛⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿𝝅⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿",
+"⣿⣷⣡⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿",
 	].map(line => theme.bold(theme.fg("success", line))).join("\n");
 
 	const logo =
@@ -48,29 +57,28 @@ function buildHeader(theme: Theme): string {
 	// Use rawKeyHint("key", "description") for app-level shortcuts.
 	// Use keyHint("editorAction", "description") for editor shortcuts.
 	const hints = [
-		rawKeyHint("escape", "to interrupt"),
-		rawKeyHint("ctrl+c", "to clear"),
-		rawKeyHint("ctrl+c twice", "to exit"),
-		rawKeyHint("ctrl+d", "to exit (empty)"),
-		rawKeyHint("ctrl+z", "to suspend"),
-		keyHint("deleteToLineEnd", "to delete to end"),
+		// rawKeyHint("escape", "to interrupt"),
+		// rawKeyHint("ctrl+c", "to clear"),
+		// rawKeyHint("ctrl+c twice", "to exit"),
+		// rawKeyHint("ctrl+d", "to exit (empty)"),
+		// rawKeyHint("ctrl+z", "to suspend"),
+		// keyHint("deleteToLineEnd", "to delete to end"),
 		rawKeyHint("shift+tab", "to cycle thinking level"),
-		rawKeyHint("ctrl+p/shift+ctrl+p", "to cycle models"),
+		// rawKeyHint("ctrl+p/shift+ctrl+p", "to cycle models"),
 		rawKeyHint("ctrl+l", "to select model"),
-		rawKeyHint("ctrl+o", "to expand tools"),
+		// rawKeyHint("ctrl+o", "to expand tools"),
 		rawKeyHint("ctrl+t", "to expand thinking"),
 		rawKeyHint("ctrl+g", "for external editor"),
-		rawKeyHint("/", "for commands"),
+		// rawKeyHint("/", "for commands"),
 		rawKeyHint("!", "to run bash"),
-		rawKeyHint("!!", "to run bash (no context)"),
-		rawKeyHint("alt+enter", "to queue follow-up"),
+		// rawKeyHint("!!", "to run bash (no context)"),
+		// rawKeyHint("alt+enter", "to queue follow-up"),
 		rawKeyHint("alt+up", "to edit all queued messages"),
 		rawKeyHint(process.platform === "win32" ? "alt+v" : "ctrl+v", "to paste image"),
-		rawKeyHint("drop files", "to attach"),
+		// rawKeyHint("drop files", "to attach"),
 	];
 
-	//return `${logo}\n${hints.join("\n")}`;
-	return logo
+	return `${logo}\n${hints.join("\n")}`;
 }
 
 
