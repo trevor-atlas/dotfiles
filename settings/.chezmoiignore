@@ -8,3 +8,8 @@
 {{ if ne .chezmoi.os "darwin" }}.config/yabai/**{{ end }}
 {{ if ne .chezmoi.os "darwin" }}.config/brewfile{{ end }}
 {{ if ne .chezmoi.os "darwin" }}.config/brewfile/**{{ end }}
+
+# claude-connectors: connectors.json is generated per-machine by
+# `bun connectors.ts sync` and contains account-specific installedServerId
+# values — never commit it. The account token lives only in the keychain.
+.config/claude-connectors/connectors.json
