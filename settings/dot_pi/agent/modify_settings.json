@@ -7,9 +7,11 @@
 {{- $isHsMachine := stat (joinPath .chezmoi.destDir ".hubspot") -}}
 {{- $defaultProvider := "deepseek" -}}
 {{- $defaultModel := "deepseek-v4-flash" -}}
+{{- $workingVibeModel := "deepseek/deepseek-v4-flash" -}}
 {{- if $isHsMachine -}}
 {{- $defaultProvider = "anthropic" -}}
 {{- $defaultModel = "claude-opus-4-8" -}}
+{{- $workingVibeModel = "anthropic/claude-opus-4-8" -}}
 {{- end -}}
 {{- /* pi-interactive-subagents is vendored at settings/dot_pi/agent/packages/pi-interactive-subagents
        (chezmoi symlinks it to ~/.pi/agent/packages/pi-interactive-subagents); the relative
@@ -35,5 +37,5 @@
   | setValueAtPath "powerline.separator" "chevron"
   | setValueAtPath "powerline.placement" "above"
   | setValueAtPath "workingVibe" "ordis"
-  | setValueAtPath "workingVibeModel" "deepseek/deepseek-v4-flash"
+  | setValueAtPath "workingVibeModel" $workingVibeModel
   | toPrettyJson -}}

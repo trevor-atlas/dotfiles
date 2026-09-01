@@ -101,8 +101,11 @@ const SubagentParams = Type.Object({
   name: Type.Optional(
     Type.String({
       description:
-        "Optional cosmetic label for the subagent's pane and widget row. Defaults to the agent name. " +
-        "Has no effect on which agent runs — use `agent` for that.",
+        "Optional label for the subagent's pane and widget row, and the unique handle used by " +
+        "subagent_message to steer or resume it. Has no effect on which agent runs — use `agent` for that. " +
+        "Must be unique within this session: reusing a name (running or finished) is rejected. " +
+        "Omit it to auto-generate a unique name (e.g. worker, worker-2), or give each instance a " +
+        "distinct descriptive name when running several instances of the same agent.",
     }),
   ),
   model: Type.Optional(Type.String({ description: "Model override (overrides agent default)" })),
@@ -393,12 +396,29 @@ function resolveLaunchBehavior(
  *      woken on stall/recovery transitions. Agents that don't auto-exit are
  *      driven by the user in their own pane (worker) and stall pings are noise.
  */
+/**
+ * Decide whether a spawned subagent self-terminates when its agent loop ends.
+ *
+ * The `subagent` tool is fire-and-forget by contract: the parent is woken with
+ * the child's result only if the child shuts itself down. So auto-exit is the
+ * default, and an agent must *explicitly* opt into a persistent, human-driven
+ * pane via `interactive: true` or `auto-exit: false`. This mirrors
+ * resolveResumeLaunchBehavior(), which already forces auto-exit on every resume
+ * for the same reason, and prevents non-annotated agents (e.g. pi's built-in
+ * general-purpose/Explore/Plan) from stranding a pane that never terminates.
+ */
+function resolveEffectiveAutoExit(agentDefs: AgentDefaults | null): boolean {
+  if (agentDefs?.autoExit != null) return agentDefs.autoExit;
+  if (agentDefs?.interactive === true) return false;
+  return true;
+}
+
 function resolveEffectiveInteractive(
   _params: Static<typeof SubagentParams>,
   agentDefs: AgentDefaults | null,
 ): boolean {
   if (agentDefs?.interactive != null) return agentDefs.interactive;
-  return !(agentDefs?.autoExit ?? false);
+  return !resolveEffectiveAutoExit(agentDefs);
 }
 
 function loadAgentDefaults(agentName: string): AgentDefaults | null {
@@ -549,13 +569,28 @@ function formatWidgetRightLabel(snapshot: StatusSnapshot): string {
 function resolveResultPresentation(
   result: Pick<
     SubagentResult,
-    "exitCode" | "elapsed" | "summary" | "sessionFile" | "sessionId" | "errorMessage"
+    "exitCode" | "elapsed" | "summary" | "sessionFile" | "sessionId" | "errorMessage" | "error"
   >,
   name: string,
 ): string {
   // Name is the persistent handle: the same name steers a running subagent or
   // resumes a finished one, so follow-ups always reference it.
   const sessionRef = `\n\nFollow up with subagent_message({ name: "${name}", message: "…" })`;
+
+  if (result.error === "pane-closed") {
+    // The pane was destroyed out-of-band before a completion signal arrived.
+    // Make the resume path explicit: the session file is intact, so the work
+    // is not lost — subagent_message({ name }) relaunches it fire-and-forget.
+    return (
+      `Sub-agent "${name}" stopped after ${formatElapsed(result.elapsed)} — its pane was ` +
+      `closed before it reported a result (most likely closed manually).\n\n` +
+      (result.summary ? `Last output before it was closed:\n${result.summary}\n\n` : "") +
+      `No completion signal was received, so this may be incomplete. The session was ` +
+      `saved and can be resumed to pick up where it left off — ` +
+      `subagent_message({ name: "${name}", message: "…" }) relaunches it and delivers ` +
+      `the result back to you.`
+    );
+  }
 
   if (result.errorMessage) {
     // Auto-retry exhausted or other agent-loop error. The subagent did not
@@ -1128,6 +1163,7 @@ export const __test__ = {
   resolveEffectiveSessionMode,
   resolveLaunchBehavior,
   resolveEffectiveInteractive,
+  resolveEffectiveAutoExit,
   buildSubagentToolAllowlist,
   applySandboxToParts,
   buildPiPromptArgs,
@@ -1179,6 +1215,7 @@ async function launchSubagent(
   const effectiveSkills = agentDefs?.skills;
   const effectiveThinking = agentDefs?.thinking;
   const effectiveInteractive = resolveEffectiveInteractive(params, agentDefs);
+  const effectiveAutoExit = resolveEffectiveAutoExit(agentDefs);
 
   const sessionFile = ctx.sessionManager.getSessionFile();
   if (!sessionFile) throw new Error("No session file");
@@ -1227,10 +1264,10 @@ async function launchSubagent(
   // Build the task message
   // Only full-context fork mode inherits prior conversation state.
   // Blank-session modes need the wrapper instructions and artifact-backed handoff.
-  const modeHint = agentDefs?.autoExit
+  const modeHint = effectiveAutoExit
     ? "Complete your task autonomously. When you are finished, simply stop — your session ends automatically."
     : "Complete your task. The user can interact with you at any time, and the session ends when the user exits the pane.";
-  const summaryInstruction = agentDefs?.autoExit
+  const summaryInstruction = effectiveAutoExit
     ? "Your FINAL assistant message should summarize what you accomplished."
     : "Your FINAL assistant message (before the user exits) should summarize what you accomplished.";
   // An agent with a non-empty subagent_agents list is granted the spawning
@@ -1353,7 +1390,7 @@ async function launchSubagent(
     systemPromptMode: systemPromptMode ?? null,
     identity: identityInSystemPrompt ? identity : null,
     spawnable: agentDefs?.subagentAgents ?? null,
-    autoExit: agentDefs?.autoExit ?? false,
+    autoExit: effectiveAutoExit,
     cwd: effectiveCwd ?? null,
     agentDir: resolvedAgentDir,
   };
@@ -1377,7 +1414,7 @@ async function launchSubagent(
   if (params.agent) {
     envParts.push(`PI_SUBAGENT_AGENT=${shellEscape(params.agent)}`);
   }
-  if (agentDefs?.autoExit) {
+  if (effectiveAutoExit) {
     envParts.push(`PI_SUBAGENT_AUTO_EXIT=1`);
   }
   envParts.push(`PI_SUBAGENT_SESSION=${shellEscape(subagentSessionFile)}`);
@@ -1553,6 +1590,38 @@ async function watchSubagent(
     });
 
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
+
+    // The pane disappeared without any completion signal — almost always the
+    // user manually closed/killed it (a clean exit is caught earlier via the
+    // sentinel or `.exit` sidecar, before teardown). Salvage any last assistant
+    // message, then tear down cleanly so the widget stops showing it running.
+    if (result.reason === "vanished") {
+      let summary = "";
+      if (running.cli !== "claude" && existsSync(sessionFile)) {
+        try {
+          summary = findLastAssistantMessage(getNewEntries(sessionFile, 0)) ?? "";
+        } catch {}
+      }
+      if (!summary) {
+        summary = `The pane for sub-agent "${name}" was closed before it reported a result.`;
+      }
+      const subagentSessionId =
+        running.cli !== "claude" && existsSync(sessionFile) ? getSessionId(sessionFile) : null;
+      try {
+        closeSurface(surface);
+      } catch {}
+      runningSubagents.delete(running.id);
+      return {
+        name,
+        task,
+        summary,
+        sessionFile,
+        ...(subagentSessionId ? { sessionId: subagentSessionId } : {}),
+        exitCode: result.exitCode,
+        elapsed,
+        error: "pane-closed",
+      };
+    }
 
     if (running.cli === "claude") {
       // Claude Code result extraction
@@ -1797,16 +1866,60 @@ export default function subagentsExtension(pi: ExtensionAPI) {
           ctx.sessionManager.getSessionId(),
         );
 
-        // Default the cosmetic pane label to the agent name when omitted,
-        // disambiguating against running subagents, in-flight reservations, and
-        // every name already in the registry — so names stay unique across the
-        // whole session, running or finished. Reserve the chosen name
-        // synchronously (before any await) so parallel spawns don't collide.
+        // The name is the unique per-session handle for subagent_message
+        // (steer while running, resume once finished). It must stay unique or a
+        // duplicate would overwrite the registry entry (breaking resume) and
+        // make steering ambiguous.
+        //
+        // Reserve the chosen name synchronously (before any await) so parallel
+        // spawns in the same tick can't both claim it.
         let reservedName: string | null = null;
         if (!params.name?.trim()) {
+          // No name given: default to the agent name, disambiguating against
+          // running subagents, in-flight reservations, and every name already
+          // in the registry (worker → worker-2 → worker-3, running or finished).
           const registryNames = new Set(Object.keys(readNameRegistry(parentArtifactDir)));
           params.name = uniqueRunningName(params.agent, registryNames);
           reservedName = params.name;
+          reservedNames.add(reservedName);
+        } else {
+          // Explicit name: reject a collision rather than silently overwriting.
+          // To act on an existing subagent, the caller should use
+          // subagent_message (which steers or resumes it by the same name).
+          const requestedName = params.name.trim();
+          params.name = requestedName;
+          const runningNames = new Set(
+            Array.from(runningSubagents.values()).map((r) => r.name),
+          );
+          const clash = runningNames.has(requestedName)
+            ? "is already running"
+            : reservedNames.has(requestedName)
+              ? "is already being spawned right now"
+              : Object.prototype.hasOwnProperty.call(
+                    readNameRegistry(parentArtifactDir),
+                    requestedName,
+                  )
+                ? "was already used by another subagent in this session"
+                : null;
+          if (clash) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text:
+                    `A subagent named "${requestedName}" ${clash}. Names are unique per ` +
+                    `session — each one identifies a single subagent for subagent_message ` +
+                    `(steer while running, resume once finished).\n\n` +
+                    `To start another instance of the same agent, choose a different name ` +
+                    `(e.g. "${requestedName}-2") or omit "name" to auto-generate a unique one. ` +
+                    `To continue the existing one, use ` +
+                    `subagent_message({ name: "${requestedName}", message: "…" }).`,
+                },
+              ],
+              details: { error: "duplicate name", name: requestedName },
+            };
+          }
+          reservedName = requestedName;
           reservedNames.add(reservedName);
         }
 

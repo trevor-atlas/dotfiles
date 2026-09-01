@@ -95,12 +95,22 @@ export function closeSurface(surface: string): void {
   requireBackend().closeSurface(surface);
 }
 
+/** True when the pane/surface still exists (false once it has been closed). */
+export function surfaceExists(surface: string): boolean {
+  return requireBackend().surfaceExists(surface);
+}
+
 export function pollForExit(
   surface: string,
   signal: AbortSignal,
   options: PollOptions,
 ): Promise<PollResult> {
-  return pollForExitCore(requireBackend().readScreenAsync, surface, signal, options);
+  // Inject the active backend's liveness probe so the shared loop can detect a
+  // manually-closed pane (no sentinel, no `.exit`) and stop watching it.
+  return pollForExitCore(requireBackend().readScreenAsync, surface, signal, {
+    ...options,
+    surfaceExists: (s) => requireBackend().surfaceExists(s),
+  });
 }
 
 export { shellEscape } from "./tmux.ts";

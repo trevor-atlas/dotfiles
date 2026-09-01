@@ -104,12 +104,84 @@ function parseHerdrJson(raw: string): any {
 // ── Pane layout ──
 
 /**
- * herdr splits the target pane in half with --ratio 0.5. Repeated splits
- * halve the newest pane, so parallel subagents drift like tmux without its
- * even-horizontal rebalance; keeping panes perfectly even is left to the
- * user (zoom/focus) for now.
+ * herdr splits the chosen pane in half with --ratio 0.5.
+ *
+ * herdr has no one-shot even-layout primitive (unlike tmux's
+ * `select-layout even-horizontal`). Always splitting the *same* pane in the
+ * *same* direction geometrically halves it, so the first pane stays huge while
+ * later ones shrink into unreadable slivers. Instead we split whichever pane
+ * is currently largest, and pick the split direction from its aspect ratio
+ * (wide → right, tall → down). That keeps every pane within ~2× of the others
+ * — a balanced grid — which matches herdr's own guidance to "split a wide pane
+ * to the right and a narrow or tall pane down [and] avoid repeated
+ * same-direction splits that create unusably narrow columns."
  */
 const SUBAGENT_HERDR_SPLIT_RATIO = "0.5";
+
+interface HerdrRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface HerdrLayoutPane {
+  pane_id: string;
+  rect: HerdrRect;
+}
+
+function isValidLayoutPane(value: any): value is HerdrLayoutPane {
+  return (
+    value != null &&
+    typeof value.pane_id === "string" &&
+    value.rect != null &&
+    Number.isFinite(value.rect.width) &&
+    Number.isFinite(value.rect.height)
+  );
+}
+
+/**
+ * Read the panes of the calling pi pane's tab (id + geometry). Returns [] when
+ * herdr can't report a layout; callers fall back to a plain split.
+ */
+function readTabLayoutPanes(): HerdrLayoutPane[] {
+  const parent = process.env.HERDR_PANE_ID;
+  const args = parent ? ["pane", "layout", "--pane", parent] : ["pane", "layout", "--current"];
+  let out: string;
+  try {
+    out = execFileSync("herdr", args, { encoding: "utf8" });
+  } catch {
+    return [];
+  }
+  let panes: unknown;
+  try {
+    panes = parseHerdrJson(out)?.result?.layout?.panes;
+  } catch {
+    return [];
+  }
+  return Array.isArray(panes) ? panes.filter(isValidLayoutPane) : [];
+}
+
+/**
+ * Choose which pane to split and in which direction so the new subagent pane
+ * shares space evenly. Splits the largest pane; picks `right` while it is more
+ * than twice as wide as tall (herdr cells are ~2× taller than wide, so this is
+ * roughly "wider than square in pixels"), otherwise `down`. Falls back to
+ * splitting the calling pane to the right when no layout is available.
+ */
+export function pickSplitTarget(
+  panes: HerdrLayoutPane[],
+): { paneId?: string; direction: "right" | "down" } {
+  if (panes.length === 0) return { direction: "right" };
+  let largest = panes[0];
+  for (const pane of panes) {
+    if (pane.rect.width * pane.rect.height > largest.rect.width * largest.rect.height) {
+      largest = pane;
+    }
+  }
+  const direction = largest.rect.width >= largest.rect.height * 2 ? "right" : "down";
+  return { paneId: largest.pane_id, direction };
+}
 
 // ── Surface primitives ──
 
@@ -123,7 +195,13 @@ const SUBAGENT_HERDR_SPLIT_RATIO = "0.5";
  */
 export function createSurface(name: string): string {
   void name; // herdr panes are not named; the pi process inside shows its own title.
-  return createSurfaceSplit(name, "right");
+  requireHerdr();
+  // Split the largest existing pane (direction chosen by aspect ratio) so
+  // parallel subagents share the space evenly instead of the first pane
+  // hogging half and later ones shrinking to slivers. Best-effort: any failure
+  // to read the layout falls back to a plain right split of the calling pane.
+  const { paneId, direction } = pickSplitTarget(readTabLayoutPanes());
+  return createSurfaceSplit(name, direction, paneId);
 }
 
 /**
@@ -272,6 +350,25 @@ export function closeSurface(surface: string): void {
     throw new Error(
       `Failed to close herdr pane ${surface}: ${error?.stderr?.trim() || error?.message || String(error)}`,
     );
+  }
+}
+
+/**
+ * True when the pane still exists. `herdr pane get` returns an {"error":...}
+ * payload (and non-zero status) for an unknown pane id, so any failure means
+ * the pane is gone. Used by the exit poller to detect a manually-closed pane.
+ */
+export function surfaceExists(surface: string): boolean {
+  requireHerdr();
+  try {
+    const out = execFileSync("herdr", ["pane", "get", surface], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    parseHerdrJson(out); // throws on {"error":...}
+    return true;
+  } catch {
+    return false;
   }
 }
 

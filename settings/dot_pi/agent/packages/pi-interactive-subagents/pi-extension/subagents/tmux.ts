@@ -240,6 +240,24 @@ export function closeSurface(surface: string): void {
   rebalanceSurfaces();
 }
 
+/**
+ * True when the pane still exists. `display-message` exits non-zero (throws)
+ * for an unknown pane id, so a thrown error means the pane is gone. Used by
+ * the exit poller to detect a manually-closed pane.
+ */
+export function surfaceExists(surface: string): boolean {
+  requireTmux();
+  try {
+    execFileSync("tmux", ["display-message", "-p", "-t", surface, "#{pane_id}"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ── Exit polling ──
 
 // The poll loop itself is shared (see poll.ts) — tmux only supplies the

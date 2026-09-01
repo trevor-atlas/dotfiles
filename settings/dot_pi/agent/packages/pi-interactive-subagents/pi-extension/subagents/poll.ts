@@ -12,8 +12,8 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 
 export interface PollResult {
   /** How the subagent exited */
-  reason: "done" | "sentinel" | "error";
-  /** Shell exit code (from sentinel). 0 for file-based exits. */
+  reason: "done" | "sentinel" | "error" | "vanished";
+  /** Shell exit code (from sentinel). 0 for file-based exits, -1 for a vanished pane. */
   exitCode: number;
   /** Error message if reason is "error" (auto-retry exhausted, provider overload, etc.) */
   errorMessage?: string;
@@ -24,6 +24,15 @@ export interface PollOptions {
   sessionFile?: string;
   sentinelFile?: string;
   onTick?: (elapsed: number) => void;
+  /**
+   * Optional liveness probe for the pane/surface. When a terminal read fails
+   * and neither an `.exit` sidecar nor a completion sentinel is present, the
+   * loop uses this to distinguish a transient CLI error from a pane that was
+   * destroyed out-of-band (e.g. the user manually closed/killed it). Returning
+   * `false` for two consecutive checks resolves the poll with reason
+   * "vanished" so the watcher can tear down and stop showing it as running.
+   */
+  surfaceExists?: (surface: string) => boolean | Promise<boolean>;
 }
 
 /**
@@ -58,6 +67,10 @@ export async function pollForExit(
   options: PollOptions,
 ): Promise<PollResult> {
   const start = Date.now();
+  // Consecutive confirmations that the surface no longer exists. Requiring two
+  // adds a small grace window so we never misreport a pane that is mid-teardown
+  // after a clean exit (those are caught earlier via sentinel/.exit anyway).
+  let missingChecks = 0;
 
   for (;;) {
     if (signal.aborted) {
@@ -88,6 +101,8 @@ export async function pollForExit(
     // Slow path: read terminal screen for sentinel (crash detection)
     try {
       const screen = await readScreenAsync(surface, 5);
+      // A successful read proves the pane is alive; clear any pending vanish.
+      missingChecks = 0;
       const match = screen.match(/__SUBAGENT_DONE_(\d+)__/);
       if (match) {
         return { reason: "sentinel", exitCode: parseInt(match[1], 10) };
@@ -103,6 +118,27 @@ export async function pollForExit(
             return interpretExitSidecar(data);
           }
         } catch {}
+      }
+
+      // No exit signal and the read failed — the pane may have been closed
+      // out-of-band (manual kill). Probe liveness; two consecutive "gone"
+      // results resolve the poll so the watcher removes it from the running
+      // set and the parent's widget stops showing it as active.
+      if (options.surfaceExists) {
+        let gone = false;
+        try {
+          gone = !(await options.surfaceExists(surface));
+        } catch {
+          gone = false;
+        }
+        if (gone) {
+          missingChecks += 1;
+          if (missingChecks >= 2) {
+            return { reason: "vanished", exitCode: -1 };
+          }
+        } else {
+          missingChecks = 0;
+        }
       }
     }
 
