@@ -6,6 +6,8 @@ alias dotfiles="$EDITOR $ATLAS_ROOT"
 alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222"
 
 alias nodescripts="jq '.scripts' package.json"
+# dictate with Handy -> new pi session (see scripts/handy-pi.ts)
+alias handy-pi="bun $ATLAS_ROOT/scripts/handy-pi.ts"
 alias preview="fzf --preview 'bat --color \"always\" {}'"
 
 # add support for ctrl+o to open selected file in VS Code
