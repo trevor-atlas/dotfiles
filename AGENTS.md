@@ -74,11 +74,13 @@ This will:
 - **Media Conversion**:
   - `convert_aiff`, `convert_gif`, `convert_webm`, `jpg_to_video`: Various media conversion utilities
 
-### Tmux/Zellij Session Management
+### Tmux/Zellij/Herdr Session Management
 
 - **`bool`**: Launch or reconnect to main tmux session with predefined windows
 - **`unbool`**: Kill tmux server
 - **`zbool`**: Zellij version of `bool`
+- **`herd`**: Launch or reconnect to the persistent herdr session (server-side, no rebuild step)
+- **`unherd`**: Stop the herdr server (tears down all sessions/panes/agents)
 
 ## Environment Variables
 
@@ -89,6 +91,7 @@ Key environment variables:
 - `CODE_DIR`: Alias for source code repositories (typically `~/src`)
 - `DEEPSEEK_API_KEY`: pi provider key, injected into `~/.pi/agent/models.json` by a chezmoi template (never commit the raw key)
 - `OPENAI_API_KEY`: pi provider key, injected into `~/.pi/agent/models.json` by a chezmoi template (never commit the raw key)
+- `NINFER_API_KEY`: pi provider key for the LAN ninfer server (Qwen 3.8 27B), injected into `~/.pi/agent/models.json` by a chezmoi template (never commit the raw key)
 
 ## Pi config
 

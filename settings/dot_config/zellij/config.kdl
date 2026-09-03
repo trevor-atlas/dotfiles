@@ -122,7 +122,12 @@ default_mode "locked"
 mouse_mode true
 scroll_buffer_size 10000
 styled_underlines true
-support_kitty_keyboard_protocol true
+// Disabled: zsh (the main pane app here) doesn't speak the kitty keyboard
+// protocol, and leaving it enabled lets CSI-u key events (Backspace as
+// ESC[127u etc.) leak through to shells after protocol-state hiccups,
+// which manifests as "backspace ignored, typing works". Apps that opt in
+// (e.g. nvim >= 0.10) degrade gracefully to legacy key encodings.
+support_kitty_keyboard_protocol false
 
 // Closest built-in equivalent to the tmux dracula plugin.
 theme "catppuccin-macchiato"

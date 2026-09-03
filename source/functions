@@ -241,6 +241,33 @@ bool() {
   tmux a -t "$SESSION_NAME"
 }
 
+# Launch or reconnect to the main herdr session (`herd` = the herdr analog of
+# bool/zbool). Unlike tmux/zellij there is nothing to rebuild: herdr sessions
+# persist server-side, so plain `herdr` attaches to the persistent `default`
+# session (starting the server first if needed). This wrapper just adds an
+# install guard.
+herd() {
+  if ! command -v herdr >/dev/null 2>&1; then
+    echo "herdr is not installed." >&2
+    return 1
+  fi
+
+  herdr
+}
+
+# Tear down herdr (`unherd` = the herdr analog of `unbool` / `tmux
+# kill-server`): stop the headless server, which takes down every
+# session/pane/agent it hosts. Sessions persist on disk, so the next `herd`
+# brings them back.
+unherd() {
+  if ! command -v herdr >/dev/null 2>&1; then
+    echo "herdr is not installed." >&2
+    return 1
+  fi
+
+  herdr server stop
+}
+
 convert_aiffs() {
   for i in *.aiff;
     do convert_aiff $i;

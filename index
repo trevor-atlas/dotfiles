@@ -214,30 +214,111 @@ install_dotfiles() {
 
 # Above sources are order dependent at the moment so we don't use a loop.
 # for f in "$ATLAS_ROOT/source*"; do source $f; done;
-set -o vi
 
-# Prefix history search: type the start of a command, hit up/down arrow, and
-# cycle only through past commands that begin with what you've typed (instead
-# of walking the entire history). up-line-or-beginning-search first moves
-# between lines of a multiline buffer, then falls back to the prefix search.
-# Bound AFTER `set -o vi` so the vi keymaps (viins/vicmd) don't clobber it.
-autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
-zle -N up-line-or-beginning-search
-zle -N down-line-or-beginning-search
-# Bind the arrow keys in insert mode (viins == main keymap after `set -o vi`),
-# using terminfo sequences with literal-escape fallbacks.
-bindkey "${terminfo[kcuu1]:-^[[A}" up-line-or-beginning-search
-bindkey "${terminfo[kcud1]:-^[[B}" down-line-or-beginning-search
-# Same in vi command mode, plus k/j for the same prefix search.
-bindkey -M vicmd "${terminfo[kcuu1]:-^[[A}" up-line-or-beginning-search
-bindkey -M vicmd "${terminfo[kcud1]:-^[[B}" down-line-or-beginning-search
-bindkey -M vicmd 'k' up-line-or-beginning-search
-bindkey -M vicmd 'j' down-line-or-beginning-search
+# ---------------------------------------------------------------------------
+# vi editing
+# ---------------------------------------------------------------------------
+# Preferred: jeffreytse/zsh-vi-mode (full vim operators/text objects, cursor
+# styles, clipboard). It lazy-initializes on the first command line. Because it
+# rebinds keys by default, any custom bind we want to keep is re-established in
+# its `zvm_after_lazy_keybindings` hook below. If the plugin is not installed we
+# fall back to the minimal `set -o vi` + hand-made binds further down, so hosts
+# that haven't run `brew bundle` (or a non-brew Linux box) are still usable.
 
-# edit-command-line: open the CURRENT command line in $EDITOR (nvim) to edit it
-# with full editor power, then :wq to run it. Great for long / multi-line
-# commands. In vi command mode press `v`; from insert mode press Ctrl-X Ctrl-E.
+# edit-command-line: open the CURRENT command line in $EDITOR (nvim); :wq to run.
+# Used by both the plugin branch and the fallback. vi cmd mode: `v`; insert:
+# Ctrl-X Ctrl-E.
 autoload -Uz edit-command-line
 zle -N edit-command-line
-bindkey -M vicmd 'v' edit-command-line
-bindkey '^X^E' edit-command-line
+
+# Locate jeffreytse/zsh-vi-mode across brew prefixes / platforms.
+_zvm_plugin_found=
+for _zvm_prefix in "${HOMEBREW_PREFIX:-/opt/homebrew}" /usr/local /usr; do
+  if [[ -r "$_zvm_prefix/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh" ]]; then
+    _zvm_plugin_file="$_zvm_prefix/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh"
+    _zvm_plugin_found=1
+    break
+  fi
+  if [[ -r "$_zvm_prefix/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh" ]]; then
+    _zvm_plugin_file="$_zvm_prefix/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh"
+    _zvm_plugin_found=1
+    break
+  fi
+done
+unset _zvm_prefix
+
+if [[ -n "$_zvm_plugin_found" ]]; then
+  source "$_zvm_plugin_file"
+  unset _zvm_plugin_found _zvm_plugin_file
+
+  # Re-establish our custom prefix-history-search binds INSIDE the plugin's
+  # lazy-keybinding pass (it overwrites vicmd/visual binds on first use, so we
+  # must register ours there to survive). type a prefix then `k` / `j` / arrow
+  # to walk only matching commands. Edit the line with `v`.
+  function _atlas_vi_prefix_search() {
+    autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+    zle -N up-line-or-beginning-search
+    zle -N down-line-or-beginning-search
+    # insert mode (viins): arrows as prefix search
+    bindkey "${terminfo[kcuu1]:-^[[A}" up-line-or-beginning-search
+    bindkey "${terminfo[kcud1]:-^[[B}" down-line-or-beginning-search
+    # kitty CSI-u survives: if a multiplexer leaves the keyboard protocol
+    # enabled, Backspace/Delete arrive as ESC[127u / ESC[3u etc. Bindings keep
+    # editing alive (insert mode and vi map).
+    bindkey '^[[127u'   vi-backward-delete-char
+    bindkey '^[[127;1u' vi-backward-delete-char
+    bindkey '^[[3u'     delete-char
+    bindkey '^[[3;1u'   delete-char
+    bindkey '^X^E'      edit-command-line
+    # vi command mode: k/j and arrows as prefix search; `v` edits the line.
+    zvm_bindkey vicmd 'k' up-line-or-beginning-search
+    zvm_bindkey vicmd 'j' down-line-or-beginning-search
+    zvm_bindkey vicmd "${terminfo[kcuu1]:-^[[A}" up-line-or-beginning-search
+    zvm_bindkey vicmd "${terminfo[kcud1]:-^[[B}" down-line-or-beginning-search
+    zvm_bindkey vicmd '^[[65u' up-line-or-beginning-search
+    zvm_bindkey vicmd '^[[66u' down-line-or-beginning-search
+    zvm_bindkey vicmd 'v' edit-command-line
+    # Unify history search across insert+command mode: vi cmd mode `^R`
+    # (fzf binds it there too) and `/` both open Atuin when it is installed,
+    # matching the `^R`=atuin behaviour in insert mode. Guarded: only when
+    # Atuin's vicmd widget exists (hosts running Atuin).
+    if (( ${+widgets[atuin-search-vicmd]} )); then
+      zvm_bindkey vicmd '^R' atuin-search-vicmd
+    fi
+  }
+  zvm_after_lazy_keybindings_commands+=(_atlas_vi_prefix_search)
+else
+  # ---------------------------------------------------------------------------
+  # FALLBACK (zsh-vi-mode not installed): minimal vi setup preserved verbatim.
+  # ---------------------------------------------------------------------------
+  unset _zvm_plugin_found _zvm_plugin_file
+  set -o vi
+
+  # Prefix history search: type the start of a command, hit up/down arrow, and
+  # cycle only through past commands that begin with what you've typed (instead
+  # of walking the entire history). up-line-or-beginning-search first moves
+  # between lines of a multiline buffer, then falls back to the prefix search.
+  autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+  zle -N up-line-or-beginning-search
+  zle -N down-line-or-beginning-search
+  bindkey "${terminfo[kcuu1]:-^[[A}" up-line-or-beginning-search
+  bindkey "${terminfo[kcud1]:-^[[B}" down-line-or-beginning-search
+  bindkey -M vicmd "${terminfo[kcuu1]:-^[[A}" up-line-or-beginning-search
+  bindkey -M vicmd "${terminfo[kcud1]:-^[[B}" down-line-or-beginning-search
+  bindkey -M vicmd 'k' up-line-or-beginning-search
+  bindkey -M vicmd 'j' down-line-or-beginning-search
+
+  # Kitty keyboard protocol (CSI-u) fallbacks -- see long comment below.
+  # (Bindings for `^[[127u` etc. in this same minimal branch.)
+  bindkey '^[[127u'   vi-backward-delete-char
+  bindkey '^[[127;1u' vi-backward-delete-char
+  bindkey '^[[3u'     delete-char
+  bindkey '^[[3;1u'   delete-char
+  bindkey '^[[65u'    up-line-or-beginning-search
+  bindkey '^[[66u'    down-line-or-beginning-search
+  bindkey -M vicmd '^[[65u' up-line-or-beginning-search
+  bindkey -M vicmd '^[[66u' down-line-or-beginning-search
+
+  bindkey -M vicmd 'v' edit-command-line
+  bindkey '^X^E' edit-command-line
+fi

@@ -1,0 +1,45 @@
+# Atuin configuration
+# fzf-faithful: mirrors the feel of a bottom-docked fzf Ctrl-R history search.
+#
+# enter_accept = false  -> Enter FILLS your prompt for review (like fzf), it does
+#                          NOT auto-execute. Press Enter again to run, or edit first.
+#                          (Tab also fills the prompt for editing.)
+
+## --------------------------- search / filter ---------------------------
+## fzf-like fuzzy search syntax (^foo bar$ | baz  etc.) is the default already.
+search_mode = "fuzzy"
+
+## Search all history across hosts by default when opening the search.
+filter_mode = "global"
+
+## Don't fall back to fuzzy for the up-arrow binding; keep it globally fuzzy.
+# search_mode_shell_up_key_binding = "fuzzy"
+# filter_mode_shell_up_key_binding = "global"
+
+## --------------------------- behavior / keys ----------------------------
+## Echo fzf: selecting a command with Enter just writes it to your prompt so you
+## can review/edit, rather than executing straight away.
+enter_accept = false
+
+## Keep the help row (version hint + total command count) visible.
+show_help = true
+
+## --------------------------- layout & preview ----------------------------
+## Search bar docked at the bottom (like fzf's prompt), not inverted to the top.
+invert = false
+
+## Cap the interactive list height instead of always grabbing full screen.
+inline_height = 40
+
+## Show a preview of the (possibly long) selected command.
+show_preview = true
+max_preview_height = 4
+
+## ----------------------------- theme (colors) -----------------------------
+## Catppuccin Mocha, tuned to the palette your fzf already uses.
+[theme]
+name = "catppuccin-mocha"
+
+## ----------------------------- ui columns -------------------------------
+## Show duration + relative time then the command, a clean default.
+# columns = ["duration", "time", "command"]

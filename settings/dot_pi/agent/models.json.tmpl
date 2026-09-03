@@ -19,6 +19,7 @@
 {{- if not $dsAPIKey }}{{ fail "DEEPSEEK_API_KEY must be set when applying the personal Pi configuration" }}{{ end -}}
 {{- $oaiAPIKey := env "OPENAI_API_KEY" -}}
 {{- if not $oaiAPIKey }}{{ fail "OPENAI_API_KEY must be set when applying the personal Pi configuration" }}{{ end -}}
+{{- $nfAPIKey := env "NINFER_API_KEY" -}}
 {
   "providers": {
     "deepseek": {
@@ -27,26 +28,37 @@
     },
     "openai": {
       "apiKey": {{ $oaiAPIKey | toJson }}
-    },
-    "ollama": {
-      "baseUrl": "http://192.168.50.189:11434/v1",
+    }
+{{- if $nfAPIKey }}
+    ,
+    "ninfer": {
+      "baseUrl": "http://192.168.50.178:8080/v1",
       "api": "openai-completions",
-      "apiKey": "ollama",
+      "apiKey": {{ $nfAPIKey | toJson }},
       "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false
+        "maxTokensField": "max_tokens"
       },
       "models": [
         {
-          "id": "qwen3.8:27b",
-          "name": "Qwen 3.8 27B (Ollama)",
+          "id": "qwen3.8-27b",
+          "name": "Qwen 3.8 27B (ninfer)",
           "reasoning": true,
-          "contextWindow": 131072,
+          "contextWindow": 262144,
           "maxTokens": 32768,
+          "thinkingLevelMap": {
+            "off": "none",
+            "minimal": "low",
+            "low": "low",
+            "medium": "medium",
+            "high": "xhigh",
+            "xhigh": "xhigh",
+            "max": "xhigh"
+          },
           "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
         }
       ]
     }
+{{- end }}
   }
 }
 {{- end }}

@@ -81,6 +81,9 @@ shell_mode = "auto"
 # Closest match to the zellij catppuccin-macchiato theme (and the tmux dracula vibe).
 name = "catppuccin"
 
+[experimental]
+kitty_graphics = true
+
 [ui]
 # tmux `set-option -g status-position top`.
 tab_bar_position = "top"

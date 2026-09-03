@@ -1,0 +1,35 @@
+# Catppuccin Mocha theme for Atuin.
+# Colors tuned to match the Catppuccin Mocha palette already used by this
+# machine's fzf config (~/.config/atlas/source/alias FZF_DEFAULT_OPTS).
+#
+# Keys are Atuin "meanings"; values are hex RGB or CSS color names.
+[theme]
+name = "catppuccin-mocha"
+
+[colors]
+# General text = Catppuccin Mocha "text"
+Base = "#cdd6f4"
+
+# Secondary / de-emphasised text (help rows, minor info)
+Muted = "#6c7086"
+
+# Emphasised / selected result text
+Important = "#cdd6f4"
+
+# Section / host headers (maps to fzf's header = red #f38ba8)
+Title = "#f38ba8"
+
+# ---- alert / status (exit-code, errors, hints) ----------------------------
+AlertError = "#f38ba8"     # Mocha red
+AlertWarn  = "#f9e2af"     # Mocha yellow
+AlertInfo  = "#a6e3a1"     # Mocha green
+Annotation = "#7f849c"     # Mocha overlay1
+Guidance   = "#89b4fa"     # Mocha blue
+
+# ---- syntax highlighting (shell commands) ----------------------------------
+SyntaxCommand   = "#89b4fa"   # Mocha blue   (function/cmd)
+SyntaxFlag      = "#89dceb"   # Mocha sky     (options/flags)
+SyntaxString    = "#a6e3a1"   # Mocha green   (strings)
+SyntaxVariable  = "#f9e2af"   # Mocha yellow  (variables)
+SyntaxOperator  = "#9399b2"   # Mocha overlay2 (|, &&, ;, ...)
+SyntaxComment   = "#6c7086"   # Mocha overlay0 (comments)
