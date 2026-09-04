@@ -16,14 +16,21 @@
 {{- /* pi-interactive-subagents is vendored at settings/dot_pi/agent/packages/pi-interactive-subagents
        (chezmoi symlinks it to ~/.pi/agent/packages/pi-interactive-subagents); the relative
        ./packages/... source resolves against ~/.pi/agent/settings.json. */ -}}
+{{- /* Vendored local packages (symlinked from settings/dot_pi/agent/packages/):
+       pi-interactive-subagents, browser (Playwright web-driver tools), and
+       web-fetch (Readability/Jina reader). The two runtime-dependency packages
+       need a one-time `bun install` inside ~/.pi/agent/packages/{browser,web-fetch}`
+       after chezmoi apply (their node_modules is chezmoi-ignored). */ -}}
 {{- $packages := fromJson `[
   "npm:pi-mcp-adapter",
-  "npm:pi-code-previews",
   "npm:pi-safety-net",
   "npm:pi-prompt-template-model",
   "./packages/pi-interactive-subagents",
+  "./packages/browser",
+  "./packages/web-fetch",
   "npm:@grammeaway/pi-clip",
-  "npm:pi-powerline-footer"
+  "npm:pi-observational-memory",
+  "npm:@xynogen/pix-pretty"
 ]` -}}
 {{- $settings
   | setValueAtPath "packages" $packages
@@ -33,9 +40,6 @@
   | setValueAtPath "quietStartup" true
   | setValueAtPath "collapseChangelog" true
   | setValueAtPath "theme" "dark"
-  | setValueAtPath "powerline.preset" "default"
-  | setValueAtPath "powerline.separator" "chevron"
-  | setValueAtPath "powerline.placement" "above"
   | setValueAtPath "workingVibe" "ordis"
   | setValueAtPath "workingVibeModel" $workingVibeModel
   | toPrettyJson -}}

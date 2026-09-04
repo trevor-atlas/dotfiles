@@ -13,3 +13,10 @@
 # `bun connectors.ts sync` and contains account-specific installedServerId
 # values — never commit it. The account token lives only in the keychain.
 .config/claude-connectors/connectors.json
+
+# Vendored pi extension packages carry real runtime deps installed by
+# `bun install` on the target machine; never manage/commit their node_modules.
+.pi/agent/packages/browser/node_modules
+.pi/agent/packages/browser/node_modules/**
+.pi/agent/packages/web-fetch/node_modules
+.pi/agent/packages/web-fetch/node_modules/**

@@ -17,10 +17,6 @@
       "rev": "62437532b38495551410b3f377bcf4aaac574ebe",
       "src": "https://github.com/rmagatti/auto-session"
     },
-    "bend.nvim": {
-      "rev": "d3821aa0c5142b945873d617169366134835412e",
-      "src": "git@github.com:HubSpotEngineering/bend.nvim.git"
-    },
     "better-escape.nvim": {
       "rev": "19a38aab94961016430905ebec30d272a01e9742",
       "src": "https://github.com/max397574/better-escape.nvim"
