@@ -11,7 +11,6 @@
 {{- if $isHsMachine -}}
 {{- $defaultProvider = "anthropic" -}}
 {{- $defaultModel = "claude-opus-4-8" -}}
-{{- $workingVibeModel = "anthropic/claude-opus-4-8" -}}
 {{- end -}}
 {{- /* pi-interactive-subagents is vendored at settings/dot_pi/agent/packages/pi-interactive-subagents
        (chezmoi symlinks it to ~/.pi/agent/packages/pi-interactive-subagents); the relative
@@ -32,7 +31,15 @@
   "npm:pi-observational-memory",
   "npm:@xynogen/pix-pretty"
 ]` -}}
+
+{{- if $isHsMachine -}}
+  $npmCommand := fromJson `[]`
+  {{- else -}}
+  $npmCommand := fromJson `["bun"]`
+{{- end -}}
+
 {{- $settings
+  | setValueAtPath "npmCommand" $npmCommand
   | setValueAtPath "packages" $packages
   | setValueAtPath "defaultProvider" $defaultProvider
   | setValueAtPath "defaultModel" $defaultModel
@@ -40,6 +47,4 @@
   | setValueAtPath "quietStartup" true
   | setValueAtPath "collapseChangelog" true
   | setValueAtPath "theme" "dark"
-  | setValueAtPath "workingVibe" "ordis"
-  | setValueAtPath "workingVibeModel" $workingVibeModel
   | toPrettyJson -}}
