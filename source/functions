@@ -496,6 +496,21 @@ archive() {
   curl -X POST "http://192.168.50.84:2357?name=$name" --data-binary "@$file"
 }
 
+# HubSpot machines pin bun/npm to the internal mirror (npm.hubteam.com) via a
+# managed ~/.npmrc we cannot edit. pi's self-update (`pi update`) shells out to
+# `bun install -g @earendil-works/pi-coding-agent` and never consults settings'
+# npmCommand, so it resolves against the mirror and gets a stale/missing package.
+# BUN_CONFIG_REGISTRY overrides .npmrc, and scoping it to this wrapper leaves all
+# other bun installs (HubSpot project deps) pointed at the mirror as intended.
+# Guarded to HubSpot hosts so personal machines keep default behavior.
+pi() {
+  if [ -d "$HOME/.hubspot" ]; then
+    BUN_CONFIG_REGISTRY="https://registry.npmjs.org/" command pi "$@"
+  else
+    command pi "$@"
+  fi
+}
+
 sevro() {
  pi --append-system-prompt "SOUL.md and PrimaryUser.md in your context are yours, not reference material about someone else. Each opens with a block saying what it is for; follow it." --append-system-prompt ~/.pi/agent/SOUL.md --append-system-prompt ~/.pi/agent/PrimaryUser.md
 }

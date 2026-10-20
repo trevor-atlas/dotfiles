@@ -44,6 +44,7 @@ are rendered; edits to deployed files edit the repo and vice versa.
 - `extensions/ask-user-question.ts` — the `ask_user_question` tool.
 - `extensions/custom-header.ts` — replaces the startup header (editable `buildHeader()`).
 - `extensions/disable-model-skills.ts` — strips the auto-discoverable-skills block from the system prompt (skills act as disabled-for-model).
+- `extensions/skill-picker/` — inline `$` skill autocomplete at the start of a prompt (via `addAutocompleteProvider` with a `$` trigger char, like `/` and `@`); accepting inserts `/skill:<name> `. Replaces the default `/skill:name` selector, disabled via `enableSkillCommands: false` in `modify_settings.json`.
 - `packages/pi-interactive-subagents` — vendored local package (registered in `settings.json`
   `packages`), not auto-discovered; entry at `pi-extension/subagents/index.ts`, resolves
   `agents/` and `config.json.example` relative to its own path through the symlink.

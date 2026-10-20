@@ -9,8 +9,8 @@
 {{- $defaultModel := "deepseek-v4-flash" -}}
 {{- $workingVibeModel := "deepseek/deepseek-v4-flash" -}}
 {{- if $isHsMachine -}}
-{{- $defaultProvider = "anthropic" -}}
-{{- $defaultModel = "claude-opus-4-8" -}}
+{{- $defaultProvider = "litellm" -}}
+{{- $defaultModel = "anthropic/claude-opus-4-8" -}}
 {{- end -}}
 {{- /* pi-interactive-subagents is vendored at settings/dot_pi/agent/packages/pi-interactive-subagents
        (chezmoi symlinks it to ~/.pi/agent/packages/pi-interactive-subagents); the relative
@@ -32,17 +32,18 @@
   "npm:@xynogen/pix-pretty"
 ]` -}}
 
+{{- /* On HubSpot machines ~/.npmrc pins npm to the internal mirror (npm.hubteam.com),
+       which does not serve the public pi packages. Force bun back to public npm there. */ -}}
+{{- $npmCommand := fromJson `["bun"]` -}}
 {{- if $isHsMachine -}}
-  $npmCommand := fromJson `[]`
-  {{- else -}}
-  $npmCommand := fromJson `["bun"]`
+{{- $npmCommand = fromJson `["bun", "--registry=https://registry.npmjs.org/"]` -}}
 {{- end -}}
-
 {{- $settings
   | setValueAtPath "npmCommand" $npmCommand
   | setValueAtPath "packages" $packages
   | setValueAtPath "defaultProvider" $defaultProvider
   | setValueAtPath "defaultModel" $defaultModel
+  | setValueAtPath "enableSkillCommands" false
   | setValueAtPath "hideThinkingBlock" true
   | setValueAtPath "quietStartup" true
   | setValueAtPath "collapseChangelog" true

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
-import { parseArgs } from 'node:util';
-import { spawn, spawnSync } from 'node:child_process';
+// ./notify.ts -t 'Notification' -s subtitle -m 'Notification message' -- echo 'hi'
+
+import { parseArgs } from "node:util";
+import { spawn, spawnSync } from "node:child_process";
 
 function printUsage(): void {
   const scriptName = process.argv[1];
@@ -20,10 +22,10 @@ Example: ${scriptName} -t 'Build' -- mvn clean verify
 const { values, positionals } = parseArgs({
   args: process.argv.slice(2),
   options: {
-    title: { type: 'string', short: 't', default: 'Notification' },
-    subtitle: { type: 'string', short: 's', default: '' },
-    message: { type: 'string', short: 'm', default: '' },
-    help: { type: 'boolean', short: 'h', default: false },
+    title: { type: "string", short: "t", default: "Notification" },
+    subtitle: { type: "string", short: "s", default: "" },
+    message: { type: "string", short: "m", default: "" },
+    help: { type: "boolean", short: "h", default: false },
   },
   allowPositionals: true,
   strict: true,
@@ -40,27 +42,21 @@ if (positionals.length === 0) {
 }
 
 const [cmd, ...args] = positionals;
-const message = values.message || `${positionals.join(' ')} finished`;
+const message = values.message || `${positionals.join(" ")} finished`;
 
 const proc = spawn(cmd, args, {
-  stdio: 'inherit',
+  stdio: "inherit",
 });
 
-proc.on('close', (exitCode) => {
+proc.on("close", (exitCode) => {
   const escapedTitle = values.title!.replace(/"/g, '\\"');
   const escapedSubtitle = values.subtitle!.replace(/"/g, '\\"');
   const escapedMessage = message.replace(/"/g, '\\"');
 
   if (!exitCode) {
-    spawnSync('/usr/bin/osascript', [
-      '-e',
-      `display notification "${escapedMessage}" with title "${escapedTitle}" subtitle "${escapedSubtitle}" sound name "glass"`,
-    ]);
+    spawnSync("/usr/bin/osascript", ["-e", `display notification "${escapedMessage}" with title "${escapedTitle}" subtitle "${escapedSubtitle}" sound name "glass"`]);
   } else {
-    spawnSync('/usr/bin/osascript', [
-      '-e',
-      `display notification "${escapedMessage}" with title "${escapedTitle}" subtitle "${escapedSubtitle}" sound name "basso"`,
-    ]);
+    spawnSync("/usr/bin/osascript", ["-e", `display notification "${escapedMessage}" with title "${escapedTitle}" subtitle "${escapedSubtitle}" sound name "basso"`]);
   }
 
   process.exit(exitCode ?? 0);

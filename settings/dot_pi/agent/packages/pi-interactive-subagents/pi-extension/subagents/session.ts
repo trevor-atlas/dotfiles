@@ -114,6 +114,12 @@ export interface SubagentLoadout {
   cwd: string | null;
   /** PI_CODING_AGENT_DIR the subagent resolved config/extensions from, or null. */
   agentDir: string | null;
+  /** True when the agent's `skills` frontmatter was `false` (child launched with --no-skills). */
+  skillsOff?: boolean;
+  /** True when the agent's `extensions` frontmatter was `true` (full global extension discovery). */
+  extensionsOn?: boolean;
+  /** Resolved paths of per-agent `-e` extensions from an `extensions: name1,name2` list. */
+  extraExtensions?: string[];
 }
 
 /** Path of the loadout sidecar written next to a subagent session file. */

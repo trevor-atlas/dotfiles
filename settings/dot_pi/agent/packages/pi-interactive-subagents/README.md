@@ -127,7 +127,8 @@ You are a specialized agent that does X...
 | `thinking` | string | `minimal`, `low`, `medium`, or `high` |
 | `tools` | string | Strict tool allowlist. Built-ins: `read`, `write`, `edit`, `bash`, `grep`, `find`, `ls`. Extension-backed: `web_search`, `web_fetch`, `safe_bash`, `video_extract`, `youtube_search`, `google_image_search`. Only the extensions backing the listed tools are loaded into the child |
 | `subagent_agents` | string | Comma-separated agent names this agent may spawn. **Presence of this field grants the spawning toolset** (`subagent`, `subagent_message`, `subagents_list`) and restricts spawn targets to the list. Omit it and the agent cannot spawn at all |
-| `skills` | string | Comma-separated skill names to auto-load |
+| `extensions` | string/bool | `true` launches the child without `--no-extensions` (full global extension discovery; the `tools` allowlist still applies); `false` (default) keeps the restricted sandbox; a comma-separated list of extension names (file or directory under `~/.pi/agent/extensions/`) loads those in addition to the sandbox defaults |
+| `skills` | string/bool | `true` (default) leaves skill discovery on; `false` launches the child with `--no-skills` (no skills block in its system prompt); a comma-separated list of skill names auto-loads each via `/skill:` prompt args |
 | `session-mode` | string | `standalone` (default), `lineage-only`, or `fork` — see below |
 | `system-prompt` | string | `append` or `replace`: pass the body as the child's `--append-system-prompt` / `--system-prompt`. Omit and the body is prepended to the task prompt instead |
 | `auto-exit` | boolean | Auto-shutdown when the agent finishes (see below) |

@@ -123,6 +123,7 @@ interface AgentDefaults {
   model?: string;
   tools?: string;
   skills?: string;
+  extensions?: string;
   thinking?: string;
   /**
    * If set (non-empty), this agent is granted the full subagent spawning
@@ -166,6 +167,21 @@ const SPAWNING_TOOLS = [
 
 /** Built-in tools pi provides natively — no extension needs to be loaded. */
 const BUILTIN_TOOLS = new Set(["read", "write", "edit", "bash", "grep", "find", "ls"]);
+
+/**
+ * Tool-less UX extensions that restricted subagents should still receive
+ * (paths relative to `<agent-dir>/extensions/`). These register no tools, so
+ * the tool-driven `-e` whitelist in applySandboxToParts never surfaces them;
+ * they are added explicitly so e.g. `$skill` autocompletion works in a
+ * subagent pane. Skipped silently when not installed.
+ */
+const SUBAGENT_UX_EXTENSIONS = [
+  "skill-picker/index.ts",
+  // HubSpot managed AI rules (appends repo rules to the child's system prompt
+  // via before_agent_start). Children otherwise spawn with --no-extensions and
+  // never get these; a normal pi session in a HubSpot repo would.
+  "hubspot-managed-rules.ts",
+] as const;
 
 /** Resolve the global agent config directory, respecting PI_CODING_AGENT_DIR. */
 function getAgentConfigDir(): string {
@@ -294,6 +310,7 @@ function parseAgentDefinition(content: string, fallbackName: string): AgentDefin
           ? "append"
           : undefined,
     skills: getFrontmatterValue(frontmatter, "skill") ?? getFrontmatterValue(frontmatter, "skills"),
+    extensions: getFrontmatterValue(frontmatter, "extensions"),
     thinking: getFrontmatterValue(frontmatter, "thinking"),
     subagentAgents: parseCommaList(getFrontmatterValue(frontmatter, "subagent_agents")),
     autoExit: parseOptionalBoolean(getFrontmatterValue(frontmatter, "auto-exit")),
@@ -892,21 +909,51 @@ function applySandboxToParts(
     parts.push(flag, shellEscape(spPath));
   }
 
-  // Default-deny: disable global extension discovery and re-enable only the
-  // extensions backing the whitelisted tools. A null allowlist means the spawn
-  // was intentionally unrestricted (e.g. a fork clone) and is replayed as-is.
+  // Default-deny: restrict tool discovery (--tools) and, unless the agent
+  // opts out (`extensions: true`), disable global extension discovery and
+  // re-enable only the extensions the sandbox needs. A null toolAllowlist
+  // means the spawn was intentionally unrestricted (e.g. a fork clone) and is
+  // replayed as-is.
   if (loadout.toolAllowlist) {
-    parts.push("--no-extensions");
     parts.push("--tools", shellEscape(loadout.toolAllowlist));
+  }
 
-    const extPaths = new Set<string>();
-    for (const tool of loadout.toolAllowlist.split(",")) {
-      const extPath = getToolExtensionPath(tool);
-      if (extPath && existsSync(extPath)) extPaths.add(extPath);
+  if (loadout.toolAllowlist) {
+    if (!loadout.extensionsOn) {
+      parts.push("--no-extensions");
     }
-    for (const extPath of extPaths) {
-      parts.push("-e", shellEscape(extPath));
+    if (!loadout.extensionsOn) {
+      const extPaths = new Set<string>();
+      for (const tool of loadout.toolAllowlist.split(",")) {
+        const extPath = getToolExtensionPath(tool);
+        if (extPath && existsSync(extPath)) extPaths.add(extPath);
+      }
+      // UX extensions register no tools, so the tool-driven scan above never
+      // picks them up — but restricted subagents should still get them (e.g. the
+      // $skill picker, so `$name` autocompletes and expands to /skill:name).
+      // Paths are resolved from the agent dir at sandbox-build time, so a resume
+      // replay picks up whatever is installed then; nothing is snapshotted.
+      for (const relPath of SUBAGENT_UX_EXTENSIONS) {
+        const extPath = join(getAgentConfigDir(), "extensions", relPath);
+        if (existsSync(extPath)) extPaths.add(extPath);
+      }
+      for (const extPath of extPaths) {
+        parts.push("-e", shellEscape(extPath));
+      }
     }
+    // Per-agent extensions (`extensions: name1,name2`) are snapshotted as
+    // resolved paths so a resume replays them even if the agent .md is edited
+    // or removed in between.
+    for (const extPath of loadout.extraExtensions ?? []) {
+      if (existsSync(extPath)) parts.push("-e", shellEscape(extPath));
+    }
+  }
+
+  // skills: false in the agent frontmatter turns skill discovery off entirely
+  // in the child (its system prompt gets no skills block). Replay on resume so
+  // the sandbox stays identical.
+  if (loadout.skillsOff) {
+    parts.push("--no-skills");
   }
 }
 
@@ -919,6 +966,9 @@ function buildPiPromptArgs(params: {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean)
+    // Defensive: boolean-like values are handled by the skillsOff/--no-skills
+    // path, never as skill names.
+    .filter((s) => s.toLowerCase() !== "true" && s.toLowerCase() !== "false")
     .map((skill) => `/skill:${skill}`);
 
   const needsSeparator = params.taskDelivery === "artifact" && skillPrompts.length > 0;
@@ -1195,6 +1245,64 @@ function startWidgetRefresh() {
   (globalThis as any)[WIDGET_INTERVAL_KEY] = widgetInterval;
 }
 
+interface ModelResolvableCtx {
+  modelRegistry?: { getAvailable(): ArrayLike<{ provider: string; id: string }> } | null;
+  model?: { provider: string } | null;
+}
+
+/**
+ * Resolve a requested subagent model against the parent session's available
+ * models. LLMs habitually emit bare `anthropic/...`-style ids that may not
+ * match any configured provider (e.g. after renaming a provider or switching
+ * to a gateway); rather than spawning a child that hard-fails on
+ * `Model "..." not found`, re-home the id under the parent session's provider,
+ * then any available provider, and finally fall back to `null` so the child
+ * inherits the parent's default model.
+ *
+ * Resolution order for `<base>` (an optional trailing `:thinking` suffix is
+ * tolerated and preserved):
+ *   1. exact `provider/id` match in the available set → returned unchanged
+ *   2. `<parentProvider>/<base>` exists → re-homed under the parent provider
+ *   3. `<otherProvider>/<base>` exists → re-homed under that provider
+ *   4. no match anywhere → null (inherit the parent's default model)
+ */
+function resolveSubagentModel(requested: string | null | undefined, ctx: ModelResolvableCtx): string | null {
+  if (!requested) return null;
+
+  const registry = ctx.modelRegistry;
+  if (!registry) return requested;
+
+  // Tolerate a trailing `:thinking` suffix; resolve the base id only.
+  const suffixMatch = requested.match(/^(.*?):([a-z]+)$/i);
+  const base = suffixMatch ? suffixMatch[1] : requested;
+  const suffix = suffixMatch ? requested.slice(base.length) : "";
+
+  let available: Array<{ provider: string; id: string }>;
+  try {
+    available = Array.from(registry.getAvailable());
+  } catch {
+    return requested;
+  }
+
+  const exists = (provider: string, id: string) =>
+    available.some((m) => m.provider === provider && m.id === id);
+
+  if (base.includes("/")) {
+    const slash = base.indexOf("/");
+    if (exists(base.slice(0, slash), base.slice(slash + 1))) return requested;
+  }
+
+  const providers = [
+    ...new Set([ctx.model?.provider, ...available.map((m) => m.provider)].filter((p): p is string => !!p)),
+  ];
+  for (const provider of providers) {
+    if (exists(provider, base)) return `${provider}/${base}${suffix}`;
+  }
+
+  // Unresolvable — inherit the parent's default model instead of hard-failing.
+  return null;
+}
+
 /**
  * Launch a subagent: creates the multiplexer pane, builds the command, and
  * sends it. Returns a RunningSubagent — does NOT poll.
@@ -1203,16 +1311,47 @@ function startWidgetRefresh() {
  */
 async function launchSubagent(
   params: typeof SubagentParams.static,
-  ctx: { sessionManager: { getSessionFile(): string | null; getSessionId(): string; getSessionDir(): string }; cwd: string },
+  ctx: {
+    sessionManager: { getSessionFile(): string | null; getSessionId(): string; getSessionDir(): string };
+    cwd: string;
+  } & ModelResolvableCtx,
   options?: { surface?: string },
 ): Promise<RunningSubagent> {
   const startTime = Date.now();
   const id = Math.random().toString(16).slice(2, 10);
 
   const agentDefs = params.agent ? loadAgentDefaults(params.agent) : null;
-  const effectiveModel = params.model ?? agentDefs?.model;
+  const effectiveModel = resolveSubagentModel(params.model ?? agentDefs?.model, ctx);
   const effectiveTools = agentDefs?.tools;
-  const effectiveSkills = agentDefs?.skills;
+  // `skills` frontmatter accepts three shapes:
+  //   - "comma,names" → each name is prepended as a /skill:name prompt arg
+  //   - true (or "true") → skills discovery on (pi's default; no extra flags)
+  //   - false (or "false") → child launched with --no-skills (no skills block)
+  const rawSkills = agentDefs?.skills;
+  const skillsOff = rawSkills?.trim().toLowerCase() === "false";
+  const skillsBool = rawSkills?.trim().toLowerCase() === "true";
+  const effectiveSkills = skillsOff || skillsBool ? undefined : rawSkills;
+  // `extensions` frontmatter accepts three shapes:
+  //   - true (or "true") → no --no-extensions; the child gets full global
+  //     extension discovery (its --tools allowlist still applies)
+  //   - false (or omitted) → current sandbox (tool-backing + UX extensions)
+  //   - "name1,name2" → sandboxed, plus those named extensions as extra -e args
+  const rawExtensions = agentDefs?.extensions?.trim().toLowerCase();
+  const extensionsOn = rawExtensions === "true";
+  const extensionList =
+    rawExtensions && rawExtensions !== "true" && rawExtensions !== "false"
+      ? (agentDefs?.extensions ?? "")
+      : "";
+  const extensionPaths: string[] = [];
+  for (const name of extensionList
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)) {
+    const base = join(getAgentConfigDir(), "extensions");
+    const candidates = [join(base, name), `${join(base, name)}.ts`, join(base, name, "index.ts")];
+    const hit = candidates.find((c) => existsSync(c));
+    if (hit) extensionPaths.push(hit);
+  }
   const effectiveThinking = agentDefs?.thinking;
   const effectiveInteractive = resolveEffectiveInteractive(params, agentDefs);
   const effectiveAutoExit = resolveEffectiveAutoExit(agentDefs);
@@ -1393,6 +1532,9 @@ async function launchSubagent(
     autoExit: effectiveAutoExit,
     cwd: effectiveCwd ?? null,
     agentDir: resolvedAgentDir,
+    skillsOff,
+    extensionsOn: extensionsOn || undefined,
+    extraExtensions: extensionPaths.length ? extensionPaths : undefined,
   };
   writeSubagentLoadout(subagentSessionFile, loadout);
 

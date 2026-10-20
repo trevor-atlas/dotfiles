@@ -85,11 +85,18 @@ local ts_filetypes = {
 
 local function hubspot_root_dir(bufnr, on_dir)
   if not repo.is_hubspot_repo(bufnr) then return end
+  -- tsgo repos (node_modules + off-the-shelf tsgo) are served by the tsgo LSP,
+  -- not the bend asset-bender machinery. See lua/repo.lua / bend/tsgo docs.
+  if repo.is_tsgo_repo(bufnr) then return end
 
   on_dir(vim.fs.root(bufnr, { 'build-info.json', '.git' }))
 end
 
 local function ts_ls_root_dir(bufnr, on_dir)
+  -- Never attach the (bend-forked) typescript-language-server in tsgo repos;
+  -- the tsgo language server owns those buffers instead.
+  if repo.is_tsgo_repo(bufnr) then return end
+
   if repo.is_hubspot_repo(bufnr) then
     return on_dir(vim.fs.root(bufnr, { 'build-info.json', '.git' }))
   end
@@ -99,9 +106,31 @@ end
 
 local function ensure_bend_setup(bufnr)
   if bend_initialized or not is_hubspot or not repo.is_hubspot_repo(bufnr) then return end
+  -- tsgo repos resolve dependencies via local node_modules, so there is no need
+  -- to start the bend reactor host process.
+  if repo.is_tsgo_repo(bufnr) then return end
 
   bend.setup({ v2 = true, auto_add_dirs = true })
   bend_initialized = true
+end
+
+local function tsgo_root_dir(bufnr, on_dir)
+  local root = repo.find_tsgo_root(bufnr)
+  if root then on_dir(root) end
+end
+
+-- Resolve the local `node_modules/.bin/tsgo` shim for the given root, falling
+-- back to a `tsgo` on PATH.
+local function resolve_tsgo_bin(root_dir)
+  local local_bin = root_dir and repo.find_local_tsgo(root_dir)
+  return local_bin or 'tsgo'
+end
+
+-- tsgo speaks LSP over stdio via `tsgo --lsp --stdio` (same entrypoint the
+-- Microsoft native-preview VSCode extension uses).
+local function tsgo_cmd(dispatchers, config)
+  local bin = resolve_tsgo_bin(config.root_dir)
+  return vim.lsp.rpc.start({ bin, '--lsp', '--stdio' }, dispatchers, { cwd = config.root_dir })
 end
 
 local function ts_ls_config()
@@ -114,6 +143,8 @@ local function ts_ls_config()
     },
     before_init = function(_, config)
       if not is_hubspot or not repo.is_hubspot_repo(config.root_dir) then return end
+      -- tsgo repos never route through the bend-forked tsserver.
+      if repo.is_tsgo_repo(config.root_dir) then return end
 
       config.init_options = vim.tbl_deep_extend('force', config.init_options or {}, {
         tsserver = {
@@ -177,6 +208,15 @@ servers['bend-lsp'] = with_common_config({
   root_dir = hubspot_root_dir,
 })
 
+servers['tsgo'] = with_common_config({
+  filetypes = ts_filetypes,
+  cmd = tsgo_cmd,
+  root_dir = tsgo_root_dir,
+  init_options = {
+    hostInfo = 'neovim',
+  },
+})
+
 for server_name, server_config in pairs(servers) do
   if type(server_config) == 'function' then server_config = server_config() end
 
@@ -204,6 +244,11 @@ for server_name, executable in pairs(core_servers) do
 end
 
 if utils.is_hubspot_machine and utils.is_executable('bend') then vim.lsp.enable('bend-lsp') end
+
+-- tsgo is enabled unconditionally: its root_dir only resolves inside migrated
+-- (useTsgo) repos, and its cmd resolves the project-local node_modules/.bin/tsgo,
+-- so it never attaches or spawns outside a tsgo project.
+vim.lsp.enable('tsgo')
 
 local optional_servers = {
   gopls = {
